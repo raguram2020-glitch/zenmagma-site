@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Hidden Stars - ZenMagma</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}
+#hud{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hval{background:rgba(255,255,255,.12);padding:5px 16px;border-radius:20px;font-weight:700;font-size:.9em}
+.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f9d423,#ff4e50);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05)}
+#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}
+#ob{background:#16213e;border-radius:20px;padding:40px;text-align:center;max-width:380px;width:90%;border:2px solid #f9d423}
+#ob h2{font-size:2em;margin-bottom:8px;background:linear-gradient(135deg,#f9d423,#ff4e50);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#ob p{color:#aaa;margin-bottom:22px;line-height:1.5}
+#hm{position:fixed;top:10px;left:10px;padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8em;z-index:100}
+</style></head><body>
+
+
+<div id="hud"><span class="hval">Found:<b id="fd"> 0</b>/<b id="tot">0</b></span><span class="hval">Score:<b id="sc"> 0</b></span><span class="hval">Time:<b id="tm"> 60</b>s</span><button class="btn" onclick="ng()">New Game</button></div>
+<canvas id="c" width="500" height="420"></canvas>
+<div id="ov"><div id="ob"><h2>Hidden Stars</h2><p>Find all the hidden gold stars scattered in the scene! Click as fast as you can. More stars appear each level!</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+let stars=[],found=0,score=0,timeLeft=60,timer,running=false,level=1;
+const W=500,H=420;
+// Scene items to draw (fake clutter)
+function drawScene(){
+  // Sky
+  const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#1a1a2e");sky.addColorStop(1,"#16213e");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  // Ground
+  ctx.fillStyle="#0f3460";ctx.fillRect(0,H*.7,W,H*.3);
+  // Trees
+  [[50,280],[120,250],[200,260],[320,270],[420,255],[470,280]].forEach(([x,y])=>{
+    ctx.fillStyle="#1a3a1a";ctx.beginPath();ctx.moveTo(x,y-60);ctx.lineTo(x-25,y);ctx.lineTo(x+25,y);ctx.fill();
+    ctx.fillStyle="#8B4513";ctx.fillRect(x-5,y,10,30);
+  });
+  // Clouds
+  [[80,60],[220,40],[380,70],[450,50]].forEach(([x,y])=>{
+    ctx.fillStyle="rgba(255,255,255,.08)";ctx.beginPath();ctx.arc(x,y,30,0,Math.PI*2);ctx.arc(x+25,y-10,22,0,Math.PI*2);ctx.arc(x+50,y,28,0,Math.PI*2);ctx.fill();
+  });
+  // Moon
+  ctx.fillStyle="rgba(255,255,200,.15)";ctx.beginPath();ctx.arc(440,50,35,0,Math.PI*2);ctx.fill();
+}
+function mkStars(){
+  stars=[];const count=5+level*2;
+  for(let i=0;i<count;i++){stars.push({x:20+Math.random()*(W-40),y:20+Math.random()*(H-40),r:10+Math.random()*8,found:false,alpha:0.2+Math.random()*0.5});}
+}
+function drawStars(){
+  stars.filter(s=>!s.found).forEach(s=>{
+    ctx.save();ctx.globalAlpha=s.alpha;ctx.fillStyle="#f9d423";
+    ctx.translate(s.x,s.y);
+    ctx.beginPath();for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2;ctx.lineTo(Math.cos(a)*s.r,Math.sin(a)*s.r);const a2=a+Math.PI/5;ctx.lineTo(Math.cos(a2)*s.r*.4,Math.sin(a2)*s.r*.4);}
+    ctx.closePath();ctx.fill();ctx.restore();
+  });
+}
+function draw(){drawScene();drawStars();document.getElementById("tot").textContent=stars.length;}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const mx=e.offsetX,my=e.offsetY;
+  let hit=false;
+  stars.forEach(s=>{if(!s.found&&Math.hypot(mx-s.x,my-s.y)<s.r+8){s.found=true;found++;score+=Math.ceil(timeLeft*level);document.getElementById("fd").textContent=found;document.getElementById("sc").textContent=score;hit=true;}});
+  if(!hit){score=Math.max(0,score-5);document.getElementById("sc").textContent=score;}
+  draw();
+  if(stars.every(s=>s.found)){clearInterval(timer);score+=timeLeft*10*level;level++;document.getElementById("sc").textContent=score;setTimeout(()=>{found=0;document.getElementById("fd").textContent=0;mkStars();timeLeft=Math.max(20,60-level*3);clearInterval(timer);tick();draw();},800);}
+});
+function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);document.getElementById("tm").textContent="0";alert("Time up! Score: "+score);}else timer=setTimeout(()=>{timeLeft--;tick();},1000);}
+function go(){document.getElementById("ov").style.display="none";running=true;draw();tick();}
+function ng(){clearInterval(timer);score=0;found=0;level=1;timeLeft=60;document.getElementById("sc").textContent=0;document.getElementById("fd").textContent=0;document.getElementById("tm").textContent=60;mkStars();if(running){draw();tick();}}
+mkStars();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script></body></html>

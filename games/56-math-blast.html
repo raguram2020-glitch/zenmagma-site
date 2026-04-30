@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Math Blast - ZenMagma</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0514;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#fa709a,#fee140);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #fa709a}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#fa709a,#fee140);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<div style="text-align:center">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span><span class="hv">Time:<b id="tm"> 30</b>s</span></div>
+<div style="font-size:2.8em;font-weight:900;padding:20px;color:#fee140" id="eq">?</div>
+<div id="opts" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:10px"></div>
+<div id="fb" style="font-size:1.2em;height:30px;margin:8px"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Math Blast</h2><p>Choose the correct answer to the math equation as fast as you can! Level up for harder problems.</p><button class="btn" onclick="go()">Blast!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+let score=0,level=1,timeLeft=30,timer,running=false;
+function mkQ(){
+  const ops=['+','-','*'];const op=level>2?ops[Math.floor(Math.random()*3)]:ops[Math.floor(Math.random()*2)];
+  const max=5+level*3;const a=Math.floor(Math.random()*max)+1,b=Math.floor(Math.random()*max)+1;
+  let ans,q;
+  if(op==='+'){ans=a+b;q=`${a} + ${b} = ?`;}
+  else if(op==='-'){ans=Math.max(a,b)-Math.min(a,b);q=`${Math.max(a,b)} - ${Math.min(a,b)} = ?`;}
+  else{ans=a*b;q=`${a} × ${b} = ?`;}
+  document.getElementById("eq").textContent=q;
+  const opts=[ans];while(opts.length<4){const r=ans+Math.floor(Math.random()*10)-5;if(r>0&&!opts.includes(r))opts.push(r);}
+  opts.sort(()=>Math.random()-.5);
+  document.getElementById("opts").innerHTML=opts.map(o=>`<button class="btn" onclick="check(${o},${ans})" style="font-size:1.4em;padding:14px 28px">${o}</button>`).join("");
+}
+function check(chosen,correct){
+  if(chosen===correct){score+=timeLeft*level;level++;document.getElementById("sc").textContent=score;document.getElementById("lv").textContent=level;document.getElementById("fb").innerHTML='<span style="color:#2ecc71">✓ Correct!</span>';}
+  else{document.getElementById("fb").innerHTML=`<span style="color:#e74c3c">✗ It was ${correct}</span>`;score=Math.max(0,score-5);document.getElementById("sc").textContent=score;}
+  setTimeout(mkQ,600);
+}
+function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;document.getElementById("opts").innerHTML="";document.getElementById("fb").innerHTML=`<span style="color:#f39c12">Time up! Final score: ${score}</span>`;}else{timeLeft--;}}
+function go(){document.getElementById("ov").style.display="none";running=true;mkQ();timer=setInterval(tick,1000);}
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script></body></html>

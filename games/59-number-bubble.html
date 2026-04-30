@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Number Bubble - ZenMagma</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#001a14;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1abc9c,#16a085);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #1abc9c}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#1abc9c,#16a085);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<div style="text-align:center">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Time:<b id="tm"> 45</b>s</span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<div style="font-size:1.8em;font-weight:900;padding:14px;color:#1abc9c" id="eq">Loading...</div>
+<canvas id="c" width="440" height="320"></canvas>
+</div>
+<div id="ov"><div id="ob"><h2>Number Bubble</h2><p>Pop the bubble with the correct answer to the math question! Wrong pops lose points.</p><button class="btn" onclick="go()">Pop!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=440,H=320;
+let bubbles=[],score=0,level=1,timeLeft=45,timer,correct,running=false;
+function mkQ(){
+  const a=Math.floor(Math.random()*(5+level*2))+1,b=Math.floor(Math.random()*(5+level*2))+1;
+  const ops=[{s:`${a} + ${b}`,a:a+b},{s:`${a+b} - ${b}`,a:a},{s:`${a} × ${b}`,a:a*b}];
+  const q=ops[Math.floor(Math.random()*Math.min(2+level,3))];
+  correct=q.a;document.getElementById("eq").textContent=q.s+" = ?";
+  bubbles=[];const n=4+level;
+  for(let i=0;i<n;i++){
+    let x,y,ok,val;val=i===0?correct:correct+Math.floor(Math.random()*10)-5;if(val<0)val=Math.abs(val)+1;
+    do{x=30+Math.random()*(W-60);y=30+Math.random()*(H-60);ok=!bubbles.some(b=>Math.hypot(b.x-x,b.y-y)<44);}while(!ok);
+    bubbles.push({x,y,r:30,val,vx:(Math.random()-.5)*1.5,vy:(Math.random()-.5)*1.5,hue:Math.floor(Math.random()*360)});
+  }
+  bubbles[Math.floor(Math.random()*bubbles.length)].val=correct;
+}
+function draw(){
+  ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);
+  bubbles.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(b.x<b.r||b.x>W-b.r)b.vx*=-1;if(b.y<b.r||b.y>H-b.r)b.vy*=-1;ctx.fillStyle=`hsla(${b.hue},70%,55%,.8)`;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,255,255,.4)";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 18px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(b.val,b.x,b.y);});
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const mx=e.offsetX,my=e.offsetY;
+  const hit=bubbles.find(b=>Math.hypot(b.x-mx,b.y-my)<b.r);
+  if(!hit)return;
+  if(hit.val===correct){score+=timeLeft*level*2;document.getElementById("sc").textContent=score;}else{score=Math.max(0,score-10);document.getElementById("sc").textContent=score;}
+  level++;document.getElementById("lv").textContent=level;mkQ();
+});
+function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;setTimeout(()=>alert("Time up! Score: "+score),100);}else timeLeft--;}
+function go(){document.getElementById("ov").style.display="none";running=true;mkQ();timer=setInterval(tick,1000);(function lp(){if(!running)return;draw();requestAnimationFrame(lp);})();}
+mkQ();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script></body></html>

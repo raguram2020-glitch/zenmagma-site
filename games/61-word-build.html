@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Word Build - ZenMagma</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000a20;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#4facfe,#00f2fe);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #4facfe}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#4facfe,#00f2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<div style="text-align:center;max-width:500px;margin:0 auto">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span><span class="hv">Time:<b id="tm"> 30</b>s</span></div>
+<div style="font-size:1em;color:#aaa;padding:8px">Build this word:</div>
+<div id="target" style="font-size:2.5em;font-weight:900;letter-spacing:8px;padding:14px;color:#4facfe">----</div>
+<div id="built" style="font-size:2em;letter-spacing:6px;padding:10px;min-height:50px;border-bottom:2px solid #4facfe;margin:0 20px;color:#00f2fe">_</div>
+<div id="tiles" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:14px"></div>
+<button class="btn" onclick="clearBuilt()">Clear</button>
+<div id="fb" style="font-size:1em;height:28px;margin:6px"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Word Build</h2><p>Click letter tiles to build the target word! Race against the clock. Clear and try again if you make a mistake.</p><button class="btn" onclick="go()">Build!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const WORDS=["CAT","DOG","SUN","MAP","HAT","PEN","CUP","JAM","FIG","OAK","ZAP","BIG","RUN","FLY","SKY","BLUE","PINK","TREE","BIRD","FISH","CAKE","MOON","STAR","WIND","FIRE","GAME","JUMP","SWIM","SING","DRAW","CLOUD","OCEAN","FLAME","BRAVE","SMART","TIGER","EAGLE","PIANO","MAGIC","DANCE"];
+let word,tiles,built=[],score=0,level=1,timeLeft=30,timer,running=false;
+function mkQ(){
+  const pool=WORDS.filter(w=>w.length<=Math.min(4+Math.floor(level/2),8));
+  word=pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById("target").textContent=word;built=[];
+  // Make tiles: letters of word + extra
+  const extra="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").filter(c=>!word.includes(c));
+  const extras=extra.sort(()=>Math.random()-.5).slice(0,word.length+2);
+  tiles=[...word.split(""),...extras].sort(()=>Math.random()-.5);
+  renderTiles();renderBuilt();
+}
+function renderTiles(){document.getElementById("tiles").innerHTML=tiles.map((t,i)=>`<button class="btn" style="width:48px;height:48px;font-size:1.4em;padding:0" onclick="pick(${i})">${t}</button>`).join("");}
+function renderBuilt(){const b=built.join("");document.getElementById("built").textContent=b||"_";if(b===word){score+=timeLeft*level*10;document.getElementById("sc").textContent=score;document.getElementById("fb").innerHTML='<span style="color:#2ecc71">✓ Correct!</span>';level++;document.getElementById("lv").textContent=level;setTimeout(mkQ,700);}}
+function pick(i){if(built.length<word.length){built.push(tiles[i]);renderBuilt();}}
+function clearBuilt(){built=[];renderBuilt();}
+function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;alert("Time up! Score: "+score);}else timeLeft--;}
+function go(){document.getElementById("ov").style.display="none";running=true;mkQ();clearInterval(timer);timeLeft=30;timer=setInterval(tick,1000);}
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script></body></html>

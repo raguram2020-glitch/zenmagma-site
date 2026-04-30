@@ -1,0 +1,386 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fire Fighter - ZenMagma</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0300;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(255,80,0,.3);max-width:100vw}
+#hud{display:flex;gap:10px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em}
+.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ff6b6b,#ffd93d);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05)}
+#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}
+#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #ff6b6b}
+#ob h2{font-size:2em;margin-bottom:8px;background:linear-gradient(135deg,#ff6b6b,#ffd93d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#ob p{color:#aaa;margin-bottom:20px;line-height:1.6;font-size:.9em}
+#goov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
+#winov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
+</style></head><body>
+
+<div id="hud">
+  <span class="hv">🔥 Score:<b id="sc"> 0</b></span>
+  <span class="hv">🌊 Wave:<b id="wv"> 1</b></span>
+  <span class="hv">⏱ Time:<b id="tm"> 45</b>s</span>
+  <span class="hv">👨‍🚒 Lives:<b id="lf"> 3</b></span>
+  <span class="hv">💧 Water:<b id="wt"> 100</b>%</span>
+  <span class="hv">🧑 Saved:<b id="sv"> 0</b></span>
+  <button class="btn" onclick="ng()">Restart</button>
+</div>
+<canvas id="c" width="520" height="460"></canvas>
+<p style="text-align:center;color:#aaa;font-size:.8em;padding:4px">WASD/Arrows to move · Hold mouse/click to spray water · Save citizens before fire reaches them!</p>
+
+<div id="goov"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:360px;width:90%;border:2px solid #e74c3c">
+  <div style="font-size:3em;margin-bottom:10px">🔥</div>
+  <div style="font-size:1.7em;font-weight:800;color:#e74c3c;margin-bottom:8px">City Burned Down!</div>
+  <div id="gomsg" style="color:#aaa;margin-bottom:20px;font-size:.95em"></div>
+  <button class="btn" onclick="doRestart()">▶ Play Again</button>
+</div></div>
+
+<div id="winov"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:360px;width:90%;border:2px solid #2ecc71">
+  <div style="font-size:3em;margin-bottom:10px">🏆</div>
+  <div style="font-size:1.7em;font-weight:800;color:#2ecc71;margin-bottom:8px">Wave Clear!</div>
+  <div id="winmsg" style="color:#aaa;margin-bottom:20px;font-size:.95em"></div>
+  <button class="btn" style="background:linear-gradient(135deg,#27ae60,#2ecc71)" onclick="nextWave()">Next Wave →</button>
+</div></div>
+
+<div id="ov"><div id="ob">
+  <h2>🚒 Fire Fighter</h2>
+  <p>Move your firefighter with <b>WASD / Arrow keys</b>.<br>
+  <b>Hold mouse button</b> to spray water toward cursor.<br>
+  <b>Rescue citizens</b> 🧑 by walking over them before fire reaches them!<br>
+  <b>Refill water</b> by walking to a 💧 hydrant.<br>
+  Stop the fire from burning more than <b>60%</b> of the city!</p>
+  <button class="btn" onclick="go()">🚒 Fight Fire!</button>
+</div></div>
+
+<script>
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){try{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);o.start();o.stop(AC.currentTime+dur);}catch(e){}}
+function sndSplash(){beep(300,0.05,0.08,'sine');beep(250,0.05,0.08,'sine');}
+function sndSave(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),100);}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.5,0.2,'sawtooth'),250);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const W=520,H=460,CELL=52,COLS=10,ROWS=8;
+
+let grid,player,citizens,hydrants,particles,score,wave,lives,water,saved,running,gameOverFlag,spraying,mx,my,frame,waveTimer;
+
+const keys={};
+document.addEventListener('keydown',e=>keys[e.key]=true);
+document.addEventListener('keyup',e=>keys[e.key]=false);
+
+// Mouse tracking
+mx=W/2;my=H/2;
+cv.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;});
+cv.addEventListener('mousedown',()=>spraying=true);
+cv.addEventListener('mouseup',()=>spraying=false);
+cv.addEventListener('touchmove',e=>{e.preventDefault();const r=cv.getBoundingClientRect(),t=e.touches[0];mx=t.clientX-r.left;my=t.clientY-r.top;spraying=true;},{passive:false});
+cv.addEventListener('touchend',()=>spraying=false);
+
+function cellX(c){return c*CELL+CELL/2;}
+function cellY(r){return r*CELL+CELL/2;}
+
+function initWave(){
+  grid=[];
+  for(let r=0;r<ROWS;r++){grid[r]=[];for(let c=0;c<COLS;c++)grid[r][c]=0;}
+  // Seed fires based on wave
+  const fires=3+wave*2;
+  for(let i=0;i<fires;i++){
+    const r=Math.floor(Math.random()*ROWS);
+    const c=Math.floor(Math.random()*COLS);
+    grid[r][c]=0.5+Math.random()*0.5;
+  }
+  // Place hydrants (fixed corners + extras)
+  hydrants=[
+    {x:cellX(0),y:cellY(0)},
+    {x:cellX(COLS-1),y:cellY(0)},
+    {x:cellX(0),y:cellY(ROWS-1)},
+    {x:cellX(COLS-1),y:cellY(ROWS-1)},
+  ];
+  // Citizens to save
+  citizens=[];
+  const nCitizens=4+wave;
+  for(let i=0;i<nCitizens;i++){
+    let r,c,tries=0;
+    do{r=Math.floor(Math.random()*ROWS);c=Math.floor(Math.random()*COLS);tries++;}
+    while(grid[r][c]>0&&tries<20);
+    citizens.push({x:cellX(c),y:cellY(r),r,c,alive:true,flash:0});
+  }
+  particles=[];
+}
+
+const WAVE_DURATION=45; // seconds per wave
+function init(){
+  score=0;wave=1;lives=3;water=100;saved=0;
+  gameOverFlag=false;spraying=false;frame=0;waveTimer=WAVE_DURATION*60;
+  player={x:cellX(Math.floor(COLS/2)),y:cellY(ROWS-1),r:16,spd:2.8};
+  initWave();
+  updateHUD();
+}
+
+function updateHUD(){
+  document.getElementById('sc').textContent=score;
+  document.getElementById('wv').textContent=wave;
+  document.getElementById('lf').textContent=lives;
+  document.getElementById('wt').textContent=Math.round(water);
+  document.getElementById('sv').textContent=saved;
+  document.getElementById('tm').textContent=Math.ceil(waveTimer/60);
+}
+
+function fireCoverage(){
+  let count=0;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]>0)count++;
+  return count/(ROWS*COLS);
+}
+
+function update(){
+  frame++;
+
+  // Player movement
+  const spd=player.spd;
+  if(keys['ArrowLeft']||keys['a']||keys['A'])player.x=Math.max(player.r,player.x-spd);
+  if(keys['ArrowRight']||keys['d']||keys['D'])player.x=Math.min(W-player.r,player.x+spd);
+  if(keys['ArrowUp']||keys['w']||keys['W'])player.y=Math.max(player.r,player.y-spd);
+  if(keys['ArrowDown']||keys['s']||keys['S'])player.y=Math.min(H-player.r,player.y+spd);
+
+  // Hydrant refill
+  hydrants.forEach(h=>{
+    if(Math.hypot(player.x-h.x,player.y-h.y)<28){
+      if(water<100){water=Math.min(100,water+1.2);document.getElementById('wt').textContent=Math.round(water);}
+    }
+  });
+
+  // Rescue citizens by walking over them
+  citizens.forEach(c=>{
+    if(c.alive&&Math.hypot(player.x-c.x,player.y-c.y)<22){
+      c.alive=false;saved++;score+=50*wave;sndSave();
+      for(let i=0;i<8;i++)particles.push({x:c.x,y:c.y,dx:(Math.random()-.5)*4,dy:-Math.random()*4,life:30,color:'#f1c40f',size:6});
+      updateHUD();
+    }
+  });
+
+  // Citizen burns if fire reaches them
+  citizens.forEach(c=>{
+    if(c.alive&&grid[c.r]&&grid[c.r][c.c]>1.5){
+      c.alive=false;lives--;document.getElementById('lf').textContent=lives;
+      for(let i=0;i<8;i++)particles.push({x:c.x,y:c.y,dx:(Math.random()-.5)*3,dy:-Math.random()*3,life:25,color:'#e74c3c',size:5});
+      if(lives<=0&&!gameOverFlag){gameOverFlag=true;running=false;sndLose();setTimeout(()=>{document.getElementById('gomsg').textContent='Score: '+score+' | Saved: '+saved+' citizens';document.getElementById('goov').style.display='flex';},300);}
+    }
+  });
+
+  // Spray water toward cursor
+  if(spraying&&water>0){
+    const angle=Math.atan2(my-player.y,mx-player.x);
+    const speed=9;
+    // Trace water ray
+    let wx=player.x,wy=player.y;
+    const dx=Math.cos(angle)*speed,dy=Math.sin(angle)*speed;
+    for(let step=0;step<8;step++){
+      wx+=dx;wy+=dy;
+      const gc=Math.floor(wx/CELL),gr=Math.floor(wy/CELL);
+      if(gc>=0&&gc<COLS&&gr>=0&&gr<ROWS&&grid[gr][gc]>0){
+        grid[gr][gc]=Math.max(0,grid[gr][gc]-0.12);
+        if(grid[gr][gc]<=0){score+=20*wave;document.getElementById('sc').textContent=score;sndSplash();}
+        for(let i=0;i<2;i++)particles.push({x:wx,y:wy,dx:(Math.random()-.5)*2,dy:-Math.random()*2,life:14,color:'#3498db',size:4});
+        break;
+      }
+      // Water trail
+      if(step%2===0)particles.push({x:wx,y:wy,dx:(Math.random()-.5)*1,dy:-Math.random()*1,life:8,color:'rgba(52,152,219,0.6)',size:3});
+    }
+    water=Math.max(0,water-0.35);
+    document.getElementById('wt').textContent=Math.round(water);
+  }
+
+  // Fire spreads
+  const spreadChance=0.006+wave*0.0015;
+  if(Math.random()<spreadChance){
+    const fires=[];
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]>0.5)fires.push([r,c]);
+    if(fires.length){
+      const[r,c]=fires[Math.floor(Math.random()*fires.length)];
+      const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+      const[dr,dc]=dirs[Math.floor(Math.random()*4)];
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&grid[nr][nc]===0)grid[nr][nc]=0.3+Math.random()*0.4;
+    }
+  }
+
+  // Intensify fire
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]>0&&grid[r][c]<3)grid[r][c]+=0.003+wave*0.0005;
+
+  // Smoke particles from intense fires
+  if(frame%8===0){
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      if(grid[r][c]>1.5&&Math.random()<0.3){
+        particles.push({x:cellX(c)+(Math.random()-.5)*20,y:cellY(r)-CELL/2,dx:(Math.random()-.5)*0.5,dy:-Math.random()*1.5,life:40,color:'rgba(80,80,80,0.5)',size:7+Math.random()*8});
+      }
+    }
+  }
+
+  // Update particles
+  particles=particles.filter(p=>{p.x+=p.dx;p.y+=p.dy;p.life--;p.dy-=0.02;return p.life>0;});
+
+  // Check game over — too much fire
+  if(fireCoverage()>0.65&&!gameOverFlag){
+    gameOverFlag=true;running=false;sndLose();
+    setTimeout(()=>{document.getElementById('gomsg').textContent='Fire covered 65% of the city! Score: '+score;document.getElementById('goov').style.display='flex';},300);
+    return;
+  }
+
+  // Wave timer countdown
+  if(!gameOverFlag){
+    waveTimer--;
+    if(frame%60===0) document.getElementById('tm').textContent=Math.ceil(waveTimer/60);
+    if(waveTimer<=0){
+      // Wave survived!
+      running=false;sndWin();
+      const bonus=citizens.filter(c=>c.alive).length*100*wave;
+      score+=200*wave+bonus;
+      document.getElementById('winmsg').textContent='Wave '+wave+' survived! Rescued '+citizens.filter(c=>c.alive).length+' citizens. +'+bonus+' bonus. Score: '+score;
+      document.getElementById('winov').style.display='flex';
+    }
+  }
+}
+
+function draw(){
+  ctx.fillStyle='#0a0300';ctx.fillRect(0,0,W,H);
+
+  // Draw grid cells
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const v=grid[r][c];
+      const x=c*CELL,y=r*CELL;
+      if(v<=0){
+        ctx.fillStyle='#1a0800';ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
+        ctx.strokeStyle='#2a1000';ctx.lineWidth=1;ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+      } else {
+        // Fire color based on intensity
+        const hue=v>2?0:v>1?15:30;
+        const light=v>2?55:v>1?45:38;
+        ctx.fillStyle=`hsl(${hue},95%,${light}%)`;
+        ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
+        // Flame emoji with size based on intensity
+        const flicker=Math.sin(frame*0.3+c*0.7+r*0.5)*3;
+        const emojiSize=Math.round(14+v*10+flicker);
+        ctx.font=`${emojiSize}px sans-serif`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(v>2?'🔥':'🔥',x+CELL/2,y+CELL/2);
+        // Intensity glow
+        if(v>1.5){
+          ctx.fillStyle=`rgba(255,${Math.floor(100-v*20)},0,0.15)`;
+          ctx.fillRect(x-2,y-2,CELL+4,CELL+4);
+        }
+      }
+    }
+  }
+
+  // Draw particles (smoke + water)
+  particles.forEach(p=>{
+    ctx.globalAlpha=Math.min(1,p.life/15);
+    ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size||4,0,Math.PI*2);ctx.fill();
+  });
+  ctx.globalAlpha=1;
+
+  // Water stream line when spraying
+  if(spraying&&water>0){
+    ctx.strokeStyle='rgba(52,152,219,0.7)';ctx.lineWidth=3;
+    ctx.setLineDash([6,4]);ctx.beginPath();
+    ctx.moveTo(player.x,player.y);ctx.lineTo(mx,my);ctx.stroke();ctx.setLineDash([]);
+  }
+
+  // Draw hydrants
+  hydrants.forEach(h=>{
+    ctx.fillStyle='#1565c0';ctx.beginPath();ctx.arc(h.x,h.y,14,0,Math.PI*2);ctx.fill();
+    ctx.font='16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('💧',h.x,h.y);
+    // Refill indicator ring
+    if(Math.hypot(player.x-h.x,player.y-h.y)<28){
+      ctx.strokeStyle='#3498db';ctx.lineWidth=2;ctx.beginPath();ctx.arc(h.x,h.y,18,0,Math.PI*2);ctx.stroke();
+    }
+  });
+
+  // Draw citizens
+  citizens.forEach(c=>{
+    if(!c.alive)return;
+    const danger=grid[c.r]&&grid[c.r][c.c]>0.5;
+    // Danger flash
+    if(danger&&frame%10<5){
+      ctx.fillStyle='rgba(231,76,60,0.4)';ctx.beginPath();ctx.arc(c.x,c.y,20,0,Math.PI*2);ctx.fill();
+    }
+    ctx.font='22px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('🧑',c.x,c.y);
+  });
+
+  // Draw player (firefighter) — bright glowing
+  // Outer glow ring (pulsing)
+  const pulse=0.7+Math.sin(frame*0.15)*0.3;
+  const grad=ctx.createRadialGradient(player.x,player.y,8,player.x,player.y,34);
+  grad.addColorStop(0,'rgba(255,220,80,'+pulse+')');
+  grad.addColorStop(0.5,'rgba(255,150,0,0.35)');
+  grad.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.arc(player.x,player.y,34,0,Math.PI*2);ctx.fill();
+  // Bright white inner circle
+  ctx.fillStyle='rgba(255,255,255,0.92)';ctx.beginPath();ctx.arc(player.x,player.y,20,0,Math.PI*2);ctx.fill();
+  // Blue highlight ring
+  ctx.strokeStyle='#00aaff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(player.x,player.y,21,0,Math.PI*2);ctx.stroke();
+  // Firefighter emoji (large)
+  ctx.font='28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('👨‍🚒',player.x,player.y-1);
+
+  // Water bar overlay
+  const bw=180,bh=12,bx=W/2-bw/2,by=H-16;
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(bx-1,by-1,bw+2,bh+2);
+  ctx.fillStyle='#1a3a6e';ctx.fillRect(bx,by,bw,bh);
+  ctx.fillStyle=water<25?'#e74c3c':water<50?'#f39c12':'#3498db';
+  ctx.fillRect(bx,by,bw*(water/100),bh);
+  ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText('💧 '+Math.round(water)+'%',bx+bw/2,by+bh/2+1);
+
+  // Wave timer on canvas (big, urgent when low)
+  const secsLeft=Math.ceil(waveTimer/60);
+  const timerColor=secsLeft<=10?'#e74c3c':secsLeft<=20?'#f39c12':'#2ecc71';
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.beginPath();ctx.roundRect(W/2-36,4,72,28,8);ctx.fill();
+  ctx.fillStyle=timerColor;ctx.font=`bold ${secsLeft<=10?18:15}px sans-serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('⏱ '+secsLeft+'s',W/2,18);
+
+  // Fire coverage warning
+  const cov=fireCoverage();
+  if(cov>0.4){
+    ctx.fillStyle=`rgba(231,76,60,${(cov-0.4)*2})`;
+    ctx.fillRect(0,0,W,4);ctx.fillRect(0,H-4,W,4);ctx.fillRect(0,0,4,H);ctx.fillRect(W-4,0,4,H);
+  }
+}
+
+function go(){
+  document.getElementById('ov').style.display='none';
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+
+function ng(){
+  running=false;
+  document.getElementById('goov').style.display='none';
+  document.getElementById('winov').style.display='none';
+  setTimeout(()=>{init();go();},100);
+}
+
+function nextWave(){
+  document.getElementById('winov').style.display='none';
+  wave++;
+  water=100;
+  waveTimer=Math.max(25,WAVE_DURATION-wave*2)*60; // slightly shorter each wave, min 25s
+  player.x=cellX(Math.floor(COLS/2));player.y=cellY(ROWS-1);
+  initWave();
+  updateHUD();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+
+function doRestart(){ng();}
+
+init();
+</script>
+</body></html>
