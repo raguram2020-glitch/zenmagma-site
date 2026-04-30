@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════
-   GAMES DATA — GameZone Platform
+   GAMES DATA — ZenMagma Platform | zenmagma.com
    Paths are relative from game.html → ../MathHelper/public/games/
 ═══════════════════════════════════════ */
 
-const BASE = '../MathHelper/public/games/';
+const BASE = 'games/';
 
 const CATEGORIES = [
   { id:'all',       label:'🎮 All Games',    color:'#6366f1' },
@@ -169,7 +169,7 @@ function getRelated(game, n=6) { return GAMES.filter(g => g.id !== game.id && (g
 function formatPlays(n)        { return n >= 1000 ? (n/1000).toFixed(1)+'k' : n; }
 
 /* ── Recently played ── */
-const RECENT_KEY = 'gz_recent';
+const RECENT_KEY = 'zm_recent';
 function addRecent(id) {
   let arr = JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');
   arr = [id, ...arr.filter(x=>x!==id)].slice(0,8);
