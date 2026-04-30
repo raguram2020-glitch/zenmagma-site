@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games Hub - Play Free Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --bg-dark: #0f0f1e;
+            --bg-light: #1a1a2e;
+            --text-light: #e0e0e0;
+            --text-dark: #000;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .tagline {
+            font-size: 18px;
+            opacity: 0.9;
+            letter-spacing: 1px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 40px;
+            color: var(--accent-color);
+            text-shadow: 0 2px 10px rgba(240, 147, 251, 0.3);
+        }
+
+        /* Games Grid */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .game-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .game-card:nth-child(1) { animation-delay: 0.1s; }
+        .game-card:nth-child(2) { animation-delay: 0.2s; }
+        .game-card:nth-child(3) { animation-delay: 0.3s; }
+        .game-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .game-card:hover::before {
+            left: 100%;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-color);
+            box-shadow: 0 20px 50px rgba(240, 147, 251, 0.3);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+        }
+
+        .game-emoji {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover .game-emoji {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        .game-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .game-description {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 25px;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .play-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .stat-item {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 2px solid rgba(102, 126, 234, 0.3);
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-links {
+            margin-bottom: 20px;
+        }
+
+        .social-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: var(--accent-color);
+        }
+
+        .footer-text {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .game-card {
+                padding: 20px;
+            }
+
+            .game-emoji {
+                font-size: 50px;
+            }
+
+            header {
+                padding: 30px 20px;
+            }
+
+            .container {
+                padding: 20px 15px;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>🎮 GAMES HUB</h1>
+        <p class="tagline">Play Free Online Games - No Installation Required</p>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Featured Games -->
+        <h2 class="section-title">🎮 All Games (10)</h2>
+        <div class="games-grid">
+            <!-- 2048 Game -->
+            <div class="game-card">
+                <span class="game-emoji">🔢</span>
+                <h3 class="game-title">2048</h3>
+                <p class="game-description">Join the numbers and reach the 2048 tile! Merge tiles with the same number.</p>
+                <a href="2048.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Dinosaur Jump -->
+            <div class="game-card">
+                <span class="game-emoji">🦕</span>
+                <h3 class="game-title">Dinosaur Jump</h3>
+                <p class="game-description">Jump over cacti and obstacles! Get the highest score before the game ends.</p>
+                <a href="dinosaurjump.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Fruit Catch -->
+            <div class="game-card">
+                <span class="game-emoji">🍎</span>
+                <h3 class="game-title">Fruit Catch</h3>
+                <p class="game-description">Move your basket to catch falling fruits! Don't miss 3 in a row or it's game over.</p>
+                <a href="fruitcatch.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Memory Match -->
+            <div class="game-card">
+                <span class="game-emoji">🧠</span>
+                <h3 class="game-title">Memory Match</h3>
+                <p class="game-description">Flip cards to find matching pairs! Test your memory and match all 8 pairs.</p>
+                <a href="memorymatch.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Bubble Pop -->
+            <div class="game-card">
+                <span class="game-emoji">🫧</span>
+                <h3 class="game-title">Bubble Pop</h3>
+                <p class="game-description">Click on bubbles to pop them in 30 seconds! Get the highest score possible.</p>
+                <a href="bubblepop.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Space Shooter -->
+            <div class="game-card">
+                <span class="game-emoji">🚀</span>
+                <h3 class="game-title">Space Shooter</h3>
+                <p class="game-description">Shoot down aliens! Defend Earth from the invading space forces.</p>
+                <a href="spaceshooter.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Whack a Mole -->
+            <div class="game-card">
+                <span class="game-emoji">🔨</span>
+                <h3 class="game-title">Whack a Mole</h3>
+                <p class="game-description">Hit the moles as fast as you can! Beat the clock in this reaction game.</p>
+                <a href="whackamole.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Racing Game -->
+            <div class="game-card">
+                <span class="game-emoji">🏎️</span>
+                <h3 class="game-title">Racing Game</h3>
+                <p class="game-description">Dodge oncoming cars and survive as long as possible! Speed increases with time.</p>
+                <a href="racinggame.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Quiz Master -->
+            <div class="game-card">
+                <span class="game-emoji">🧠</span>
+                <h3 class="game-title">Quiz Master</h3>
+                <p class="game-description">Answer 10 fun questions! Test your knowledge and get the highest score.</p>
+                <a href="quizmaster.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Color Switch -->
+            <div class="game-card">
+                <span class="game-emoji">🎨</span>
+                <h3 class="game-title">Color Switch</h3>
+                <p class="game-description">Collect boxes that match the target color! Avoid the wrong colors.</p>
+                <a href="colorswitch.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Catch the Stars -->
+            <div class="game-card">
+                <span class="game-emoji">⭐</span>
+                <h3 class="game-title">Catch the Stars</h3>
+                <p class="game-description">Move your basket to catch falling stars! 30 seconds of fun and excitement.</p>
+                <a href="catchstars.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Snake Game -->
+            <div class="game-card">
+                <span class="game-emoji">🐍</span>
+                <h3 class="game-title">Snake</h3>
+                <p class="game-description">Classic snake game. Eat food to grow, but don't hit yourself or the walls!</p>
+                <a href="snake.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Tic Tac Toe -->
+            <div class="game-card">
+                <span class="game-emoji">⭕</span>
+                <h3 class="game-title">Tic Tac Toe</h3>
+                <p class="game-description">Play against AI or a friend. Place your marks and win with three in a row!</p>
+                <a href="tictactoe.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Flappy Bird -->
+            <div class="game-card">
+                <span class="game-emoji">🐦</span>
+                <h3 class="game-title">Flappy Bird</h3>
+                <p class="game-description">Tap to fly! Avoid obstacles and set a new high score.</p>
+                <a href="flappybird.html" class="play-btn">Play Now</a>
+            </div>
+
+            <!-- Temple Run -->
+            <div class="game-card">
+                <span class="game-emoji">🏃</span>
+                <h3 class="game-title">Temple Run</h3>
+                <p class="game-description">Endless runner adventure! Navigate lanes, collect coins, and survive!</p>
+                <a href="templerun.html" class="play-btn">Play Now</a>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <h2 class="section-title">Game Stats</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Total Games</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Free to Play</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Playable</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="https://github.com/browlu27" target="_blank">GitHub</a>
+                <a href="https://twitter.com" target="_blank">Twitter</a>
+            </div>
+            <p class="footer-text">© 2024 Games Hub. Made with ❤️ by Ragu Kirthi</p>
+        </div>
+    </footer>
+</body>
+</html>

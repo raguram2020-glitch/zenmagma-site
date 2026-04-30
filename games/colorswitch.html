@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Switch - Kids Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', Arial;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.3);
+        }
+
+        .info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.3);
+            border: 3px solid white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .info-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        #gameCanvas {
+            border: 4px solid white;
+            background: white;
+            border-radius: 15px;
+            display: block;
+            margin: 0 auto 30px;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        .color-indicator {
+            font-size: 60px;
+            margin: 20px 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Comic Sans MS', Arial;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            color: #333;
+        }
+
+        .modal-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .modal-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 COLOR SWITCH 🎮</h1>
+
+        <div class="info">
+            <div class="info-box">
+                <div>Score: <span id="score">0</span></div>
+            </div>
+            <div class="info-box">
+                <div>Lives: <span id="lives">3</span></div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+        <div class="color-indicator">
+            Match this color: <span id="targetColor">🔴</span>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="startGame()">Start Game</button>
+            
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <div class="modal-title">Game Over!</div>
+            <div class="modal-score" id="finalScore">0</div>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="startGame()">Play Again</button>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+        let gameLoopId = null;
+
+        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+        const colorEmojis = ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠'];
+
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 50,
+            width: 50,
+            height: 50,
+            color: 'red'
+        };
+
+        let targetColor = 'red';
+        let targetColorIndex = 0;
+        let obstacles = [];
+        let keys = {};
+        let speed = 3;
+        let spawnRate = 100;
+        let spawnCounter = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keydown', (e) => {
+                keys[e.key] = true;
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    if (!gameRunning) startGame();
+                }
+            });
+            document.addEventListener('keyup', (e) => keys[e.key] = false);
+            drawStartScreen();
+        });
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            obstacles = [];
+            gameRunning = true;
+            speed = 3;
+            spawnRate = 100;
+            document.getElementById('gameOverModal').classList.remove('active');
+            changeTargetColor();
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            update();
+            draw();
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            if (keys['ArrowLeft'] || keys['a']) player.x = Math.max(0, player.x - 8);
+            if (keys['ArrowRight'] || keys['d']) player.x = Math.min(canvas.width - player.width, player.x + 8);
+
+            spawnCounter++;
+            if (spawnCounter > spawnRate) {
+                spawnCounter = 0;
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                obstacles.push({
+                    x: Math.random() * (canvas.width - 50),
+                    y: -50,
+                    width: 50,
+                    height: 50,
+                    color: randomColor
+                });
+            }
+
+            obstacles = obstacles.filter((obs, index) => {
+                obs.y += speed;
+
+                if (obs.x < player.x + player.width &&
+                    obs.x + obs.width > player.x &&
+                    obs.y < player.y + player.height &&
+                    obs.y + obs.height > player.y) {
+
+                    if (obs.color === targetColor) {
+                        score += 10;
+                        changeTargetColor();
+                        obstacles.splice(index, 1);
+                        return false;
+                    } else {
+                        lives--;
+                        if (lives <= 0) endGame();
+                        obstacles.splice(index, 1);
+                        return false;
+                    }
+                }
+
+                return obs.y < canvas.height;
+            });
+
+            if (score > 0 && score % 50 === 0) {
+                speed += 0.5;
+                spawnRate = Math.max(50, spawnRate - 5);
+            }
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+        }
+
+        function changeTargetColor() {
+            targetColorIndex = Math.floor(Math.random() * colors.length);
+            targetColor = colors[targetColorIndex];
+            document.getElementById('targetColor').textContent = colorEmojis[targetColorIndex];
+        }
+
+        function draw() {
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player
+            ctx.fillStyle = targetColor;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(player.x, player.y, player.width, player.height);
+
+            // Draw obstacles
+            obstacles.forEach(obs => {
+                ctx.fillStyle = obs.color;
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+            });
+
+            // HUD
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 20px Comic Sans MS';
+            ctx.fillText(`Speed: ${(speed / 3).toFixed(1)}x`, 20, 30);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        function drawStartScreen() {
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 40px Comic Sans MS';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎨 COLOR SWITCH 🎮', canvas.width / 2, 80);
+            ctx.font = '20px Comic Sans MS';
+            ctx.fillText('Collect matching colors!', canvas.width / 2, 180);
+            ctx.fillText('Avoid wrong colors!', canvas.width / 2, 220);
+        }
+    </script>
+</body>
+</html>

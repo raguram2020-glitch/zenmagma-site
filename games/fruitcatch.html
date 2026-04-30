@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Catch - Kids Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', Arial;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            padding: 15px 25px;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .info-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        #gameCanvas {
+            border: 4px solid white;
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: block;
+            margin: 0 auto 30px;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Comic Sans MS', Arial;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 10px;
+            text-align: left;
+            color: #333;
+            margin-top: 30px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid #ff6b6b;
+            text-align: center;
+            max-width: 400px;
+            color: #333;
+        }
+
+        .modal-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .modal-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 20px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 FRUIT CATCH 🍊</h1>
+
+        <div class="game-info">
+            <div class="info-box">
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Lives</div>
+                <div class="info-value" id="lives">3</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="500"></canvas>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="startGame()">Start Game</button>
+            
+        </div>
+
+        <div class="instructions">
+            <h3>📋 How to Play</h3>
+            <ul>
+                <li>🖱️ Move your basket with the mouse or arrow keys</li>
+                <li>🍎 Catch falling fruits to get points</li>
+                <li>🍌 Catch as many fruits as you can!</li>
+                <li>❌ Miss 3 fruits and it's game over</li>
+                <li>⭐ Get a high score!</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <div class="modal-title">Game Over! 😢</div>
+            <div class="modal-score" id="finalScore">0</div>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="startGame()">Try Again</button>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+        let gameLoopId = null;
+
+        const basket = {
+            x: canvas.width / 2 - 40,
+            y: canvas.height - 40,
+            width: 80,
+            height: 30,
+            speed: 8
+        };
+
+        let fruits = [];
+        let spawnRate = 60;
+        let spawnCounter = 0;
+
+        const fruitTypes = ['🍎', '🍊', '🍌', '🍇', '🍓'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('mousemove', moveMouse);
+            document.addEventListener('keydown', moveKeyboard);
+            drawStartScreen();
+        });
+
+        function moveMouse(e) {
+            if (gameRunning) {
+                const rect = canvas.getBoundingClientRect();
+                basket.x = e.clientX - rect.left - basket.width / 2;
+                basket.x = Math.max(0, Math.min(basket.x, canvas.width - basket.width));
+            }
+        }
+
+        function moveKeyboard(e) {
+            if (!gameRunning) {
+                if (e.code === 'Space') startGame();
+                return;
+            }
+            if (e.key === 'ArrowLeft') basket.x = Math.max(0, basket.x - basket.speed);
+            if (e.key === 'ArrowRight') basket.x = Math.min(canvas.width - basket.width, basket.x + basket.speed);
+        }
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            fruits = [];
+            gameRunning = true;
+            spawnRate = 60;
+            document.getElementById('gameOverModal').classList.remove('active');
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            update();
+            draw();
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            spawnCounter++;
+            if (spawnCounter > spawnRate) {
+                spawnCounter = 0;
+                fruits.push({
+                    x: Math.random() * (canvas.width - 30),
+                    y: 0,
+                    size: 25,
+                    emoji: fruitTypes[Math.floor(Math.random() * fruitTypes.length)],
+                    speed: 3 + Math.random() * 2
+                });
+            }
+
+            fruits = fruits.filter((fruit, index) => {
+                fruit.y += fruit.speed;
+
+                if (checkCollision(fruit)) {
+                    score += 10;
+                    return false;
+                }
+
+                if (fruit.y > canvas.height) {
+                    lives--;
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                    return false;
+                }
+
+                return true;
+            });
+
+            if (score % 100 === 0 && score > 0) {
+                spawnRate = Math.max(30, spawnRate - 2);
+            }
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+        }
+
+        function checkCollision(fruit) {
+            const fruitLeft = fruit.x;
+            const fruitRight = fruit.x + fruit.size;
+            const fruitTop = fruit.y;
+            const fruitBottom = fruit.y + fruit.size;
+
+            const basketLeft = basket.x;
+            const basketRight = basket.x + basket.width;
+            const basketTop = basket.y;
+            const basketBottom = basket.y + basket.height;
+
+            return fruitRight > basketLeft && fruitLeft < basketRight &&
+                   fruitBottom > basketTop && fruitTop < basketBottom;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#87ceeb';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            fruits.forEach(fruit => {
+                ctx.font = `${fruit.size}px Arial`;
+                ctx.fillText(fruit.emoji, fruit.x, fruit.y + fruit.size);
+            });
+
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+            ctx.strokeStyle = '#654321';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(basket.x, basket.y, basket.width, basket.height);
+
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 20px Comic Sans MS';
+            ctx.fillText(`Score: ${score}  Lives: ${lives}`, 20, 30);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        function drawStartScreen() {
+            ctx.fillStyle = '#87ceeb';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 40px Comic Sans MS';
+            ctx.textAlign = 'center';
+            ctx.fillText('🍎 FRUIT CATCH 🍊', canvas.width / 2, 100);
+            ctx.font = '20px Comic Sans MS';
+            ctx.fillText('Move your basket to catch fruits!', canvas.width / 2, 200);
+            ctx.fillText('Press SPACE or click START to begin', canvas.width / 2, 250);
+        }
+    </script>
+</body>
+</html>
