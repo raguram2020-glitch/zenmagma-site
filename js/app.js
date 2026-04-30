@@ -196,22 +196,107 @@ function handleCardClick(e, id) {
 function initSearch() {
   const input = document.getElementById('search-input');
   if (!input) return;
+
+  // Add clear button inside search bar
+  const bar = input.parentElement;
+  const clearBtn = document.createElement('button');
+  clearBtn.id = 'search-clear';
+  clearBtn.innerHTML = '✕';
+  clearBtn.style.cssText = 'position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--c-muted);font-size:14px;cursor:pointer;display:none;padding:4px;line-height:1;';
+  clearBtn.onclick = () => { input.value = ''; clearSearch(); input.focus(); };
+  bar.style.position = 'relative';
+  bar.appendChild(clearBtn);
+
   let timer;
   input.addEventListener('input', () => {
     clearTimeout(timer);
+    clearBtn.style.display = input.value ? 'block' : 'none';
     timer = setTimeout(() => {
       const q = input.value.trim().toLowerCase();
-      if (!q) { buildAllGames(); return; }
-      const results = GAMES.filter(g =>
-        g.title.toLowerCase().includes(q) ||
-        g.tags.some(t => t.includes(q)) ||
-        g.category.includes(q)
-      );
-      document.getElementById('grid-title').innerHTML = `<span>🔍</span> Results for "${q}"`;
-      document.getElementById('game-count').textContent = `${results.length} found`;
-      renderGrid('all-games-grid', results);
-    }, 250);
+      if (!q) { clearSearch(); return; }
+      doSearch(q);
+    }, 200);
   });
+
+  // Search on Enter key too
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { input.value = ''; clearSearch(); input.blur(); }
+  });
+}
+
+function doSearch(q) {
+  const results = GAMES.filter(g =>
+    g.title.toLowerCase().includes(q) ||
+    g.tags.some(t => t.toLowerCase().includes(q)) ||
+    g.category.toLowerCase().includes(q) ||
+    g.desc.toLowerCase().includes(q)
+  );
+
+  // Hide hero + trending during search
+  const hideEls = ['hero', 'cat-pills', 'trending-section', 'recent-section'];
+  hideEls.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Also hide the trending row wrapper (uses sec-header sibling)
+  document.querySelectorAll('.sec-header').forEach(el => {
+    if (el.nextElementSibling?.classList.contains('scroll-row')) {
+      el.style.display = 'none';
+      el.nextElementSibling.style.display = 'none';
+    }
+  });
+  // Hide ad banners in main content during search
+  document.querySelectorAll('.ad-banner.leaderboard').forEach(el => el.style.display = 'none');
+
+  // Update grid title
+  document.getElementById('grid-title').innerHTML =
+    `<span>🔍</span> Results for "<em style="color:var(--c-accent)">${q}</em>"`;
+  document.getElementById('game-count').textContent =
+    results.length ? `${results.length} game${results.length > 1 ? 's' : ''} found` : '';
+
+  if (results.length === 0) {
+    document.getElementById('all-games-grid').innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--c-muted);">
+        <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+        <div style="font-size:18px;font-weight:700;color:var(--c-text);margin-bottom:8px;">No games found for "${q}"</div>
+        <div style="font-size:14px;">Try searching for a category like "puzzle", "runner" or a game name</div>
+      </div>`;
+  } else {
+    renderGrid('all-games-grid', results);
+  }
+
+  // Scroll smoothly to results
+  const grid = document.getElementById('all-games-grid');
+  if (grid) {
+    const gridSection = grid.closest('section') || grid.parentElement;
+    const top = (gridSection || grid).getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+}
+
+function clearSearch() {
+  // Restore hidden sections
+  const showEls = ['hero', 'cat-pills'];
+  showEls.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  document.querySelectorAll('.sec-header').forEach(el => {
+    el.style.display = '';
+    if (el.nextElementSibling?.classList.contains('scroll-row'))
+      el.nextElementSibling.style.display = '';
+  });
+  document.querySelectorAll('.ad-banner.leaderboard').forEach(el => el.style.display = '');
+
+  // Restore recent section only if it has items
+  buildRecent();
+
+  // Reset grid to current category
+  document.getElementById('grid-title').innerHTML = `<span>🎮</span> All Games`;
+  document.getElementById('game-count').textContent = `${GAMES.length} games`;
+  renderGrid('all-games-grid', GAMES);
+  document.getElementById('search-clear').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ── SIDEBAR TOGGLE (mobile) ── */
