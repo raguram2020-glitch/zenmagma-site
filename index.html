@@ -14,6 +14,7 @@
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
 
@@ -34,8 +35,10 @@
 </style>
 <div id="zm-loader">
   <div class="zm-loader-logo">🌋</div>
-  <div class="zm-loader-bar-wrap"><div class="zm-loader-bar"></div></div>
-  <div class="zm-loader-text">LOADING ZENMAGMA...</div>
+  <div class="zm-loader-dots">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="zm-loader-text">LOADING ZENMAGMA</div>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -296,6 +299,7 @@
 
 <script src="js/games-data.js"></script>
 <script src="js/app.js"></script>
+<script src="js/animations.js"></script>
 <script>
 /* ── STARS BACKGROUND ── */
 (function(){
@@ -306,11 +310,11 @@
   function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
   function init(){
     resize();stars=[];
-    for(let i=0;i<160;i++) stars.push({
+    for(let i=0;i<140;i++) stars.push({
       x:Math.random()*W, y:Math.random()*H,
-      r:Math.random()*1.5+.3,
-      a:Math.random(), da:(Math.random()-.5)*.008,
-      dx:(Math.random()-.5)*.08, dy:(Math.random()-.5)*.04
+      r:Math.random()*1.4+.3,
+      a:Math.random(), da:(Math.random()-.5)*.006,
+      dx:(Math.random()-.5)*.06, dy:(Math.random()-.5)*.03
     });
   }
   function draw(){
@@ -321,7 +325,7 @@
       if(s.y<0)s.y=H; if(s.y>H)s.y=0;
       if(s.a<0||s.a>1) s.da*=-1;
       ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(180,160,255,${s.a*.7})`;
+      ctx.fillStyle=`rgba(180,160,255,${s.a*.65})`;
       ctx.fill();
     });
     requestAnimationFrame(draw);
@@ -330,69 +334,20 @@
   init(); draw();
 })();
 
-/* ── LOADER ── */
-const _loaderStart=Date.now();
+/* ── LOADER hide after min 1.2s ── */
+const _ls=Date.now();
 window.addEventListener('load',()=>{
   const loader=document.getElementById('zm-loader');
-  const elapsed=Date.now()-_loaderStart;
-  const remaining=Math.max(0,1200-elapsed);
-  setTimeout(()=>loader.classList.add('hidden'),remaining);
+  const rem=Math.max(0,1200-(Date.now()-_ls));
+  setTimeout(()=>loader.classList.add('hidden'),rem);
 });
 
-/* ── CARD TILT (3D hover) ── */
-document.addEventListener('mousemove',e=>{
-  const card=e.target.closest('.game-card');
-  if(!card)return;
-  const r=card.getBoundingClientRect();
-  const x=((e.clientX-r.left)/r.width-.5)*12;
-  const y=((e.clientY-r.top)/r.height-.5)*-12;
-  card.style.transform=`perspective(600px) rotateX(${y}deg) rotateY(${x}deg) translateY(-6px) scale(1.02)`;
+/* ── XP POPUP on card click ── */
+document.addEventListener('click', e => {
+  const card = e.target.closest('.game-card');
+  if (!card) return;
+  showXpPopup(10, e.clientX, e.clientY + window.scrollY - 40);
 });
-document.addEventListener('mouseleave',e=>{
-  const card=e.target.closest('.game-card');
-  if(card) card.style.transform='';
-},true);
-document.addEventListener('mouseover',e=>{
-  const card=e.target.closest('.game-card');
-  if(!card) document.querySelectorAll('.game-card').forEach(c=>c.style.transform='');
-});
-
-/* ── RIPPLE on game cards ── */
-document.addEventListener('click',e=>{
-  const card=e.target.closest('.game-card');
-  if(!card)return;
-  const r=card.getBoundingClientRect();
-  const rip=document.createElement('span');
-  rip.className='ripple-effect';
-  const size=Math.max(r.width,r.height);
-  rip.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-r.left-size/2}px;top:${e.clientY-r.top-size/2}px`;
-  card.appendChild(rip);
-  setTimeout(()=>rip.remove(),700);
-});
-
-/* ── DAILY CHALLENGE COUNTDOWN ── */
-function updateDCTimer(){
-  const now=new Date();
-  const midnight=new Date(now);
-  midnight.setHours(24,0,0,0);
-  const diff=midnight-now;
-  const h=Math.floor(diff/3600000);
-  const m=Math.floor((diff%3600000)/60000);
-  const s=Math.floor((diff%60000)/1000);
-  const el=document.getElementById('dc-timer');
-  if(el) el.textContent=`⏰ Resets in: ${h}h ${m}m ${s}s`;
-}
-setInterval(updateDCTimer,1000);
-updateDCTimer();
-
-/* ── LIVE PLAYER COUNT (simulated) ── */
-function animatePlayers(){
-  const el=document.getElementById('hero-player-count');
-  if(!el)return;
-  const base=1200+Math.floor(Math.random()*400);
-  el.textContent=base.toLocaleString();
-}
-setInterval(animatePlayers,7000);
 </script>
 </body>
 </html>
