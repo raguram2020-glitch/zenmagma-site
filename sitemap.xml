@@ -6,7 +6,7 @@
   <!-- ══════════════════════════════════════════════════════════
        ZenMagma.com — XML Sitemap
        Generated: 2026-05-02
-       Pages: 11 static + 98 game pages
+       Pages: 12 static + 98 game pages
   ══════════════════════════════════════════════════════════ -->
 
   <!-- ── HOMEPAGE ──────────────────────────────────────────── -->
@@ -22,6 +22,12 @@
   </url>
 
   <!-- ── STATIC PAGES ──────────────────────────────────────── -->
+  <url>
+    <loc>https://zenmagma.com/games/</loc>
+    <lastmod>2026-05-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
   <url>
     <loc>https://zenmagma.com/about.html</loc>
     <lastmod>2026-05-02</lastmod>
