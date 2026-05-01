@@ -7,54 +7,35 @@
 <meta name="description" content="Play hundreds of free online games — action, puzzle, racing, arcade, and more. No downloads needed. ZenMagma is the ultimate kids gaming platform.">
 <meta property="og:title" content="ZenMagma – Free Online Games">
 <link rel="canonical" href="https://zenmagma.com/">
-<meta property="og:description" content="Play hundreds of free browser games instantly. No downloads!">
-<meta name="theme-color" content="#ff6b35">
+<meta name="theme-color" content="#7c3aed">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
 <link rel="stylesheet" href="css/style.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 </head>
 <body>
 
+<!-- ── STAR CANVAS BACKGROUND ── -->
+<canvas id="stars-canvas"></canvas>
+
 <!-- ── PAGE LOADER ── -->
 <style>
-  #zm-loader {
-    position: fixed; inset: 0; z-index: 9999;
-    background: #0f172a;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 28px;
-    transition: opacity 0.6s ease, visibility 0.6s ease;
-  }
-  #zm-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-  .zm-loader-logo {
-    font-size: 72px;
-    animation: lPulse 1.4s ease-in-out infinite;
-    filter: drop-shadow(0 0 28px #ff6b35cc);
-  }
-  .zm-loader-ring {
-    width: 58px; height: 58px;
-    border: 4px solid rgba(255,107,53,0.2);
-    border-top-color: #ff6b35;
-    border-radius: 50%;
-    animation: lSpin 0.85s linear infinite;
-  }
-  .zm-loader-text {
-    font-family: 'Nunito', sans-serif; font-weight: 700;
-    font-size: 1.15rem; color: #94a3b8;
-    letter-spacing: 2px;
-    animation: lFade 1.4s ease-in-out infinite;
-  }
-  @keyframes lSpin  { to { transform: rotate(360deg); } }
-  @keyframes lPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.12);opacity:.8} }
-  @keyframes lFade  { 0%,100%{opacity:.5} 50%{opacity:1} }
+  #zm-loader{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at center,#0f0828 0%,#050510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .7s ease,visibility .7s ease;}
+  #zm-loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+  .zm-loader-logo{font-size:72px;animation:lPulse 1.6s ease-in-out infinite;filter:drop-shadow(0 0 32px #ff6b35cc) drop-shadow(0 0 60px #ff6b3566);}
+  .zm-loader-bar-wrap{width:200px;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+  .zm-loader-bar{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#ff6b35,#ffcd3c,#a855f7);animation:lBar 1.2s ease-in-out forwards;box-shadow:0 0 12px #ff6b35;}
+  .zm-loader-text{font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;color:#7986cb;letter-spacing:3px;animation:lFade 1.4s ease-in-out infinite;}
+  @keyframes lPulse{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.1) rotate(2deg)}}
+  @keyframes lBar{0%{width:0}60%{width:80%}100%{width:100%}}
+  @keyframes lFade{0%,100%{opacity:.4}50%{opacity:1}}
 </style>
 <div id="zm-loader">
   <div class="zm-loader-logo">🌋</div>
-  <div class="zm-loader-ring"></div>
-  <div class="zm-loader-text">Loading ZenMagma...</div>
+  <div class="zm-loader-bar-wrap"><div class="zm-loader-bar"></div></div>
+  <div class="zm-loader-text">LOADING ZENMAGMA...</div>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -62,17 +43,31 @@
 ══════════════════════════════════════ -->
 <header id="header">
   <button id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+
   <a href="index.html" class="logo">
     <span class="logo-icon">🌋</span>
     <span>ZenMagma</span>
   </a>
+
   <div class="search-bar">
     <span class="search-icon">🔍</span>
-    <input type="text" id="search-input" placeholder="Search games..." autocomplete="off">
+    <input type="text" id="search-input" placeholder="Search 100+ games..." autocomplete="off">
   </div>
+
+  <!-- XP Bar -->
+  <div id="header-xp" title="Your XP Progress">
+    ⚡ <span id="hdr-pts">0</span> XP
+    <div class="xp-bar-wrap"><div class="xp-bar-fill" id="hdr-xp-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Streak -->
+  <div id="header-streak" title="Daily Streak">
+    🔥 <span id="hdr-streak">0</span> day streak
+  </div>
+
   <div class="header-actions">
     <button class="btn-pill outline" onclick="window.location.href='../quiz-site/index.html'">📚 Quizzes</button>
-    <button class="btn-pill primary">Sign In</button>
+    <button class="btn-pill primary" onclick="showToast('🚀 Sign-in coming soon!')">Sign In</button>
   </div>
 </header>
 
@@ -83,96 +78,167 @@
 
   <!-- ── SIDEBAR ── -->
   <aside id="sidebar">
+
+    <!-- Points -->
+    <div class="sidebar-points">
+      <div class="sp-icon">🏆</div>
+      <div class="sp-info">
+        <div class="sp-pts" id="sb-pts">0 XP</div>
+        <div class="sp-label">Your Points</div>
+      </div>
+    </div>
+
+    <!-- Daily Challenge mini -->
+    <div class="sidebar-challenge" id="sb-challenge" onclick="launchDailyChallenge()">
+      <div class="sc-label">🎯 Daily Challenge</div>
+      <div class="sc-title" id="sb-challenge-title">Loading...</div>
+      <button class="sc-btn">Play Now →</button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
     <div class="sidebar-section">
-      <div class="sidebar-label">Browse</div>
+      <div class="sidebar-label">Browse Games</div>
       <div id="cat-list"></div>
     </div>
 
+    <div class="sidebar-divider"></div>
+
     <!-- Sidebar Ad -->
     <div class="sidebar-ad">
-      <!-- Google AdSense: 160x600 or 300x250 -->
-      <div style="font-size:28px;opacity:0.3;">📢</div>
+      <div style="font-size:28px;opacity:.2">📢</div>
       <div>Advertisement</div>
-      <div style="font-size:10px;opacity:0.5;">160×600 Skyscraper</div>
-      <!-- INSERT ADSENSE CODE HERE:
-      <ins class="adsbygoogle" style="display:block;width:160px;height:600px"
-           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-           data-ad-slot="XXXXXXXXXX"></ins>
-      <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
-      -->
+      <div style="font-size:10px;opacity:.4">300×250</div>
     </div>
   </aside>
 
   <!-- ── MAIN ── -->
   <main id="main">
 
-    <!-- Top Leaderboard Ad -->
-    <div class="ad-banner leaderboard" style="margin-bottom:24px;">
-      <!-- Google AdSense: 728×90 Leaderboard -->
-      📢 Advertisement — 728×90 Leaderboard
-      <!--
-      <ins class="adsbygoogle" style="display:inline-block;width:728px;height:90px"
-           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-           data-ad-slot="XXXXXXXXXX"></ins>
-      <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
-      -->
-    </div>
-
     <!-- ── HERO CAROUSEL ── -->
     <div class="hero" id="hero">
       <div class="hero-bg" id="hero-bg"></div>
-      <span id="hero-emoji" style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:flex-end;padding-right:80px;font-size:110px;line-height:1;filter:drop-shadow(0 4px 32px rgba(0,0,0,.6));pointer-events:none;opacity:0.7;"></span>
+      <span id="hero-emoji" style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:flex-end;padding-right:60px;font-size:120px;line-height:1;filter:drop-shadow(0 4px 40px rgba(0,0,0,.7));pointer-events:none;opacity:.6;"></span>
       <div class="hero-overlay"></div>
+      <div class="hero-players" id="hero-players">
+        <span class="dot-live"></span>
+        <span id="hero-player-count">1,247</span> playing
+      </div>
       <div class="hero-content" id="hero-content">
-        <div class="hero-badge">🔥 Featured</div>
+        <div class="hero-badge">🔥 Featured Game</div>
         <div class="hero-title" id="hero-title">Loading...</div>
         <div class="hero-desc" id="hero-desc"></div>
         <div class="hero-actions">
           <button class="btn-play" id="hero-play" onclick="heroPlay()">
             <span class="play-icon">▶</span> Play Now
           </button>
-          <button class="btn-pill outline" onclick="heroMore()">Learn More</button>
+          <button class="btn-pill outline" onclick="heroMore()" style="color:#fff;border-color:rgba(255,255,255,.25)">More Info</button>
         </div>
       </div>
       <div class="hero-dots" id="hero-dots"></div>
     </div>
 
+    <!-- ── GAMIFICATION BAR ── -->
+    <div id="gamification-bar">
+      <div class="gam-item">
+        <span class="gam-icon">⚡</span>
+        <div class="gam-info">
+          <div class="gam-val" id="gam-pts">0</div>
+          <div class="gam-label">XP Points</div>
+        </div>
+      </div>
+      <div class="gam-divider"></div>
+      <div class="gam-item">
+        <span class="gam-icon">🔥</span>
+        <div class="gam-info">
+          <div class="gam-val" id="gam-streak">0</div>
+          <div class="gam-label">Day Streak</div>
+        </div>
+      </div>
+      <div class="gam-divider"></div>
+      <div class="gam-item">
+        <span class="gam-icon">🎮</span>
+        <div class="gam-info">
+          <div class="gam-val" id="gam-played">0</div>
+          <div class="gam-label">Games Played</div>
+        </div>
+      </div>
+      <div class="gam-divider"></div>
+      <div class="gam-xp-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:11px;color:var(--c-muted)">Level <span id="gam-level">1</span></span>
+          <span class="gam-badge" id="gam-badge">🥉 Newcomer</span>
+        </div>
+        <div class="gam-xp-bar"><div class="gam-xp-fill" id="gam-xp-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- ── DAILY CHALLENGE ── -->
+    <div id="daily-challenge" onclick="launchDailyChallenge()">
+      <div class="dc-badge">
+        <div class="dc-icon">🎯</div>
+        <div class="dc-label">Daily</div>
+      </div>
+      <div class="dc-info">
+        <div class="dc-tag">⚡ Daily Challenge</div>
+        <div class="dc-title" id="dc-title">Mystery Game</div>
+        <div class="dc-sub">Complete today's challenge to earn <b style="color:var(--c-fire2)">+50 bonus XP</b></div>
+        <div class="dc-timer" id="dc-timer">Resets in: calculating...</div>
+      </div>
+      <button class="dc-action">Play Challenge →</button>
+    </div>
+
     <!-- ── CATEGORY PILLS ── -->
     <div class="cat-pills" id="cat-pills"></div>
 
-    <!-- ── TRENDING ── -->
-    <div class="sec-header">
+    <!-- ── TRENDING NOW ── -->
+    <div class="sec-header section-glow">
       <h2 class="sec-title"><span>🔥</span> Trending Now</h2>
-      <a href="#" class="see-all" onclick="filterCat('all')">See All →</a>
+      <a href="#" class="see-all" onclick="filterCat('all');return false">See All →</a>
     </div>
     <div class="scroll-row" id="trending-row"></div>
 
-    <!-- Mid Ad -->
-    <div class="ad-banner leaderboard" style="margin-bottom:28px;">
-      📢 Advertisement — 728×90
-      <!--
-      <ins class="adsbygoogle" ...></ins>
-      -->
+    <!-- ── MYSTERY GAME ── -->
+    <div class="mystery-box" onclick="launchMystery()">
+      <div class="mb-icon">🎲</div>
+      <div class="mb-info">
+        <div class="mb-tag">🌟 Surprise Me</div>
+        <div class="mb-title">Mystery Game of the Day</div>
+        <div class="mb-sub">Click to reveal a random game — you might discover your new favourite!</div>
+      </div>
+    </div>
+
+    <!-- Ad -->
+    <div class="ad-banner leaderboard">
+      📢 Advertisement — 728×90 Leaderboard
     </div>
 
     <!-- ── RECENTLY PLAYED ── -->
     <div id="recent-section" style="display:none">
-      <div class="sec-header">
-        <h2 class="sec-title"><span>🕐</span> Recently Played</h2>
-        <a href="#" class="see-all" onclick="clearRecent()">Clear</a>
+      <div class="sec-header section-glow">
+        <h2 class="sec-title"><span>🕐</span> Continue Playing</h2>
+        <a href="#" class="see-all" onclick="clearRecent();return false">Clear</a>
       </div>
       <div class="scroll-row" id="recent-row"></div>
     </div>
 
+    <!-- ── MINI LEADERBOARD ── -->
+    <div class="sec-header section-glow" style="margin-bottom:14px">
+      <h2 class="sec-title"><span>🏆</span> Top Players This Week</h2>
+    </div>
+    <div id="mini-leaderboard" style="margin-bottom:36px">
+      <!-- filled by JS -->
+    </div>
+
     <!-- ── ALL GAMES ── -->
-    <div class="sec-header">
+    <div class="sec-header section-glow">
       <h2 class="sec-title" id="grid-title"><span>🎮</span> All Games</h2>
-      <span id="game-count" style="color:var(--c-muted);font-size:13px;"></span>
+      <span id="game-count" style="color:var(--c-muted);font-size:13px;font-weight:700;"></span>
     </div>
     <div class="games-grid wide" id="all-games-grid"></div>
 
     <!-- Bottom Ad -->
-    <div class="ad-banner rectangle" style="margin-bottom:0">
+    <div class="ad-banner rectangle">
       📢 Advertisement — 300×250 Rectangle
     </div>
 
@@ -183,30 +249,36 @@
 <footer>
   <div class="footer-grid">
     <div class="footer-col">
-      <div class="logo" style="margin-bottom:12px;font-size:18px;">🌋 ZenMagma</div>
-      <p style="font-size:12px;color:var(--c-muted);line-height:1.6">Free online games for kids and adults. No downloads, no sign-ups — just fun!</p>
+      <div class="logo" style="margin-bottom:12px;font-size:18px">🌋 ZenMagma</div>
+      <p style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.7">Free online games for kids and adults. No downloads, no sign-ups — just fun!</p>
     </div>
     <div class="footer-col">
       <h4>Games</h4>
-      <a href="#">Action Games</a><a href="#">Puzzle Games</a>
-      <a href="#">Racing Games</a><a href="#">Kids Games</a>
-      <a href="#">Arcade Games</a>
+      <a href="#" onclick="filterCat('action');return false">Action Games</a>
+      <a href="#" onclick="filterCat('puzzle');return false">Puzzle Games</a>
+      <a href="#" onclick="filterCat('runner');return false">Runner Games</a>
+      <a href="#" onclick="filterCat('kids');return false">Kids Games</a>
+      <a href="#" onclick="filterCat('arcade');return false">Arcade Games</a>
     </div>
     <div class="footer-col">
-      <h4>Company</h4>
+      <h4>Platform</h4>
       <a href="../main-hub/index.html">Home Hub</a>
       <a href="../quiz-site/index.html">Quiz Site</a>
-      <a href="#">About Us</a><a href="#">Contact</a><a href="#">Privacy Policy</a>
+      <a href="#" onclick="showToast('Coming soon! 🚀');return false">About Us</a>
+      <a href="#" onclick="showToast('Coming soon! 🚀');return false">Contact</a>
+      <a href="#" onclick="showToast('Coming soon! 🚀');return false">Privacy Policy</a>
     </div>
     <div class="footer-col">
-      <h4>Add Your Game</h4>
-      <a href="#">Submit a Game</a><a href="#">Advertise With Us</a>
-      <a href="#">Developer API</a><a href="#">Sitemap</a>
+      <h4>Community</h4>
+      <a href="#" onclick="showToast('Coming soon! 🚀');return false">Leaderboard</a>
+      <a href="#" onclick="showToast('Coming soon! 🚀');return false">Submit a Game</a>
+      <a href="#" onclick="showToast('Coming soon! 🚀');return false">Advertise</a>
+      <a href="#" onclick="showToast('Coming soon! 🚀');return false">Sitemap</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2025 <a href="https://zenmagma.com" style="color:var(--c-accent);text-decoration:none;">ZenMagma.com</a>. All rights reserved.</span>
-    <span>Made with ❤️ for kids everywhere</span>
+    <span>© 2025 <a href="https://zenmagma.com" style="color:var(--c-neon)">ZenMagma.com</a>. All rights reserved.</span>
+    <span>Made with ❤️ for players everywhere</span>
   </div>
 </footer>
 
@@ -220,18 +292,107 @@
 </nav>
 
 <!-- ── TOAST ── -->
-<div id="toast">✅ Added to recently played!</div>
+<div id="toast"></div>
 
 <script src="js/games-data.js"></script>
 <script src="js/app.js"></script>
 <script>
-  const loaderStart = Date.now();
-  window.addEventListener('load', () => {
-    const loader = document.getElementById('zm-loader');
-    const elapsed = Date.now() - loaderStart;
-    const remaining = Math.max(0, 1000 - elapsed);
-    setTimeout(() => loader.classList.add('hidden'), remaining);
-  });
+/* ── STARS BACKGROUND ── */
+(function(){
+  const c=document.getElementById('stars-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  let W,H,stars=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  function init(){
+    resize();stars=[];
+    for(let i=0;i<160;i++) stars.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.5+.3,
+      a:Math.random(), da:(Math.random()-.5)*.008,
+      dx:(Math.random()-.5)*.08, dy:(Math.random()-.5)*.04
+    });
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      s.x+=s.dx; s.y+=s.dy; s.a+=s.da;
+      if(s.x<0)s.x=W; if(s.x>W)s.x=0;
+      if(s.y<0)s.y=H; if(s.y>H)s.y=0;
+      if(s.a<0||s.a>1) s.da*=-1;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(180,160,255,${s.a*.7})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',init);
+  init(); draw();
+})();
+
+/* ── LOADER ── */
+const _loaderStart=Date.now();
+window.addEventListener('load',()=>{
+  const loader=document.getElementById('zm-loader');
+  const elapsed=Date.now()-_loaderStart;
+  const remaining=Math.max(0,1200-elapsed);
+  setTimeout(()=>loader.classList.add('hidden'),remaining);
+});
+
+/* ── CARD TILT (3D hover) ── */
+document.addEventListener('mousemove',e=>{
+  const card=e.target.closest('.game-card');
+  if(!card)return;
+  const r=card.getBoundingClientRect();
+  const x=((e.clientX-r.left)/r.width-.5)*12;
+  const y=((e.clientY-r.top)/r.height-.5)*-12;
+  card.style.transform=`perspective(600px) rotateX(${y}deg) rotateY(${x}deg) translateY(-6px) scale(1.02)`;
+});
+document.addEventListener('mouseleave',e=>{
+  const card=e.target.closest('.game-card');
+  if(card) card.style.transform='';
+},true);
+document.addEventListener('mouseover',e=>{
+  const card=e.target.closest('.game-card');
+  if(!card) document.querySelectorAll('.game-card').forEach(c=>c.style.transform='');
+});
+
+/* ── RIPPLE on game cards ── */
+document.addEventListener('click',e=>{
+  const card=e.target.closest('.game-card');
+  if(!card)return;
+  const r=card.getBoundingClientRect();
+  const rip=document.createElement('span');
+  rip.className='ripple-effect';
+  const size=Math.max(r.width,r.height);
+  rip.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-r.left-size/2}px;top:${e.clientY-r.top-size/2}px`;
+  card.appendChild(rip);
+  setTimeout(()=>rip.remove(),700);
+});
+
+/* ── DAILY CHALLENGE COUNTDOWN ── */
+function updateDCTimer(){
+  const now=new Date();
+  const midnight=new Date(now);
+  midnight.setHours(24,0,0,0);
+  const diff=midnight-now;
+  const h=Math.floor(diff/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  const s=Math.floor((diff%60000)/1000);
+  const el=document.getElementById('dc-timer');
+  if(el) el.textContent=`⏰ Resets in: ${h}h ${m}m ${s}s`;
+}
+setInterval(updateDCTimer,1000);
+updateDCTimer();
+
+/* ── LIVE PLAYER COUNT (simulated) ── */
+function animatePlayers(){
+  const el=document.getElementById('hero-player-count');
+  if(!el)return;
+  const base=1200+Math.floor(Math.random()*400);
+  el.textContent=base.toLocaleString();
+}
+setInterval(animatePlayers,7000);
 </script>
 </body>
 </html>
