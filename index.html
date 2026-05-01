@@ -291,6 +291,55 @@
   </div>
 </footer>
 
+<!-- ══════════════════════════════════════
+     FULL-SCREEN GAME MODAL
+     Opens when any game card is clicked
+══════════════════════════════════════ -->
+<div id="game-modal" role="dialog" aria-modal="true" aria-label="Play Game">
+
+  <!-- Top action bar -->
+  <div id="gm-bar">
+    <!-- Game thumbnail + title -->
+    <div id="gm-thumb-mini" class="gm-thumb-mini-fallback">🎮</div>
+    <div class="gm-title-wrap">
+      <div id="gm-title">Loading...</div>
+      <div id="gm-cat">Game</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="gm-actions">
+      <button class="gm-btn" id="gm-like-btn" onclick="gmToggleLike()" title="Like">
+        ❤️ <span class="gm-btn-text">Like</span>
+      </button>
+      <button class="gm-btn" onclick="gmShare()" title="Share">
+        📤 <span class="gm-btn-text">Share</span>
+      </button>
+      <button class="gm-btn" onclick="gmFullscreen()" title="Fullscreen">
+        ⛶ <span class="gm-btn-text">Fullscreen</span>
+      </button>
+      <a class="gm-btn" id="gm-page-link" href="#" title="Open game page">
+        🔗 <span class="gm-btn-text">Game Page</span>
+      </a>
+      <button class="gm-close" onclick="closeGameModal()" aria-label="Close game">✕</button>
+    </div>
+  </div>
+
+  <!-- Game iframe -->
+  <div id="gm-frame-wrap">
+    <!-- Loading spinner -->
+    <div id="gm-loading">
+      <div class="gm-spinner"></div>
+      <div class="gm-loading-text">LOADING GAME</div>
+    </div>
+    <iframe id="gm-iframe"
+            allowfullscreen
+            allow="autoplay; fullscreen; gamepad *"
+            scrolling="no"
+            title="Game"></iframe>
+  </div>
+
+</div>
+
 <!-- ── MOBILE BOTTOM NAV ── -->
 <nav id="mobile-nav">
   <button class="mob-nav-item active" onclick="filterCat('all')"><span class="mn-icon">🏠</span>Home</button>
@@ -304,6 +353,7 @@
 <div id="toast"></div>
 
 <script src="js/games-data.js"></script>
+<script src="js/games.js"></script>
 <script src="js/app.js"></script>
 <script src="js/animations.js"></script>
 <script>
@@ -354,6 +404,180 @@ document.addEventListener('click', e => {
   if (!card) return;
   showXpPopup(10, e.clientX, e.clientY + window.scrollY - 40);
 });
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   ZENMAGMA — GameModal
+   Full-screen iframe game overlay
+   Works for local games AND GameDistribution embeds
+═══════════════════════════════════════════════════ */
+const GameModal = (() => {
+
+  let _currentGame   = null;
+  let _loadTimer     = null;
+  let _iframeLoaded  = false;
+
+  const modal    = () => document.getElementById('game-modal');
+  const iframe   = () => document.getElementById('gm-iframe');
+  const loading  = () => document.getElementById('gm-loading');
+
+  /* ── Open ── */
+  function open(gameId) {
+    const game = getGameById(gameId);
+    if (!game) return;
+    _currentGame  = game;
+    _iframeLoaded = false;
+
+    // Populate bar
+    _populateBar(game);
+
+    // Show loading state
+    const ld = loading();
+    if (ld) { ld.classList.remove('hidden'); }
+
+    // Set iframe src
+    const fr = iframe();
+    if (fr) {
+      fr.src = '';
+      // Small rAF delay so iframe resets cleanly
+      requestAnimationFrame(() => {
+        fr.src = game.src;
+        fr.onload = () => _onIframeLoad();
+        // Fallback: hide spinner after 5s regardless
+        _loadTimer = setTimeout(() => _onIframeLoad(), 5000);
+      });
+    }
+
+    // Show modal
+    modal()?.classList.add('gm-open');
+    document.body.style.overflow = 'hidden';
+
+    // XP flash
+    _showXPFlash(10);
+
+    // Track
+    addRecent(gameId);
+    if (window.GS) GS.addPoints(10);
+    buildLeaderboard?.();
+  }
+
+  function _onIframeLoad() {
+    if (_iframeLoaded) return;
+    _iframeLoaded = true;
+    clearTimeout(_loadTimer);
+    const ld = loading();
+    if (ld) ld.classList.add('hidden');
+  }
+
+  function _populateBar(game) {
+    // Title + category
+    const titleEl = document.getElementById('gm-title');
+    const catEl   = document.getElementById('gm-cat');
+    if (titleEl) titleEl.textContent = game.title;
+    if (catEl)   catEl.textContent   = (game.category || '').toUpperCase();
+
+    // Mini thumbnail
+    const thumbEl = document.getElementById('gm-thumb-mini');
+    if (thumbEl) {
+      if (game.thumb) {
+        thumbEl.outerHTML = `<img id="gm-thumb-mini" class="gm-thumb-mini"
+          src="${game.thumb}" alt="${game.title}"
+          onerror="this.outerHTML='<div id=&quot;gm-thumb-mini&quot; class=&quot;gm-thumb-mini-fallback&quot; style=&quot;background:${game.color}44&quot;>${game.emoji}</div>'">`;
+      } else {
+        thumbEl.className  = 'gm-thumb-mini-fallback';
+        thumbEl.style.background = (game.color || '#7c3aed') + '44';
+        thumbEl.textContent = game.emoji || '🎮';
+      }
+    }
+
+    // Like button state
+    const likeBtn = document.getElementById('gm-like-btn');
+    if (likeBtn) {
+      const liked = !!localStorage.getItem('zm_liked_' + game.id);
+      likeBtn.classList.toggle('liked', liked);
+    }
+
+    // Page link
+    const pageLink = document.getElementById('gm-page-link');
+    if (pageLink) pageLink.href = `game.html?id=${game.slug}`;
+  }
+
+  function _showXPFlash(pts) {
+    const el = document.createElement('div');
+    el.className = 'gm-xp-flash';
+    el.textContent = `⚡ +${pts} XP`;
+    document.getElementById('gm-frame-wrap')?.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+
+  /* ── Close ── */
+  function close() {
+    modal()?.classList.remove('gm-open');
+    document.body.style.overflow = '';
+    clearTimeout(_loadTimer);
+    // Delay src clear so exit animation plays
+    setTimeout(() => {
+      const fr = iframe();
+      if (fr) fr.src = '';
+      const ld = loading();
+      if (ld) ld.classList.remove('hidden');
+    }, 300);
+    _currentGame = null;
+  }
+
+  /* ── Like toggle ── */
+  function toggleLike() {
+    if (!_currentGame) return;
+    const key   = 'zm_liked_' + _currentGame.id;
+    const liked = !!localStorage.getItem(key);
+    if (liked) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, '1');
+      showToast?.('❤️ Liked!', 1800);
+    }
+    const btn = document.getElementById('gm-like-btn');
+    if (btn) btn.classList.toggle('liked', !liked);
+  }
+
+  /* ── Share ── */
+  function share() {
+    if (!_currentGame) return;
+    const url = `${location.origin}${location.pathname.replace('index.html','') || '/'}game.html?id=${_currentGame.slug}`;
+    if (navigator.share) {
+      navigator.share({ title: _currentGame.title, url }).catch(()=>{});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      showToast?.('🔗 Link copied!', 2000);
+    }
+  }
+
+  /* ── Fullscreen ── */
+  function fullscreen() {
+    const wrap = document.getElementById('gm-frame-wrap');
+    if (!document.fullscreenElement) {
+      wrap?.requestFullscreen?.() || wrap?.webkitRequestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }
+
+  /* ── Keyboard ── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal()?.classList.contains('gm-open')) close();
+  });
+
+  return { open, close, toggleLike, share, fullscreen };
+
+})();
+
+/* ── Global aliases ── */
+window.openGameModal  = (id)  => GameModal.open(id);
+window.closeGameModal = ()    => GameModal.close();
+window.gmToggleLike   = ()    => GameModal.toggleLike();
+window.gmShare        = ()    => GameModal.share();
+window.gmFullscreen   = ()    => GameModal.fullscreen();
 </script>
 
 <script>
