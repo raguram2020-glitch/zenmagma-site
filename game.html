@@ -12,6 +12,7 @@
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#ff6b35">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/engagement.css">
 </head>
 <body>
 
@@ -63,10 +64,20 @@
         <button class="action-btn" onclick="shareGame()">
           <span>📤</span> Share
         </button>
+        <button class="action-btn" onclick="triggerPostGame()">
+          <span>🏆</span> Results
+        </button>
         <button class="action-btn" onclick="window.location.href='index.html'">
           <span>🌋</span> More Games
         </button>
       </div>
+    </div>
+
+    <!-- XP Mini-Bar -->
+    <div id="gp-xp-bar">
+      <span id="gp-xp-label">⚡ 0 XP · Lvl 1</span>
+      <div id="gp-xp-track"><div id="gp-xp-fill"></div></div>
+      <button id="claim-reward-btn" onclick="handleClaimReward()">🎁 Daily Reward</button>
     </div>
 
     <!-- Stats Bar -->
@@ -145,6 +156,9 @@
 <!-- TOAST -->
 <div id="toast">✅ Done!</div>
 
+<!-- DAILY REWARD POPUP -->
+<div id="reward-popup">🎁 Daily Reward Claimed!</div>
+
 <!-- MOBILE BOTTOM NAV -->
 <nav id="mobile-nav">
   <button class="mob-nav-item" onclick="window.history.back()"><span class="mn-icon">←</span>Back</button>
@@ -155,6 +169,9 @@
 </nav>
 
 <script src="js/games-data.js"></script>
+<script src="js/engagement.js"></script>
+<script src="js/post-game.js"></script>
+<script src="js/animations.js"></script>
 <script>
 /* ── INIT GAME PAGE ── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -201,8 +218,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('like-btn').classList.add('liked');
   }
 
-  // Recently played
+  // Recently played + engagement
   addRecent(game.id);
+  if (window.Engagement) {
+    Engagement.addRecentGame(game.slug);
+    Engagement.updateStreak();
+    const xpResult = Engagement.addXP(10);
+    if (xpResult.unlocked) {
+      showToast(`${xpResult.unlocked.icon} Badge unlocked: ${xpResult.unlocked.label}!`, 3500);
+    }
+    // XP popup near top of page
+    if (window.showXpPopup) showXpPopup(10, window.innerWidth / 2, 140);
+  }
 
   // Related games
   renderRelated(getRelated(game, 6));
@@ -374,6 +401,35 @@ function injectResponsiveCSS(iframe) {
   } catch(e) {
     // Cross-origin or iframe not ready — silently ignore
   }
+}
+
+/* ── DAILY REWARD ── */
+function handleClaimReward() {
+  if (!window.Engagement || !Engagement.canClaimDailyReward()) return;
+  const res = Engagement.claimDailyReward();
+  if (!res) return;
+
+  const popup = document.getElementById('reward-popup');
+  if (popup) {
+    popup.textContent = `🎁 +${res.xp} XP! 🔥 ${res.streak}-day streak!`;
+    popup.classList.add('show');
+    setTimeout(() => popup.classList.remove('show'), 3000);
+  }
+  if (window.showXpPopup) showXpPopup(res.xp, window.innerWidth / 2, 200);
+
+  // Update button state
+  const btn = document.getElementById('claim-reward-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '✅ Reward Claimed'; }
+
+  if (res.badge) showToast(`${res.badge.icon} Badge: ${res.badge.label}!`, 3500);
+}
+
+/* ── POST-GAME MODAL TRIGGER (manual button) ── */
+function triggerPostGame() {
+  const params = new URLSearchParams(window.location.search);
+  const id     = params.get('id') || params.get('slug');
+  const game   = getGameById(id);
+  if (game && window.showPostGameModal) showPostGameModal({ ...game, xpEarned: 25 });
 }
 
 /* ── TOAST ── */

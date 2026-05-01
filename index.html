@@ -79,6 +79,12 @@
 ══════════════════════════════════════ -->
 <div id="layout">
 
+  <!-- ── SIDEBAR EDGE TRIGGER ── -->
+  <div id="sidebar-edge" aria-hidden="true"></div>
+
+  <!-- ── SIDEBAR BACKDROP ── -->
+  <div id="sidebar-backdrop" onclick="SidebarCtrl.close()" aria-hidden="true"></div>
+
   <!-- ── SIDEBAR ── -->
   <aside id="sidebar">
 
@@ -348,6 +354,133 @@ document.addEventListener('click', e => {
   if (!card) return;
   showXpPopup(10, e.clientX, e.clientY + window.scrollY - 40);
 });
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   ZENMAGMA — SidebarController
+   Premium hover-to-reveal sidebar with edge trigger
+   Desktop: mouse proximity reveal + auto-hide
+   Mobile:  hamburger button toggle
+═══════════════════════════════════════════════════ */
+const SidebarCtrl = (() => {
+
+  const EDGE_WIDTH    = 20;   // px from left edge to trigger
+  const HIDE_DELAY    = 400;  // ms delay before auto-hiding
+  const isMobile      = () => window.matchMedia('(max-width: 768px)').matches;
+
+  let isOpen          = false;
+  let hideTimer       = null;
+  let isMouseInSidebar = false;
+  let isMouseInEdge   = false;
+
+  const sidebar   = document.getElementById('sidebar');
+  const backdrop  = document.getElementById('sidebar-backdrop');
+  const toggle    = document.getElementById('sidebar-toggle');
+
+  /* ── Open ── */
+  function open() {
+    if (isOpen) return;
+    isOpen = true;
+    sidebar.classList.add('sidebar-open');
+    backdrop.classList.add('visible');
+    if (toggle) toggle.textContent = '✕';
+    clearHideTimer();
+  }
+
+  /* ── Close ── */
+  function close() {
+    if (!isOpen) return;
+    isOpen = false;
+    sidebar.classList.remove('sidebar-open');
+    backdrop.classList.remove('visible');
+    if (toggle) toggle.textContent = '☰';
+    clearHideTimer();
+  }
+
+  /* ── Toggle (mobile hamburger) ── */
+  function toggle_() {
+    isOpen ? close() : open();
+  }
+
+  /* ── Timer helpers ── */
+  function scheduleHide() {
+    clearHideTimer();
+    hideTimer = setTimeout(() => {
+      if (!isMouseInSidebar && !isMouseInEdge) close();
+    }, HIDE_DELAY);
+  }
+
+  function clearHideTimer() {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+  }
+
+  /* ── Desktop: global mouse move → edge detection ── */
+  function onMouseMove(e) {
+    if (isMobile()) return;
+
+    // Within edge zone → open
+    if (e.clientX <= EDGE_WIDTH) {
+      isMouseInEdge = true;
+      clearHideTimer();
+      if (!isOpen) open();
+    } else {
+      isMouseInEdge = false;
+      // If sidebar is open but mouse has left both edge and sidebar → schedule hide
+      if (isOpen && !isMouseInSidebar) scheduleHide();
+    }
+  }
+
+  /* ── Sidebar: mouse enter/leave ── */
+  function onSidebarEnter() {
+    isMouseInSidebar = true;
+    clearHideTimer();
+  }
+
+  function onSidebarLeave() {
+    isMouseInSidebar = false;
+    if (!isMouseInEdge) scheduleHide();
+  }
+
+  /* ── Click inside sidebar keeps it open (already handled by enter/leave)
+        Click on a link inside still navigates, no extra handling needed ── */
+
+  /* ── Keyboard: Escape to close ── */
+  function onKeyDown(e) {
+    if (e.key === 'Escape' && isOpen) close();
+  }
+
+  /* ── Init ── */
+  function init() {
+    if (!sidebar) return;
+
+    // Desktop edge + sidebar hover
+    document.addEventListener('mousemove', onMouseMove, { passive: true });
+    sidebar.addEventListener('mouseenter', onSidebarEnter);
+    sidebar.addEventListener('mouseleave', onSidebarLeave);
+
+    // Keyboard
+    document.addEventListener('keydown', onKeyDown);
+
+    // Mobile toggle wiring (button already calls toggleSidebar in HTML)
+    // Override the old toggleSidebar function
+    window.toggleSidebar = toggle_;
+
+    // Close on sidebar internal link click (navigate away — close first)
+    sidebar.addEventListener('click', e => {
+      const a = e.target.closest('a[href], .cat-item');
+      if (a && !isMobile()) {
+        // Small delay so the click registers before closing
+        setTimeout(() => close(), 120);
+      }
+    });
+  }
+
+  return { init, open, close, toggle: toggle_ };
+
+})();
+
+document.addEventListener('DOMContentLoaded', () => SidebarCtrl.init());
 </script>
 </body>
 </html>
