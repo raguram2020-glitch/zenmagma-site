@@ -374,8 +374,14 @@ function gameCardHTML(g, mode = 'grid', index = 0) {
 
 function handleCardClick(e, id) {
   addRecent(id);
-  GS.addPoints(10);
+  const data = GS.addPoints(10);
   buildLeaderboard();
+  // Badge unlock toast
+  const badge = GS.getBadge(data.pts);
+  const prev  = GS.getBadge(data.pts - 10);
+  if (badge.label !== prev.label) {
+    setTimeout(() => showToast(`🏅 Badge unlocked: ${badge.label}!`, 3000), 600);
+  }
 }
 
 /* ══════════════════════════════════════
