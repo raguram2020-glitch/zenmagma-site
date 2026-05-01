@@ -27,7 +27,6 @@ function buildSidebar() {
             data-id="${cat.id}">
       <span class="cat-dot" style="background:${cat.color}"></span>
       ${cat.label}
-      <span class="cat-count">${getByCategory(cat.id).length}</span>
     </button>
   `).join('');
 }
@@ -179,7 +178,6 @@ function gameCardHTML(g, mode = 'grid') {
       <div class="card-info">
         <div class="card-title">${g.title}</div>
         <div class="card-meta">
-          <span class="card-plays">🎮 ${formatPlays(g.plays)}</span>
           <span class="card-rating">⭐ ${g.rating}</span>
         </div>
       </div>
