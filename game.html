@@ -3,14 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title id="page-title">ZenMagma – Play Free Online Games</title>
-<meta name="description" id="page-desc" content="Play free online games at ZenMagma.">
+
+<!-- ── Primary SEO (updated dynamically per game) ── -->
+<title>Play Free Online Games | ZenMagma</title>
+<meta name="description"  id="page-desc"     content="Play free online games at ZenMagma — no download, no sign-up required.">
+<meta name="robots"                           content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="author"                           content="ZenMagma">
+<link rel="canonical"     id="page-canonical" href="https://zenmagma.com/game.html">
+
+<!-- ── Open Graph (dynamic) ── -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="ZenMagma">
+<meta property="og:url"         id="og-url"         content="https://zenmagma.com/game.html">
+<meta property="og:title"       id="og-title"       content="Play Free Online Games | ZenMagma">
+<meta property="og:description" id="og-desc"        content="Play free online games at ZenMagma — no download, no sign-up required.">
+<meta property="og:image"       id="og-image"       content="https://zenmagma.com/assets/og-image.png">
+<meta property="og:image:width"                     content="1200">
+<meta property="og:image:height"                    content="630">
+<meta property="og:image:alt"   id="og-image-alt"  content="ZenMagma Game">
+<meta property="og:locale"                          content="en_US">
+
+<!-- ── Twitter Card (dynamic) ── -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:site"        content="@zenmagma">
+<meta name="twitter:title"       id="tw-title"  content="Play Free Online Games | ZenMagma">
+<meta name="twitter:description" id="tw-desc"   content="Play free online games at ZenMagma — no download, no sign-up required.">
+<meta name="twitter:image"       id="tw-image"  content="https://zenmagma.com/assets/og-image.png">
+<meta name="twitter:image:alt"   id="tw-imgalt" content="ZenMagma Game">
+
+<!-- ── JSON-LD (injected dynamically after game loads) ── -->
+<script type="application/ld+json" id="page-jsonld">{}</script>
+
+<!-- ── Favicons & PWA ── -->
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#ff6b35">
+
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/engagement.css">
 </head>
@@ -199,9 +230,69 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Meta
-  document.title = `${game.title} – Play Free | ZenMagma`;
-  document.getElementById('page-desc').content = game.desc;
+  // ── Dynamic SEO ──
+  const _pageUrl  = `https://zenmagma.com/game.html?id=${game.slug}`;
+  const _ogImg    = game.thumb || 'https://zenmagma.com/assets/og-image.png';
+  const _metaDesc = `${game.desc} Play ${game.title} free online at ZenMagma — no download needed.`.slice(0, 160);
+  const _title    = `${game.title} – Play Free Online | ZenMagma`;
+
+  document.title = _title;
+  _setMeta('page-desc',     'content',  _metaDesc);
+  _setMeta('page-canonical','href',     _pageUrl);
+  _setMeta('og-url',        'content',  _pageUrl);
+  _setMeta('og-title',      'content',  _title);
+  _setMeta('og-desc',       'content',  _metaDesc);
+  _setMeta('og-image',      'content',  _ogImg);
+  _setMeta('og-image-alt',  'content',  `${game.title} – ZenMagma`);
+  _setMeta('tw-title',      'content',  _title);
+  _setMeta('tw-desc',       'content',  _metaDesc);
+  _setMeta('tw-image',      'content',  _ogImg);
+  _setMeta('tw-imgalt',     'content',  `${game.title} – ZenMagma`);
+
+  // VideoGame + BreadcrumbList JSON-LD
+  const _cat = CATEGORIES.find(c => c.id === game.category);
+  const _catLabel = _cat?.label?.replace(/[^\w\s]/g,'').trim() || game.category;
+  document.getElementById('page-jsonld').textContent = JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "VideoGame",
+        "name": game.title,
+        "description": game.desc,
+        "url": _pageUrl,
+        "image": _ogImg,
+        "genre": _catLabel,
+        "playMode": "SinglePlayer",
+        "applicationCategory": "Game",
+        "operatingSystem": "Any (Browser)",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": game.rating,
+          "bestRating": "5",
+          "worstRating": "1",
+          "ratingCount": game.likes || 100
+        },
+        "publisher": { "@type": "Organization", "name": "ZenMagma", "url": "https://zenmagma.com/" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home",            "item": "https://zenmagma.com/" },
+          { "@type": "ListItem", "position": 2, "name": _catLabel,         "item": `https://zenmagma.com/categories/${game.category}.html` },
+          { "@type": "ListItem", "position": 3, "name": game.title,        "item": _pageUrl }
+        ]
+      }
+    ]
+  });
+
+  function _setMeta(id, attr, val) {
+    const el = document.getElementById(id);
+    if (el) el[attr] = val;
+  }
+
+  // Breadcrumb DOM update
+  document.getElementById('page-desc').content = _metaDesc;
 
   // Breadcrumb
   const cat = CATEGORIES.find(c => c.id === game.category);

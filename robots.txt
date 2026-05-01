@@ -1,0 +1,42 @@
+# ============================================================
+#  robots.txt — ZenMagma.com
+#  Updated: 2026-05-02
+# ============================================================
+
+# Allow all well-behaved crawlers
+User-agent: *
+Allow: /
+
+# Block access to internal JS source maps and dev artifacts
+Disallow: /js/*.map
+Disallow: /css/*.map
+
+# Crawl-delay hint (optional, respected by some bots)
+Crawl-delay: 1
+
+# ── Google specific ──────────────────────────────────────────
+User-agent: Googlebot
+Allow: /
+Disallow: /js/*.map
+Disallow: /css/*.map
+
+User-agent: Googlebot-Image
+Allow: /assets/
+Allow: /games/
+
+# ── Bing ────────────────────────────────────────────────────
+User-agent: Bingbot
+Allow: /
+
+# ── Block bad actors ────────────────────────────────────────
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Disallow: /
+
+# ── Sitemap ─────────────────────────────────────────────────
+Sitemap: https://zenmagma.com/sitemap.xml
