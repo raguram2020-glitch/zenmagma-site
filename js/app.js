@@ -116,7 +116,8 @@ const DC = {
 function launchDailyChallenge() {
   const g = DC.getGame();
   GS.addPoints(50);
-  showToast('🎯 Daily Challenge started! +50 XP bonus!', 2500);
+  showToast('🎯 Daily Challenge! +50 XP bonus!', 2500);
+  if (window.openGameModal) { setTimeout(() => openGameModal(g.slug), 400); return; }
   setTimeout(() => { window.location.href = `game.html?id=${g.slug}`; }, 400);
 }
 
@@ -126,6 +127,7 @@ function launchDailyChallenge() {
 function launchMystery() {
   const g = GAMES[Math.floor(Math.random() * GAMES.length)];
   showToast(`🎲 Surprise! You got: ${g.title}`, 2000);
+  if (window.openGameModal) { setTimeout(() => openGameModal(g.slug), 600); return; }
   setTimeout(() => { window.location.href = `game.html?id=${g.slug}`; }, 600);
 }
 
@@ -263,11 +265,15 @@ function startHeroRotation() {
 
 function heroPlay() {
   const slug = document.getElementById('hero-play').dataset.slug;
-  if (slug) window.location.href = `game.html?id=${slug}`;
+  if (!slug) return;
+  if (window.openGameModal) { openGameModal(slug); return; }
+  window.location.href = `game.html?id=${slug}`;
 }
 function heroMore() {
   const g = featured[heroIdx];
-  if (g) window.location.href = `game.html?id=${g.slug}`;
+  if (!g) return;
+  if (window.openGameModal) { openGameModal(g.slug); return; }
+  window.location.href = `game.html?id=${g.slug}`;
 }
 
 /* ══════════════════════════════════════
@@ -340,32 +346,43 @@ function fakePlayerCount(id) {
 
 function gameCardHTML(g, mode = 'grid', index = 0) {
   const badges = [
-    g.isNew    ? '<span class="badge new">New</span>'    : '',
-    g.trending ? '<span class="badge hot">🔥 Hot</span>' : '',
+    g.isNew      ? '<span class="badge new">✨ New</span>'    : '',
+    g.trending   ? '<span class="badge hot">🔥 Hot</span>'    : '',
+    g.isExternal ? '<span class="badge gd">🌐 Live</span>'    : '',
   ].filter(Boolean).join('');
+
+  // Category display label
+  const cat = CATEGORIES.find(c => c.id === g.category);
+  const catLabel = cat ? cat.label.replace(/^\S+\s*/, '') : g.category || '';
 
   const delay = Math.min(index * 40, 400);
 
   return `
     <a class="game-card" href="game.html?id=${g.slug}"
        onclick="handleCardClick(event,'${g.id}')"
-       style="animation-delay:${delay}ms">
+       style="animation-delay:${delay}ms"
+       title="${g.title} — ${g.desc ? g.desc.slice(0,80) : ''}">
       <div class="card-thumb" style="background:${g.color}33">
         ${thumbHTML(g)}
         <div class="card-overlay">
-          <div class="card-play-btn">▶</div>
+          <div class="card-play-label">▶ Play Now</div>
         </div>
         ${badges ? `<div class="card-badges">${badges}</div>` : ''}
+        ${g.isExternal ? `<div class="card-ext-badge">GD</div>` : ''}
         <div class="card-players">
           <span class="dot"></span>
-          ${fakePlayerCount(g.id)}
+          ${fakePlayerCount(g.id)} online
         </div>
       </div>
       <div class="card-info">
         <div class="card-title">${g.title}</div>
         <div class="card-meta">
-          <span style="font-size:11px;color:var(--c-muted)">${g.category || ''}</span>
+          <span class="card-cat-badge">${catLabel}</span>
           <span class="card-rating">⭐ ${g.rating}</span>
+        </div>
+        <div class="card-plays-row">
+          <span class="live-dot"></span>
+          ${formatPlays(g.plays)} plays
         </div>
       </div>
     </a>
@@ -373,6 +390,7 @@ function gameCardHTML(g, mode = 'grid', index = 0) {
 }
 
 function handleCardClick(e, id) {
+  e.preventDefault(); // always open in modal, not navigate
   addRecent(id);
   const data = GS.addPoints(10);
   buildLeaderboard();
@@ -382,6 +400,8 @@ function handleCardClick(e, id) {
   if (badge.label !== prev.label) {
     setTimeout(() => showToast(`🏅 Badge unlocked: ${badge.label}!`, 3000), 600);
   }
+  // Open full-screen modal
+  if (window.openGameModal) openGameModal(id);
 }
 
 /* ══════════════════════════════════════
