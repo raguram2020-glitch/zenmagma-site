@@ -15,6 +15,7 @@ const ZM_BASE = window.ZM_BASE !== undefined ? window.ZM_BASE : (() => {
 ───────────────────────────────────────────────────*/
 const ZM_NAV = [
   { href: 'index.html',              label: 'Home',          icon: '🏠' },
+  { href: 'games/',                  label: 'All Games',     icon: '🎮' },
   { href: 'categories/action.html',  label: 'Action',        icon: '⚡' },
   { href: 'categories/puzzle.html',  label: 'Puzzle',        icon: '🧩' },
   { href: 'categories/kids.html',    label: 'Kids',          icon: '🌈' },
@@ -75,6 +76,7 @@ function zmFooter() {
     <div class="footer-col">
       <h4>Platform</h4>
       <a href="${ZM_BASE}index.html">🏠 Home</a>
+      <a href="${ZM_BASE}games/">🎮 All Games</a>
       <a href="${ZM_BASE}about.html">✨ About Us</a>
       <a href="${ZM_BASE}contact.html">💬 Contact</a>
       <a href="${ZM_BASE}privacy-policy.html">🔒 Privacy Policy</a>
