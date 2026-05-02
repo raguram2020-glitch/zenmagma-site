@@ -1,0 +1,102 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bridge Builder - ZenMagma</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a001a;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}
+#hud{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hval{background:rgba(255,255,255,.12);padding:5px 16px;border-radius:20px;font-weight:700;font-size:.9em}
+.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f953c6,#b91d73);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05)}
+#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}
+#ob{background:#16213e;border-radius:20px;padding:40px;text-align:center;max-width:380px;width:90%;border:2px solid #f953c6}
+#ob h2{font-size:2em;margin-bottom:8px;background:linear-gradient(135deg,#f953c6,#b91d73);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#ob p{color:#aaa;margin-bottom:22px;line-height:1.5}
+#hm{position:fixed;top:10px;left:10px;padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8em;z-index:100}
+</style></head><body>
+
+
+<div id="hud"><span class="hval">Score:<b id="sc"> 0</b></span><span class="hval">Level:<b id="lv"> 1</b></span><span class="hval" id="ph">Connect all dots!</span></div>
+<canvas id="c" width="400" height="400"></canvas>
+<div id="ov"><div id="ob"><h2>Bridge Builder</h2><p>Draw bridges by clicking two matching colored dots to connect them. Connect all pairs without crossing paths!</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const COLORS=["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6"];
+let dots=[],paths=[],selected=null,score=0,level=1,running=false;
+const N=6,SZ=400/N;
+function mkLevel(){
+  dots=[];paths=[];selected=null;
+  const pairs=Math.min(level+1,5);
+  const cells=[];for(let r=0;r<N;r++)for(let c=0;c<N;c++)cells.push([r,c]);
+  cells.sort(()=>Math.random()-.5);
+  for(let i=0;i<pairs;i++){dots.push({r:cells[i*2][0],c:cells[i*2][1],color:i,paired:false});dots.push({r:cells[i*2+1][0],c:cells[i*2+1][1],color:i,paired:false});}
+}
+function draw(){
+  ctx.fillStyle="#0a001a";ctx.fillRect(0,0,400,400);
+  ctx.strokeStyle="#1a0a2a";ctx.lineWidth=1;for(let i=0;i<=N;i++){ctx.beginPath();ctx.moveTo(i*SZ,0);ctx.lineTo(i*SZ,400);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*SZ);ctx.lineTo(400,i*SZ);ctx.stroke();}
+  paths.forEach(p=>{ctx.strokeStyle=COLORS[p.color];ctx.lineWidth=8;ctx.lineCap="round";ctx.beginPath();p.points.forEach(([r,c],i)=>i===0?ctx.moveTo(c*SZ+SZ/2,r*SZ+SZ/2):ctx.lineTo(c*SZ+SZ/2,r*SZ+SZ/2));ctx.stroke();});
+  dots.forEach(d=>{const x=d.c*SZ+SZ/2,y=d.r*SZ+SZ/2;ctx.fillStyle=COLORS[d.color];ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.fill();if(selected===d){ctx.strokeStyle="#fff";ctx.lineWidth=4;ctx.stroke();}ctx.fillStyle="#fff";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(d.color+1,x,y);});
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const c=Math.floor(e.offsetX/SZ),r=Math.floor(e.offsetY/SZ);
+  const dot=dots.find(d=>d.r===r&&d.c===c);
+  if(!dot)return;
+  if(!selected){selected=dot;draw();return;}
+  if(selected===dot){selected=null;draw();return;}
+  if(selected.color===dot.color&&!selected.paired&&!dot.paired){
+    selected.paired=dot.paired=true;
+    paths.push({color:dot.color,points:[[selected.r,selected.c],[dot.r,dot.c]]});
+    score+=100*level;document.getElementById("sc").textContent=score;
+    selected=null;
+    if(dots.every(d=>d.paired)){document.getElementById("ph").textContent="Level "+level+" complete!";level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkLevel();document.getElementById("ph").textContent="Connect all dots!";draw();},700);}
+  }else selected=dot;
+  draw();
+});
+function go(){document.getElementById("ov").style.display="none";running=true;draw();}
+mkLevel();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script></body></html>

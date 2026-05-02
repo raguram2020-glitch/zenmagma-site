@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Space Colony - ZenMagma</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000010;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #667eea}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<div style="text-align:center;max-width:600px;margin:0 auto">
+<div style="padding:8px;flex-wrap:wrap;display:flex;gap:8px;justify-content:center">
+<span class="hv">⚡<b id="en"> 100</b></span><span class="hv">💧<b id="wr"> 100</b></span><span class="hv">🍖<b id="fd"> 100</b></span><span class="hv">👨‍🚀<b id="pop"> 3</b></span><span class="hv">Day:<b id="dy"> 1</b></span>
+</div>
+<canvas id="c" width="480" height="300"></canvas>
+<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px">
+<button class="btn" onclick="build('solar')">☀️ Solar (50E)</button>
+<button class="btn" onclick="build('water')">💧 Water Pump (60W)</button>
+<button class="btn" onclick="build('farm')">🌿 Farm (40F)</button>
+<button class="btn" onclick="build('dome')">🏠 Habitat (80 all)</button>
+<button class="btn" onclick="nextDay()">Next Day ⏭</button>
+</div>
+<div id="log" style="color:#aaa;font-size:.85em;height:24px;padding:4px;text-align:center"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Space Colony</h2><p>Build and manage a colony on a distant planet! Balance energy, water, food and population. Survive 30 days!</p><button class="btn" onclick="go()">Colonize!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=300;
+const TILES=12*7;let grid=[],energy=100,water=100,food=100,pop=3,day=1,score=0,running=false;
+const BUILDINGS={empty:{e:"",ep:0,wp:0,fp:0},solar:{e:"☀️",ep:15,wp:0,fp:0},water:{e:"💧",ep:-5,wp:20,fp:0},farm:{e:"🌿",ep:-5,wp:-5,fp:15},dome:{e:"🏠",ep:-10,wp:-10,fp:-10,pp:2}};
+function init(){grid=Array(84).fill("empty");}
+function draw(){
+  ctx.fillStyle="#000010";ctx.fillRect(0,0,W,H);
+  for(let i=0;i<7;i++)for(let j=0;j<12;j++){const b=grid[i*12+j];const x=j*40,y=i*43;ctx.fillStyle="#0a0a1a";ctx.fillRect(x+1,y+1,38,41);ctx.strokeStyle="rgba(102,126,234,.2)";ctx.lineWidth=1;ctx.strokeRect(x,y,40,43);if(b!=="empty"){ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(BUILDINGS[b].e,x+20,y+21);}}
+}
+function build(type){
+  const costs={solar:{ep:50},water:{wp:60},farm:{fp:40},dome:{ep:80,wp:80,fp:80}};
+  const c=costs[type];
+  if(c.ep&&energy<c.ep){log("Not enough energy!");return;}
+  if(c.wp&&water<c.wp){log("Not enough water!");return;}
+  if(c.fp&&food<c.fp){log("Not enough food!");return;}
+  const empty=grid.indexOf("empty");if(empty<0){log("No space!");return;}
+  grid[empty]=type;if(c.ep)energy-=c.ep;if(c.wp)water-=c.wp;if(c.fp)food-=c.fp;draw();upd();log(type+" built!");
+}
+function nextDay(){
+  day++;let ep=0,wp=0,fp=0,pp=0;
+  grid.forEach(b=>{const bd=BUILDINGS[b];ep+=bd.ep||0;wp+=bd.wp||0;fp+=bd.fp||0;pp+=bd.pp||0;});
+  energy=Math.max(0,Math.min(200,energy+ep-pop*2));water=Math.max(0,Math.min(200,water+wp-pop*3));food=Math.max(0,Math.min(200,food+fp-pop*4));pop+=pp;
+  document.getElementById("dy").textContent=day;upd();log(`Day ${day} - Resources updated`);
+  if(energy<=0||water<=0||food<=0){running=false;setTimeout(()=>alert("Colony failed! Survived "+day+" days"),200);}
+  if(day>=30)setTimeout(()=>alert("Colony survived 30 days! Score: "+score),200);
+  score=day*pop*10;
+}
+function upd(){document.getElementById("en").textContent=Math.round(energy);document.getElementById("wr").textContent=Math.round(water);document.getElementById("fd").textContent=Math.round(food);document.getElementById("pop").textContent=pop;}
+function log(m){document.getElementById("log").textContent=m;}
+function go(){document.getElementById("ov").style.display="none";running=true;draw();upd();}
+init();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  init();
+}
+</script></body></html>

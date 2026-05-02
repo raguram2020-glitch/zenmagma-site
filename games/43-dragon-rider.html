@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dragon Rider - ZenMagma</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0500;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}#hud{display:flex;gap:12px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em}.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f7971e,#ffd200);color:#fff;transition:.2s}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:360px;width:90%;border:2px solid #f7971e}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#f7971e,#ffd200);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+
+<div id="hud"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Lives:<b id="lf"> 3</b></span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<canvas id="c" width="480" height="420"></canvas>
+<p style="text-align:center;color:#aaa;font-size:.8em">Arrow keys / WASD to move, Up/W/Space to jump. Collect gems!</p>
+<div id="ov"><div id="ob"><h2>Dragon Rider</h2><p>Fly your dragon through clouds collecting stars! Dodge lightning and collect golden apples.</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=420;
+let player,platforms,gems,enemies,score,lives,level,camera,frame,running,keys={};
+function mkLevel(){
+  platforms=[];gems=[];enemies=[];camera=0;
+  const base=[{x:0,y:H-30,w:W*3,h:30}];
+  for(let i=0;i<12+level*2;i++){platforms.push({x:100+i*200+Math.random()*80,y:100+Math.random()*(H-180),w:80+Math.random()*80,h:16});}
+  platforms=[...base,...platforms];
+  // Gems
+  platforms.forEach(p=>{if(Math.random()<0.6&&p.h===16)gems.push({x:p.x+p.w/2,y:p.y-20,r:10,collected:false});});
+  // Enemies
+  for(let i=0;i<2+level;i++){enemies.push({x:300+i*400,y:H-60,r:14,dx:1+level*.2,patrolMin:200+i*400,patrolMax:400+i*400});}
+  player={x:60,y:H-80,w:28,h:36,vx:0,vy:0,onGround:false};
+}
+document.addEventListener("keydown",e=>{keys[e.key]=true;if(e.key===" ")e.preventDefault();});
+document.addEventListener("keyup",e=>keys[e.key]=false);
+let touchDir=0,touchJump=false;
+function addTouchControls(){
+  const d=document.createElement("div");d.style.cssText="position:fixed;bottom:0;width:100%;display:flex;justify-content:space-between;padding:10px;z-index:20";
+  d.innerHTML=`<div style="display:flex;gap:8px"><button style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:1.5em" ontouchstart="touchDir=-1" ontouchend="touchDir=0">&#8592;</button><button style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:1.5em" ontouchstart="touchDir=1" ontouchend="touchDir=0">&#8594;</button></div><button style="width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.3);border:none;color:#fff;font-size:1.5em" ontouchstart="touchJump=true" ontouchend="touchJump=false">&#8679;</button>`;
+  document.body.appendChild(d);
+}
+function update(){
+  frame++;
+  const spd=5;
+  if(keys["ArrowLeft"]||keys["a"]||touchDir<0)player.vx=-spd;
+  else if(keys["ArrowRight"]||keys["d"]||touchDir>0)player.vx=spd;
+  else player.vx*=0.8;
+  if((keys["ArrowUp"]||keys["w"]||keys[" "]||touchJump)&&player.onGround){player.vy=-12;player.onGround=false;}
+  player.vy+=0.5;player.x+=player.vx;player.y+=player.vy;player.onGround=false;
+  platforms.forEach(p=>{
+    if(player.x+player.w>p.x&&player.x<p.x+p.w&&player.y+player.h>p.y&&player.y+player.h<p.y+p.h+player.vy+2&&player.vy>0){
+      player.y=p.y-player.h;player.vy=0;player.onGround=true;
+    }
+    if(player.x+player.w>p.x&&player.x<p.x+p.w&&player.y<p.y+p.h&&player.y+player.h>p.y){
+      if(player.vy<0){player.y=p.y+p.h;player.vy=0;}
+    }
+  });
+  camera=Math.max(0,player.x-W/3);
+  gems=gems.filter(g=>{if(!g.collected&&Math.abs(player.x+player.w/2-g.x)<g.r+10&&Math.abs(player.y+player.h/2-g.y)<g.r+10){g.collected=true;score+=10*level;document.getElementById("sc").textContent=score;return false;}return true;});
+  enemies.forEach(e=>{e.x+=e.dx;if(e.x<e.patrolMin||e.x>e.patrolMax)e.dx*=-1;if(Math.abs(player.x-e.x)<e.r+14&&Math.abs(player.y+player.h/2-e.y)<e.r+18){lives--;document.getElementById("lf").textContent=lives;player.x=60;player.y=H-100;player.vy=0;if(lives<=0){running=false;showGameOver("Score: "+score);}}  });
+  if(player.y>H+50){lives--;player.x=60;player.y=H-100;player.vy=0;document.getElementById("lf").textContent=lives;if(lives<=0){running=false;showGameOver("Score: "+score);}};
+  if(gems.length===0){level++;document.getElementById("lv").textContent=level;score+=level*50;document.getElementById("sc").textContent=score;mkLevel();}
+}
+function draw(){
+  const cam=Math.round(camera);
+  ctx.fillStyle="#0a0500";ctx.fillRect(0,0,W,H);
+  
+  ctx.save();ctx.translate(-cam,0);
+  platforms.forEach(p=>{ctx.fillStyle="#c0392b";ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(p.x,p.y,p.w,4);});
+  gems.forEach(g=>{ctx.fillStyle="#f1c40f";ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("💎",g.x,g.y);});
+  enemies.forEach(e=>{ctx.fillStyle="#e74c3c";ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="22px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("👾",e.x,e.y);});
+  ctx.fillStyle="#c0392b";ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle="#fff";ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("😊",player.x+player.w/2,player.y+player.h/2);
+  ctx.restore();
+}
+function go(){score=0;lives=3;level=1;frame=0;document.getElementById("ov").style.display="none";running=true;addTouchControls();mkLevel();document.getElementById("sc").textContent=score;document.getElementById("lf").textContent=lives;document.getElementById("lv").textContent=level;(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
+mkLevel();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script></body></html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tile Slide - ZenMagma</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#001100;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}
+#hud{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hval{background:rgba(255,255,255,.12);padding:5px 16px;border-radius:20px;font-weight:700;font-size:.9em}
+.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1a9850,#91cf60);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05)}
+#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}
+#ob{background:#16213e;border-radius:20px;padding:40px;text-align:center;max-width:380px;width:90%;border:2px solid #1a9850}
+#ob h2{font-size:2em;margin-bottom:8px;background:linear-gradient(135deg,#1a9850,#91cf60);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#ob p{color:#aaa;margin-bottom:22px;line-height:1.5}
+#hm{position:fixed;top:10px;left:10px;padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8em;z-index:100}
+</style></head><body>
+
+
+<div id="hud"><span class="hval">Moves:<b id="mv"> 0</b></span><span class="hval">Best:<b id="best"> -</b></span><span class="hval">Level:<b id="lv"> 1</b></span><button class="btn" onclick="ng()">New Game</button></div>
+<canvas id="c" width="360" height="360"></canvas>
+<div id="ov"><div id="ob"><h2>Tile Slide</h2><p>Slide tiles to arrange numbers 1-15 in order!<br>Click a tile adjacent to the empty space to slide it.</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const N=4,SZ=90;
+let tiles=[],empty,moves=0,best=Infinity,running=false;
+const COLORS=["#1a9850","#2ecc71","#27ae60","#16a085","#1abc9c","#0e6655","#148f77","#17a589","#1d8348","#239b56","#196f3d","#1e8449","#229954","#28b463","#2ecc71"];
+function mkTiles(){tiles=[];for(let i=0;i<15;i++)tiles.push(i+1);tiles.push(0);shuffle();empty=tiles.indexOf(0);}
+function shuffle(){for(let i=tiles.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[tiles[i],tiles[j]]=[tiles[j],tiles[i]];}}
+function isSolvable(){let inv=0;const t=tiles.filter(x=>x!==0);for(let i=0;i<t.length;i++)for(let j=i+1;j<t.length;j++)if(t[i]>t[j])inv++;const eRow=Math.floor(tiles.indexOf(0)/N);return (N%2===1)?(inv%2===0):((eRow%2===0)===(inv%2===1));}
+function isWon(){return tiles.every((v,i)=>i===15?v===0:v===i+1);}
+function draw(){
+  ctx.fillStyle="#001100";ctx.fillRect(0,0,360,360);
+  for(let i=0;i<16;i++){
+    const r=Math.floor(i/N),c=i%N,x=c*SZ,y=r*SZ,v=tiles[i];
+    if(v===0)continue;
+    const isCorrect=v===i+1;
+    ctx.fillStyle=isCorrect?"#1a9850":COLORS[v%15];
+    ctx.beginPath();ctx.roundRect(x+3,y+3,SZ-6,SZ-6,8);ctx.fill();
+    ctx.fillStyle="#fff";ctx.font="bold 28px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(v,x+SZ/2,y+SZ/2);
+  }
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const c=Math.floor(e.offsetX/SZ),r=Math.floor(e.offsetY/SZ),idx=r*N+c;
+  const er=Math.floor(empty/N),ec=empty%N;
+  if(Math.abs(er-r)+Math.abs(ec-c)===1){[tiles[idx],tiles[empty]]=[tiles[empty],tiles[idx]];empty=idx;moves++;document.getElementById("mv").textContent=moves;draw();if(isWon()){if(moves<best){best=moves;document.getElementById("best").textContent=best;}setTimeout(()=>{alert("Solved in "+moves+" moves! ");ng();},200);}}
+});
+function go(){document.getElementById("ov").style.display="none";running=true;draw();}
+function ng(){do{mkTiles();}while(!isSolvable());empty=tiles.indexOf(0);moves=0;document.getElementById("mv").textContent=0;if(running)draw();}
+ng();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script></body></html>

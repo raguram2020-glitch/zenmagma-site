@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<!-- ── Primary SEO ── -->
+<title>Contact Us | ZenMagma – Free Online Games</title>
+<meta name="description" content="Reach the ZenMagma team — report a bug, suggest a game, ask about advertising, or share feedback. We love hearing from our players!">
+<meta name="robots" content="index, follow">
+<meta name="author" content="ZenMagma">
+<link rel="canonical" href="https://zenmagma.com/contact.html">
+
+<!-- ── Open Graph ── -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="ZenMagma">
+<meta property="og:url"         content="https://zenmagma.com/contact.html">
+<meta property="og:title"       content="Contact ZenMagma – Get in Touch">
+<meta property="og:description" content="Reach the ZenMagma team — report a bug, suggest a game, ask about advertising, or share feedback. We love hearing from our players!">
+<meta property="og:image"       content="https://zenmagma.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt"   content="Contact ZenMagma">
+<meta property="og:locale"      content="en_US">
+
+<!-- ── Twitter Card ── -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:site"        content="@zenmagma">
+<meta name="twitter:title"       content="Contact ZenMagma – Get in Touch">
+<meta name="twitter:description" content="Reach the ZenMagma team — report a bug, suggest a game, ask about advertising, or share feedback.">
+<meta name="twitter:image"       content="https://zenmagma.com/assets/og-image.png">
+<meta name="twitter:image:alt"   content="Contact ZenMagma">
+
+<!-- ── JSON-LD ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ContactPage",
+      "@id": "https://zenmagma.com/contact.html",
+      "url": "https://zenmagma.com/contact.html",
+      "name": "Contact Us | ZenMagma",
+      "description": "Reach the ZenMagma team — report a bug, suggest a game, or ask about advertising.",
+      "isPartOf": { "@id": "https://zenmagma.com/#website" },
+      "inLanguage": "en-US"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home",       "item": "https://zenmagma.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Contact Us", "item": "https://zenmagma.com/contact.html" }
+      ]
+    }
+  ]
+}
+</script>
+
+<!-- ── Favicons & PWA ── -->
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#7c3aed">
+
+<link rel="stylesheet" href="css/style.css">
+<script>window.ZM_BASE = '';</script>
+</head>
+<body>
+
+<!-- Header -->
+<div id="zm-header" data-active="Contact"></div>
+
+<!-- Breadcrumb -->
+<div class="sub-breadcrumb">
+  <a href="index.html">🏠 Home</a>
+  <span class="bc-sep">›</span>
+  <span class="bc-cur">Contact Us</span>
+</div>
+
+<!-- Hero -->
+<section class="sub-hero" style="--hero-color: rgba(0,229,255,0.25);">
+  <span class="sub-hero-icon">💬</span>
+  <h1 class="sub-hero-title">Get In Touch</h1>
+  <p class="sub-hero-sub">
+    Have a question, suggestion, or bug report? We'd love to hear from you. We usually respond within 24–48 hours.
+  </p>
+</section>
+
+<!-- Content -->
+<div class="sub-content" style="max-width:920px">
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:36px;align-items:start">
+
+    <!-- Left: form -->
+    <div>
+      <section class="sub-section" style="margin-bottom:0">
+        <h2 class="sub-section-title"><span>✉️</span> Send a Message</h2>
+
+        <div class="contact-form" id="contact-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="cf-name">Your Name *</label>
+              <input class="form-input" id="cf-name" type="text" placeholder="e.g. Alex Smith" required autocomplete="name">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="cf-email">Email Address *</label>
+              <input class="form-input" id="cf-email" type="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="cf-subject">Subject</label>
+            <select class="form-input form-select" id="cf-subject">
+              <option value="general">💬 General Enquiry</option>
+              <option value="bug">🐛 Report a Bug</option>
+              <option value="submit">📤 Submit a Game</option>
+              <option value="advertise">📢 Advertising / Partnership</option>
+              <option value="feedback">⭐ Feedback & Suggestions</option>
+              <option value="privacy">🔒 Privacy / Data Request</option>
+              <option value="other">🔖 Other</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="cf-message">Message *</label>
+            <textarea class="form-input form-textarea" id="cf-message"
+              placeholder="Tell us what's on your mind. The more detail you include, the better we can help!" required></textarea>
+          </div>
+
+          <button class="form-submit" onclick="submitContactForm()">
+            📤 Send Message
+          </button>
+
+          <div class="form-success" id="form-success">
+            ✅ Message sent! We'll get back to you at your email address within 24–48 hours.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right: info cards -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <div class="info-card" style="text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:24px">📧</span>
+          <strong style="color:#fff;font-size:14px">Email Us</strong>
+        </div>
+        <p class="info-card-text">
+          Drop us a line at<br>
+          <a href="mailto:raguram2020@gmail.com" style="color:var(--c-neon,#b388ff);font-weight:700">raguram2020@gmail.com</a>
+        </p>
+      </div>
+
+      <div class="info-card" style="text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:24px">⏱️</span>
+          <strong style="color:#fff;font-size:14px">Response Time</strong>
+        </div>
+        <p class="info-card-text">We typically respond within <strong style="color:#fff">24–48 hours</strong>, Monday to Friday.</p>
+      </div>
+
+      <div class="info-card" style="text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:24px">🐛</span>
+          <strong style="color:#fff;font-size:14px">Reporting a Bug?</strong>
+        </div>
+        <p class="info-card-text">Please include: the game name, device type, browser, and a description of what went wrong. Screenshots help too!</p>
+      </div>
+
+      <div class="info-card" style="text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:24px">📤</span>
+          <strong style="color:#fff;font-size:14px">Submit a Game?</strong>
+        </div>
+        <p class="info-card-text">If you've built an HTML5 game and want it featured on ZenMagma, we'd love to hear about it! Include a demo link.</p>
+      </div>
+
+      <div class="info-card" style="text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:24px">🔒</span>
+          <strong style="color:#fff;font-size:14px">Privacy Requests</strong>
+        </div>
+        <p class="info-card-text">
+          To exercise your GDPR rights (access, deletion, correction), please
+          <a href="mailto:raguram2020@gmail.com?subject=Privacy%20Request" style="color:var(--c-neon,#b388ff);font-weight:700">email us</a>
+          or use the form with subject "Privacy / Data Request".
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <section class="sub-section" style="margin-top:48px">
+    <h2 class="sub-section-title"><span>❓</span> Frequently Asked Questions</h2>
+    <div class="cards-row">
+      <div class="info-card" style="text-align:left">
+        <div class="info-card-title" style="margin-bottom:8px">Are all games really free?</div>
+        <div class="info-card-text">Yes — 100% free, forever. We're supported by non-intrusive advertising, not player payments.</div>
+      </div>
+      <div class="info-card" style="text-align:left">
+        <div class="info-card-title" style="margin-bottom:8px">Do I need to create an account?</div>
+        <div class="info-card-text">No account required! Your XP and progress are saved locally in your browser via localStorage.</div>
+      </div>
+      <div class="info-card" style="text-align:left">
+        <div class="info-card-title" style="margin-bottom:8px">Can I play on my phone?</div>
+        <div class="info-card-text">Absolutely. ZenMagma is fully responsive and works on phones, tablets, and desktops.</div>
+      </div>
+      <div class="info-card" style="text-align:left">
+        <div class="info-card-title" style="margin-bottom:8px">How do I report a broken game?</div>
+        <div class="info-card-text">Use the contact form above with subject "Report a Bug". Include the game name and your browser info.</div>
+      </div>
+      <div class="info-card" style="text-align:left">
+        <div class="info-card-title" style="margin-bottom:8px">Are the games safe for kids?</div>
+        <div class="info-card-text">Yes. We manually review all games for content and safety. Our Kids category is especially curated.</div>
+      </div>
+      <div class="info-card" style="text-align:left">
+        <div class="info-card-title" style="margin-bottom:8px">How is my data used?</div>
+        <div class="info-card-text">We collect minimal data. Read our <a href="privacy-policy.html" style="color:var(--c-neon,#b388ff)">Privacy Policy</a> for the full details.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Footer -->
+<div id="zm-footer"></div>
+
+<script src="js/page-shared.js"></script>
+<script>
+/* ── Pre-fill subject from URL param ── */
+window.addEventListener('DOMContentLoaded', () => {
+  const subject = new URLSearchParams(window.location.search).get('subject');
+  if (subject) {
+    const sel = document.getElementById('cf-subject');
+    if (sel) {
+      for (const opt of sel.options) {
+        if (opt.value === subject) { opt.selected = true; break; }
+      }
+    }
+  }
+});
+
+/* ── Contact form submit → mailto ── */
+function submitContactForm() {
+  const name    = document.getElementById('cf-name')?.value.trim();
+  const email   = document.getElementById('cf-email')?.value.trim();
+  const subject = document.getElementById('cf-subject')?.value || 'general';
+  const message = document.getElementById('cf-message')?.value.trim();
+
+  if (!name)    { alert('Please enter your name.'); return; }
+  if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); return; }
+  if (!message) { alert('Please enter a message.'); return; }
+
+  const subjectLine = encodeURIComponent(`ZenMagma Contact [${subject}]: ${name}`);
+  const body = encodeURIComponent(
+    `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\nMessage:\n${message}\n\n---\nSent from ZenMagma Contact Form`
+  );
+
+  window.location.href = `mailto:raguram2020@gmail.com?subject=${subjectLine}&body=${body}`;
+
+  /* Show success */
+  setTimeout(() => {
+    document.getElementById('form-success').style.display = 'block';
+    document.getElementById('cf-message').value = '';
+  }, 500);
+}
+</script>
+
+<style>
+@media (max-width: 700px) {
+  .sub-content > div { grid-template-columns: 1fr !important; }
+}
+</style>
+
+</body>
+</html>

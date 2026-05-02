@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<!-- ── Primary SEO ── -->
+<title>Runner Games – Free Endless Runner Games Online | ZenMagma</title>
+<meta name="description" content="Play free endless runner games online at ZenMagma — dodge obstacles, collect coins &amp; beat your high score. Temple Run-style games, no download needed!">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="author" content="ZenMagma">
+<link rel="canonical" href="https://zenmagma.com/categories/runner.html">
+
+<!-- ── Open Graph ── -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="ZenMagma">
+<meta property="og:url"         content="https://zenmagma.com/categories/runner.html">
+<meta property="og:title"       content="Free Endless Runner Games Online – Play Now | ZenMagma">
+<meta property="og:description" content="Dodge obstacles, collect coins &amp; beat your high score in free endless runner games. Play Temple Run-style games instantly — no download needed!">
+<meta property="og:image"       content="https://zenmagma.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt"   content="Free Runner Games – ZenMagma">
+<meta property="og:locale"      content="en_US">
+
+<!-- ── Twitter Card ── -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:site"        content="@zenmagma">
+<meta name="twitter:title"       content="Free Endless Runner Games Online – Play Now | ZenMagma">
+<meta name="twitter:description" content="Dodge obstacles, collect coins &amp; beat your high score. Free endless runner games playable instantly — no download needed!">
+<meta name="twitter:image"       content="https://zenmagma.com/assets/og-image.png">
+<meta name="twitter:image:alt"   content="Free Runner Games – ZenMagma">
+
+<!-- ── JSON-LD ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://zenmagma.com/categories/runner.html",
+      "url": "https://zenmagma.com/categories/runner.html",
+      "name": "Runner Games | ZenMagma",
+      "description": "Free endless runner games — dodge obstacles, collect coins and beat your high score. Temple Run-style games playable instantly in your browser.",
+      "isPartOf": { "@id": "https://zenmagma.com/#website" },
+      "inLanguage": "en-US",
+      "about": { "@type": "Thing", "name": "Endless Runner Games" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home",         "item": "https://zenmagma.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Runner Games", "item": "https://zenmagma.com/categories/runner.html" }
+      ]
+    }
+  ]
+}
+</script>
+
+<!-- ── Favicons & PWA ── -->
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="shortcut icon" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
+<meta name="theme-color" content="#f97316">
+
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/animations.css">
+<script>window.ZM_BASE = '../';</script>
+</head>
+<body>
+
+<div id="zm-header" data-active="Runner"></div>
+
+<div class="sub-breadcrumb">
+  <a href="../index.html">🏠 Home</a>
+  <span class="bc-sep">›</span>
+  <span class="bc-cur">🏃 Runner Games</span>
+</div>
+
+<section class="sub-hero" style="--hero-color: rgba(249,115,22,0.35);">
+  <span class="sub-hero-icon">🏃</span>
+  <h1 class="sub-hero-title">Runner Games</h1>
+  <p class="sub-hero-sub">Endless runners, dash games and obstacle courses that keep you on the edge of your seat. How far can you go?</p>
+  <div class="sub-hero-stats">
+    <div class="sub-stat"><div class="sub-stat-val" id="cat-count">–</div><div class="sub-stat-label">Games</div></div>
+    <div class="sub-stat"><div class="sub-stat-val">∞</div><div class="sub-stat-label">Runs</div></div>
+    <div class="sub-stat"><div class="sub-stat-val">Free</div><div class="sub-stat-label">Always</div></div>
+  </div>
+</section>
+
+<div class="cat-page-wrap">
+  <div class="related-cats">
+    <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.3);align-self:center;white-space:nowrap">Browse also:</span>
+    <a class="related-cat-chip" href="action.html">⚡ Action</a>
+    <a class="related-cat-chip" href="puzzle.html">🧩 Puzzle</a>
+    <a class="related-cat-chip" href="kids.html">🌈 Kids</a>
+    <a class="related-cat-chip" href="arcade.html">🕹️ Arcade</a>
+  </div>
+  <div class="cat-filter-bar">
+    <span class="cat-sort-label">Sort by:</span>
+    <button class="cat-sort-btn active" onclick="sortGames('popular', this)">🔥 Most Popular</button>
+    <button class="cat-sort-btn" onclick="sortGames('rating', this)">⭐ Top Rated</button>
+    <button class="cat-sort-btn" onclick="sortGames('new', this)">✨ Newest</button>
+    <button class="cat-sort-btn" onclick="sortGames('az', this)">🔤 A–Z</button>
+  </div>
+  <div class="games-grid wide" id="cat-grid"></div>
+  <div id="no-games" style="display:none;text-align:center;padding:60px 20px;color:rgba(255,255,255,.3)">
+    <div style="font-size:48px;margin-bottom:12px">🏃</div>
+    <div>No runner games found yet.</div>
+    <a href="../index.html" style="color:var(--c-neon,#b388ff);font-weight:700;display:block;margin-top:12px">← Browse all games</a>
+  </div>
+</div>
+
+<div id="zm-footer"></div>
+
+<script src="../js/games-data.js"></script>
+<script src="../js/page-shared.js"></script>
+<script src="../js/animations.js"></script>
+<script>
+const CAT_ID = 'runner';
+let _games = [], _sort = 'popular';
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof GAMES === 'undefined') return;
+  _games = GAMES.filter(g => g.category === CAT_ID || g.tags?.includes(CAT_ID));
+  document.getElementById('cat-count').textContent = _games.length;
+  renderCatGrid();
+});
+function sortGames(by, btn) {
+  _sort = by;
+  document.querySelectorAll('.cat-sort-btn').forEach(b => b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderCatGrid();
+}
+function renderCatGrid() {
+  const grid = document.getElementById('cat-grid'), noGames = document.getElementById('no-games');
+  if (!grid) return;
+  const sorted = [..._games].sort((a, b) => {
+    if (_sort === 'rating') return b.rating - a.rating;
+    if (_sort === 'new')    return (b.isNew?1:0) - (a.isNew?1:0);
+    if (_sort === 'az')     return a.title.localeCompare(b.title);
+    return b.plays - a.plays;
+  });
+  if (!sorted.length) { grid.innerHTML = ''; if (noGames) noGames.style.display = 'block'; return; }
+  if (noGames) noGames.style.display = 'none';
+  grid.innerHTML = sorted.map((g, i) => {
+    const delay = Math.min(i * 35, 350);
+    const thumb = g.thumb
+      ? `<img src="${g.thumb}" alt="${g.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+      : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${g.color}dd,${g.color}55);display:flex;align-items:center;justify-content:center;font-size:48px">${g.emoji}</div>`;
+    return `
+      <a class="game-card will-reveal" href="../game.html?id=${g.slug}" style="animation-delay:${delay}ms" title="${g.title}">
+        <div class="card-thumb" style="background:${g.color}33">
+          ${thumb}
+          <div class="card-overlay"><div class="card-play-label">▶ Play Now</div></div>
+          <div class="card-badges">
+            ${g.isExternal?'<span class="badge gd">🌐 Live</span>':''}
+            ${g.isNew?'<span class="badge new">✨ New</span>':''}
+            ${g.trending?'<span class="badge hot">🔥 Hot</span>':''}
+          </div>
+          <div class="card-players"><span class="dot"></span>${fakePlayerCount(g.id)} online</div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">${g.title}</div>
+          <div class="card-meta">
+            <span class="card-cat-badge">Runner</span>
+            <span class="card-rating">⭐ ${g.rating}</span>
+          </div>
+          <div class="card-plays-row"><span class="live-dot"></span>${formatPlays(g.plays)} plays</div>
+        </div>
+      </a>`;
+  }).join('');
+}
+function fakePlayerCount(id) {
+  let h = 0;
+  for (const c of (id||'x')) h = ((h<<5)-h)+c.charCodeAt(0);
+  return (Math.abs(h)%900+100).toLocaleString();
+}
+</script>
+</body>
+</html>

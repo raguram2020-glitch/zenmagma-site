@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<!-- ── Primary SEO ── -->
+<title>ZenMagma – 100+ Free Online Games | Play Instantly, No Download</title>
+<meta name="description" content="Play 100+ free online games at ZenMagma — action, puzzle, arcade, runner and kids games. No downloads, no sign-up required. Play instantly in your browser!">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="keywords" content="free online games, browser games, kids games, puzzle games, action games, arcade games, no download games">
+<meta name="author" content="ZenMagma">
+<link rel="canonical" href="https://zenmagma.com/">
+
+<!-- ── Open Graph ── -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="ZenMagma">
+<meta property="og:url"         content="https://zenmagma.com/">
+<meta property="og:title"       content="ZenMagma – 100+ Free Online Games | Play Instantly">
+<meta property="og:description" content="Play 100+ free online games — action, puzzle, arcade, runner and kids games. No downloads, no sign-up. Play instantly in your browser!">
+<meta property="og:image"       content="https://zenmagma.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt"   content="ZenMagma – Free Online Games">
+<meta property="og:locale"      content="en_US">
+
+<!-- ── Twitter Card ── -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:site"        content="@zenmagma">
+<meta name="twitter:title"       content="ZenMagma – 100+ Free Online Games | Play Instantly">
+<meta name="twitter:description" content="Play 100+ free online games — action, puzzle, arcade, runner and kids games. No downloads, no sign-up. Play instantly in your browser!">
+<meta name="twitter:image"       content="https://zenmagma.com/assets/og-image.png">
+<meta name="twitter:image:alt"   content="ZenMagma – Free Online Games">
+
+<!-- ── Favicons & PWA ── -->
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#7c3aed">
+
+<!-- ── Structured Data: WebSite + SearchAction + Organization ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://zenmagma.com/#website",
+      "url": "https://zenmagma.com/",
+      "name": "ZenMagma",
+      "description": "100+ free online games — no downloads, no sign-up, play instantly.",
+      "inLanguage": "en-US",
+      "publisher": { "@id": "https://zenmagma.com/#organization" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": { "@type": "EntryPoint", "urlTemplate": "https://zenmagma.com/?q={search_term_string}" },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://zenmagma.com/#organization",
+      "name": "ZenMagma",
+      "url": "https://zenmagma.com/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://zenmagma.com/assets/og-image.png",
+        "width": 1200,
+        "height": 630
+      },
+      "sameAs": []
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://zenmagma.com/#webpage",
+      "url": "https://zenmagma.com/",
+      "name": "ZenMagma – 100+ Free Online Games | Play Instantly, No Download",
+      "isPartOf": { "@id": "https://zenmagma.com/#website" },
+      "about": { "@id": "https://zenmagma.com/#organization" },
+      "description": "Play 100+ free online games at ZenMagma — action, puzzle, arcade, runner and kids games. No downloads, no sign-up required.",
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": "https://zenmagma.com/" }]
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+
+<!-- ── STAR CANVAS BACKGROUND ── -->
+<canvas id="stars-canvas"></canvas>
+
+<!-- ── PAGE LOADER ── -->
+<style>
+  #zm-loader{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at center,#0f0828 0%,#050510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .7s ease,visibility .7s ease;}
+  #zm-loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+  .zm-loader-logo{font-size:72px;animation:lPulse 1.6s ease-in-out infinite;filter:drop-shadow(0 0 32px #ff6b35cc) drop-shadow(0 0 60px #ff6b3566);}
+  .zm-loader-bar-wrap{width:200px;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+  .zm-loader-bar{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#ff6b35,#ffcd3c,#a855f7);animation:lBar 1.2s ease-in-out forwards;box-shadow:0 0 12px #ff6b35;}
+  .zm-loader-text{font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;color:#7986cb;letter-spacing:3px;animation:lFade 1.4s ease-in-out infinite;}
+  @keyframes lPulse{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.1) rotate(2deg)}}
+  @keyframes lBar{0%{width:0}60%{width:80%}100%{width:100%}}
+  @keyframes lFade{0%,100%{opacity:.4}50%{opacity:1}}
+</style>
+<div id="zm-loader">
+  <div class="zm-loader-logo">🌋</div>
+  <div class="zm-loader-dots">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="zm-loader-text">LOADING ZENMAGMA</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<header id="header">
+  <button id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+
+  <a href="index.html" class="logo">
+    <span class="logo-icon">🌋</span>
+    <span>ZenMagma</span>
+  </a>
+
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Search 100+ games..." autocomplete="off">
+  </div>
+
+  <!-- XP Bar -->
+  <div id="header-xp" title="Your XP Progress">
+    ⚡ <span id="hdr-pts">0</span> XP
+    <div class="xp-bar-wrap"><div class="xp-bar-fill" id="hdr-xp-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Streak -->
+  <div id="header-streak" title="Daily Streak">
+    🔥 <span id="hdr-streak">0</span> day streak
+  </div>
+
+  <div class="header-actions">
+    <button class="btn-pill outline" onclick="window.location.href='../quiz-site/index.html'">📚 Quizzes</button>
+    <button class="btn-pill primary" onclick="showToast('🚀 Sign-in coming soon!')">Sign In</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     LAYOUT
+══════════════════════════════════════ -->
+<div id="layout">
+
+  <!-- ── SIDEBAR EDGE TRIGGER ── -->
+  <div id="sidebar-edge" aria-hidden="true"></div>
+
+  <!-- ── SIDEBAR BACKDROP ── -->
+  <div id="sidebar-backdrop" onclick="SidebarCtrl.close()" aria-hidden="true"></div>
+
+  <!-- ── SIDEBAR ── -->
+  <aside id="sidebar">
+
+    <!-- Points -->
+    <div class="sidebar-points">
+      <div class="sp-icon">🏆</div>
+      <div class="sp-info">
+        <div class="sp-pts" id="sb-pts">0 XP</div>
+        <div class="sp-label">Your Points</div>
+      </div>
+    </div>
+
+    <!-- Daily Challenge mini -->
+    <div class="sidebar-challenge" id="sb-challenge" onclick="launchDailyChallenge()">
+      <div class="sc-label">🎯 Daily Challenge</div>
+      <div class="sc-title" id="sb-challenge-title">Loading...</div>
+      <button class="sc-btn">Play Now →</button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Browse Games</div>
+      <div id="cat-list"></div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Sidebar Ad -->
+    <div class="sidebar-ad">
+      <div style="font-size:28px;opacity:.2">📢</div>
+      <div>Advertisement</div>
+      <div style="font-size:10px;opacity:.4">300×250</div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main id="main">
+
+    <!-- ── HERO CAROUSEL ── -->
+    <div class="hero" id="hero">
+      <div class="hero-bg" id="hero-bg"></div>
+      <span id="hero-emoji" style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:flex-end;padding-right:60px;font-size:120px;line-height:1;filter:drop-shadow(0 4px 40px rgba(0,0,0,.7));pointer-events:none;opacity:.6;"></span>
+      <div class="hero-overlay"></div>
+      <div class="hero-players" id="hero-players">
+        <span class="dot-live"></span>
+        <span id="hero-player-count">1,247</span> playing
+      </div>
+      <div class="hero-content" id="hero-content">
+        <div class="hero-badge">🔥 Featured Game</div>
+        <div class="hero-title" id="hero-title">Loading...</div>
+        <div class="hero-desc" id="hero-desc"></div>
+        <div class="hero-actions">
+          <button class="btn-play" id="hero-play" onclick="heroPlay()">
+            <span class="play-icon">▶</span> Play Now
+          </button>
+          <button class="btn-pill outline" onclick="heroMore()" style="color:#fff;border-color:rgba(255,255,255,.25)">More Info</button>
+        </div>
+      </div>
+      <div class="hero-dots" id="hero-dots"></div>
+    </div>
+
+    <!-- ── GAMIFICATION BAR ── -->
+    <div id="gamification-bar">
+      <div class="gam-item">
+        <span class="gam-icon">⚡</span>
+        <div class="gam-info">
+          <div class="gam-val" id="gam-pts">0</div>
+          <div class="gam-label">XP Points</div>
+        </div>
+      </div>
+      <div class="gam-divider"></div>
+      <div class="gam-item">
+        <span class="gam-icon">🔥</span>
+        <div class="gam-info">
+          <div class="gam-val" id="gam-streak">0</div>
+          <div class="gam-label">Day Streak</div>
+        </div>
+      </div>
+      <div class="gam-divider"></div>
+      <div class="gam-item">
+        <span class="gam-icon">🎮</span>
+        <div class="gam-info">
+          <div class="gam-val" id="gam-played">0</div>
+          <div class="gam-label">Games Played</div>
+        </div>
+      </div>
+      <div class="gam-divider"></div>
+      <div class="gam-xp-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:11px;color:var(--c-muted)">Level <span id="gam-level">1</span></span>
+          <span class="gam-badge" id="gam-badge">🥉 Newcomer</span>
+        </div>
+        <div class="gam-xp-bar"><div class="gam-xp-fill" id="gam-xp-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- ── DAILY CHALLENGE ── -->
+    <div id="daily-challenge" onclick="launchDailyChallenge()">
+      <div class="dc-badge">
+        <div class="dc-icon">🎯</div>
+        <div class="dc-label">Daily</div>
+      </div>
+      <div class="dc-info">
+        <div class="dc-tag">⚡ Daily Challenge</div>
+        <div class="dc-title" id="dc-title">Mystery Game</div>
+        <div class="dc-sub">Complete today's challenge to earn <b style="color:var(--c-fire2)">+50 bonus XP</b></div>
+        <div class="dc-timer" id="dc-timer">Resets in: calculating...</div>
+      </div>
+      <button class="dc-action">Play Challenge →</button>
+    </div>
+
+    <!-- ── CATEGORY PILLS ── -->
+    <div class="cat-pills" id="cat-pills"></div>
+
+    <!-- ── TRENDING NOW ── -->
+    <div class="sec-header section-glow">
+      <h2 class="sec-title"><span>🔥</span> Trending Now</h2>
+      <a href="#" class="see-all" onclick="filterCat('all');return false">See All →</a>
+    </div>
+    <div class="scroll-row" id="trending-row"></div>
+
+    <!-- ── MYSTERY GAME ── -->
+    <div class="mystery-box" onclick="launchMystery()">
+      <div class="mb-icon">🎲</div>
+      <div class="mb-info">
+        <div class="mb-tag">🌟 Surprise Me</div>
+        <div class="mb-title">Mystery Game of the Day</div>
+        <div class="mb-sub">Click to reveal a random game — you might discover your new favourite!</div>
+      </div>
+    </div>
+
+    <!-- Ad -->
+    <div class="ad-banner leaderboard">
+      📢 Advertisement — 728×90 Leaderboard
+    </div>
+
+    <!-- ── RECENTLY PLAYED ── -->
+    <div id="recent-section" style="display:none">
+      <div class="sec-header section-glow">
+        <h2 class="sec-title"><span>🕐</span> Continue Playing</h2>
+        <a href="#" class="see-all" onclick="clearRecent();return false">Clear</a>
+      </div>
+      <div class="scroll-row" id="recent-row"></div>
+    </div>
+
+    <!-- ── MINI LEADERBOARD ── -->
+    <div class="sec-header section-glow" style="margin-bottom:14px">
+      <h2 class="sec-title"><span>🏆</span> Top Players This Week</h2>
+    </div>
+    <div id="mini-leaderboard" style="margin-bottom:36px">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- ── ALL GAMES ── -->
+    <div class="sec-header section-glow">
+      <h2 class="sec-title" id="grid-title"><span>🎮</span> All Games</h2>
+      <span id="game-count" style="color:var(--c-muted);font-size:13px;font-weight:700;"></span>
+    </div>
+    <div class="games-grid wide" id="all-games-grid"></div>
+
+    <!-- Bottom Ad -->
+    <div class="ad-banner rectangle">
+      📢 Advertisement — 300×250 Rectangle
+    </div>
+
+  </main>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <div class="logo" style="margin-bottom:12px;font-size:18px">🌋 ZenMagma</div>
+      <p style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.7">Free online games for kids and adults. No downloads, no sign-ups — just fun!</p>
+    </div>
+    <div class="footer-col">
+      <h4>Categories</h4>
+      <a href="categories/action.html">⚡ Action Games</a>
+      <a href="categories/puzzle.html">🧩 Puzzle Games</a>
+      <a href="categories/runner.html">🏃 Runner Games</a>
+      <a href="categories/kids.html">🌈 Kids Games</a>
+      <a href="categories/arcade.html">🕹️ Arcade Games</a>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="index.html">🏠 Home</a>
+      <a href="about.html">✨ About Us</a>
+      <a href="contact.html">💬 Contact</a>
+      <a href="privacy-policy.html">🔒 Privacy Policy</a>
+      <a href="sitemap.html">🗺️ Sitemap</a>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <a href="#mini-leaderboard" onclick="document.getElementById('mini-leaderboard').scrollIntoView({behavior:'smooth'});return false">🏆 Leaderboard</a>
+      <a href="contact.html?subject=submit">📤 Submit a Game</a>
+      <a href="contact.html?subject=advertise">📢 Advertise</a>
+      <a href="sitemap.html">🗺️ Sitemap</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 <a href="https://zenmagma.com" style="color:var(--c-neon)">ZenMagma.com</a>. All rights reserved.</span>
+    <span style="display:flex;align-items:center;gap:12px">
+      <a href="privacy-policy.html" style="color:rgba(255,255,255,.35);font-size:12px">Privacy Policy</a>
+      <span style="color:rgba(255,255,255,.2)">·</span>
+      <span style="color:rgba(255,255,255,.35);font-size:12px">Made with ❤️ for players</span>
+    </span>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════
+     FULL-SCREEN GAME MODAL
+     Opens when any game card is clicked
+══════════════════════════════════════ -->
+<div id="game-modal" role="dialog" aria-modal="true" aria-label="Play Game">
+
+  <!-- Top action bar -->
+  <div id="gm-bar">
+    <!-- Game thumbnail + title -->
+    <div id="gm-thumb-mini" class="gm-thumb-mini-fallback">🎮</div>
+    <div class="gm-title-wrap">
+      <div id="gm-title">Loading...</div>
+      <div id="gm-cat">Game</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="gm-actions">
+      <button class="gm-btn" id="gm-like-btn" onclick="gmToggleLike()" title="Like">
+        ❤️ <span class="gm-btn-text">Like</span>
+      </button>
+      <button class="gm-btn" onclick="gmShare()" title="Share">
+        📤 <span class="gm-btn-text">Share</span>
+      </button>
+      <button class="gm-btn" onclick="gmFullscreen()" title="Fullscreen">
+        ⛶ <span class="gm-btn-text">Fullscreen</span>
+      </button>
+      <a class="gm-btn" id="gm-page-link" href="#" title="Open game page">
+        🔗 <span class="gm-btn-text">Game Page</span>
+      </a>
+      <button class="gm-close" onclick="closeGameModal()" aria-label="Close game">✕</button>
+    </div>
+  </div>
+
+  <!-- Game iframe -->
+  <div id="gm-frame-wrap">
+    <!-- Loading spinner -->
+    <div id="gm-loading">
+      <div class="gm-spinner"></div>
+      <div class="gm-loading-text">LOADING GAME</div>
+    </div>
+    <iframe id="gm-iframe"
+            allowfullscreen
+            allow="autoplay; fullscreen; gamepad *"
+            scrolling="no"
+            title="Game"></iframe>
+  </div>
+
+</div>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<nav id="mobile-nav">
+  <button class="mob-nav-item active" onclick="filterCat('all')"><span class="mn-icon">🏠</span>Home</button>
+  <button class="mob-nav-item" onclick="filterCat('kids')"><span class="mn-icon">🌈</span>Kids</button>
+  <button class="mob-nav-item" onclick="filterCat('puzzle')"><span class="mn-icon">🧩</span>Puzzle</button>
+  <button class="mob-nav-item" onclick="filterCat('action')"><span class="mn-icon">⚡</span>Action</button>
+  <button class="mob-nav-item" onclick="filterCat('runner')"><span class="mn-icon">🏃</span>Runner</button>
+</nav>
+
+<!-- ── TOAST ── -->
+<div id="toast"></div>
+
+<script src="js/games-data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/animations.js"></script>
+<script src="js/video-preview.js" defer></script>
+<script>
+/* ── STARS BACKGROUND ── */
+(function(){
+  const c=document.getElementById('stars-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  let W,H,stars=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  function init(){
+    resize();stars=[];
+    for(let i=0;i<140;i++) stars.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.4+.3,
+      a:Math.random(), da:(Math.random()-.5)*.006,
+      dx:(Math.random()-.5)*.06, dy:(Math.random()-.5)*.03
+    });
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      s.x+=s.dx; s.y+=s.dy; s.a+=s.da;
+      if(s.x<0)s.x=W; if(s.x>W)s.x=0;
+      if(s.y<0)s.y=H; if(s.y>H)s.y=0;
+      if(s.a<0||s.a>1) s.da*=-1;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(180,160,255,${s.a*.65})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',init);
+  init(); draw();
+})();
+
+/* ── LOADER hide after min 1.2s ── */
+const _ls=Date.now();
+window.addEventListener('load',()=>{
+  const loader=document.getElementById('zm-loader');
+  const rem=Math.max(0,1200-(Date.now()-_ls));
+  setTimeout(()=>loader.classList.add('hidden'),rem);
+});
+
+/* ── XP POPUP on card click ── */
+document.addEventListener('click', e => {
+  const card = e.target.closest('.game-card');
+  if (!card) return;
+  showXpPopup(10, e.clientX, e.clientY + window.scrollY - 40);
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   ZENMAGMA — GameModal
+   Full-screen iframe game overlay
+   Works for local games AND GameDistribution embeds
+═══════════════════════════════════════════════════ */
+const GameModal = (() => {
+
+  let _currentGame   = null;
+  let _loadTimer     = null;
+  let _iframeLoaded  = false;
+
+  const modal    = () => document.getElementById('game-modal');
+  const iframe   = () => document.getElementById('gm-iframe');
+  const loading  = () => document.getElementById('gm-loading');
+
+  /* ── Open ── */
+  function open(gameId) {
+    const game = getGameById(gameId);
+    if (!game) return;
+    _currentGame  = game;
+    _iframeLoaded = false;
+
+    // Populate bar
+    _populateBar(game);
+
+    // Show loading state
+    const ld = loading();
+    if (ld) { ld.classList.remove('hidden'); }
+
+    // Set iframe src
+    const fr = iframe();
+    if (fr) {
+      fr.src = '';
+      // Small rAF delay so iframe resets cleanly
+      requestAnimationFrame(() => {
+        fr.src = game.src;
+        fr.onload = () => _onIframeLoad();
+        // Fallback: hide spinner after 5s regardless
+        _loadTimer = setTimeout(() => _onIframeLoad(), 5000);
+      });
+    }
+
+    // Show modal
+    modal()?.classList.add('gm-open');
+    document.body.style.overflow = 'hidden';
+
+    // XP flash
+    _showXPFlash(10);
+
+    // Track
+    addRecent(gameId);
+    if (window.GS) GS.addPoints(10);
+    buildLeaderboard?.();
+  }
+
+  function _onIframeLoad() {
+    if (_iframeLoaded) return;
+    _iframeLoaded = true;
+    clearTimeout(_loadTimer);
+    const ld = loading();
+    if (ld) ld.classList.add('hidden');
+  }
+
+  function _populateBar(game) {
+    // Title + category
+    const titleEl = document.getElementById('gm-title');
+    const catEl   = document.getElementById('gm-cat');
+    if (titleEl) titleEl.textContent = game.title;
+    if (catEl)   catEl.textContent   = (game.category || '').toUpperCase();
+
+    // Mini thumbnail
+    const thumbEl = document.getElementById('gm-thumb-mini');
+    if (thumbEl) {
+      if (game.thumb) {
+        thumbEl.outerHTML = `<img id="gm-thumb-mini" class="gm-thumb-mini"
+          src="${game.thumb}" alt="${game.title}"
+          onerror="this.outerHTML='<div id=&quot;gm-thumb-mini&quot; class=&quot;gm-thumb-mini-fallback&quot; style=&quot;background:${game.color}44&quot;>${game.emoji}</div>'">`;
+      } else {
+        thumbEl.className  = 'gm-thumb-mini-fallback';
+        thumbEl.style.background = (game.color || '#7c3aed') + '44';
+        thumbEl.textContent = game.emoji || '🎮';
+      }
+    }
+
+    // Like button state
+    const likeBtn = document.getElementById('gm-like-btn');
+    if (likeBtn) {
+      const liked = !!localStorage.getItem('zm_liked_' + game.id);
+      likeBtn.classList.toggle('liked', liked);
+    }
+
+    // Page link
+    const pageLink = document.getElementById('gm-page-link');
+    if (pageLink) pageLink.href = `game.html?id=${game.slug}`;
+  }
+
+  function _showXPFlash(pts) {
+    const el = document.createElement('div');
+    el.className = 'gm-xp-flash';
+    el.textContent = `⚡ +${pts} XP`;
+    document.getElementById('gm-frame-wrap')?.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+
+  /* ── Close ── */
+  function close() {
+    modal()?.classList.remove('gm-open');
+    document.body.style.overflow = '';
+    clearTimeout(_loadTimer);
+    // Delay src clear so exit animation plays
+    setTimeout(() => {
+      const fr = iframe();
+      if (fr) fr.src = '';
+      const ld = loading();
+      if (ld) ld.classList.remove('hidden');
+    }, 300);
+    _currentGame = null;
+  }
+
+  /* ── Like toggle ── */
+  function toggleLike() {
+    if (!_currentGame) return;
+    const key   = 'zm_liked_' + _currentGame.id;
+    const liked = !!localStorage.getItem(key);
+    if (liked) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, '1');
+      showToast?.('❤️ Liked!', 1800);
+    }
+    const btn = document.getElementById('gm-like-btn');
+    if (btn) btn.classList.toggle('liked', !liked);
+  }
+
+  /* ── Share ── */
+  function share() {
+    if (!_currentGame) return;
+    const url = `${location.origin}${location.pathname.replace('index.html','') || '/'}game.html?id=${_currentGame.slug}`;
+    if (navigator.share) {
+      navigator.share({ title: _currentGame.title, url }).catch(()=>{});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      showToast?.('🔗 Link copied!', 2000);
+    }
+  }
+
+  /* ── Fullscreen ── */
+  function fullscreen() {
+    const wrap = document.getElementById('gm-frame-wrap');
+    if (!document.fullscreenElement) {
+      wrap?.requestFullscreen?.() || wrap?.webkitRequestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }
+
+  /* ── Keyboard ── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal()?.classList.contains('gm-open')) close();
+  });
+
+  return { open, close, toggleLike, share, fullscreen };
+
+})();
+
+/* ── Global aliases ── */
+window.openGameModal  = (id)  => GameModal.open(id);
+window.closeGameModal = ()    => GameModal.close();
+window.gmToggleLike   = ()    => GameModal.toggleLike();
+window.gmShare        = ()    => GameModal.share();
+window.gmFullscreen   = ()    => GameModal.fullscreen();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   ZENMAGMA — SidebarController
+   Premium hover-to-reveal sidebar with edge trigger
+   Desktop: mouse proximity reveal + auto-hide
+   Mobile:  hamburger button toggle
+═══════════════════════════════════════════════════ */
+const SidebarCtrl = (() => {
+
+  const EDGE_WIDTH    = 20;   // px from left edge to trigger
+  const HIDE_DELAY    = 400;  // ms delay before auto-hiding
+  const isMobile      = () => window.matchMedia('(max-width: 768px)').matches;
+
+  let isOpen          = false;
+  let hideTimer       = null;
+  let isMouseInSidebar = false;
+  let isMouseInEdge   = false;
+
+  const sidebar   = document.getElementById('sidebar');
+  const backdrop  = document.getElementById('sidebar-backdrop');
+  const toggle    = document.getElementById('sidebar-toggle');
+
+  /* ── Open ── */
+  function open() {
+    if (isOpen) return;
+    isOpen = true;
+    sidebar.classList.add('sidebar-open');
+    backdrop.classList.add('visible');
+    if (toggle) toggle.textContent = '✕';
+    clearHideTimer();
+  }
+
+  /* ── Close ── */
+  function close() {
+    if (!isOpen) return;
+    isOpen = false;
+    sidebar.classList.remove('sidebar-open');
+    backdrop.classList.remove('visible');
+    if (toggle) toggle.textContent = '☰';
+    clearHideTimer();
+  }
+
+  /* ── Toggle (mobile hamburger) ── */
+  function toggle_() {
+    isOpen ? close() : open();
+  }
+
+  /* ── Timer helpers ── */
+  function scheduleHide() {
+    clearHideTimer();
+    hideTimer = setTimeout(() => {
+      if (!isMouseInSidebar && !isMouseInEdge) close();
+    }, HIDE_DELAY);
+  }
+
+  function clearHideTimer() {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+  }
+
+  /* ── Desktop: global mouse move → edge detection ── */
+  function onMouseMove(e) {
+    if (isMobile()) return;
+
+    // Within edge zone → open
+    if (e.clientX <= EDGE_WIDTH) {
+      isMouseInEdge = true;
+      clearHideTimer();
+      if (!isOpen) open();
+    } else {
+      isMouseInEdge = false;
+      // If sidebar is open but mouse has left both edge and sidebar → schedule hide
+      if (isOpen && !isMouseInSidebar) scheduleHide();
+    }
+  }
+
+  /* ── Sidebar: mouse enter/leave ── */
+  function onSidebarEnter() {
+    isMouseInSidebar = true;
+    clearHideTimer();
+  }
+
+  function onSidebarLeave() {
+    isMouseInSidebar = false;
+    if (!isMouseInEdge) scheduleHide();
+  }
+
+  /* ── Click inside sidebar keeps it open (already handled by enter/leave)
+        Click on a link inside still navigates, no extra handling needed ── */
+
+  /* ── Keyboard: Escape to close ── */
+  function onKeyDown(e) {
+    if (e.key === 'Escape' && isOpen) close();
+  }
+
+  /* ── Init ── */
+  function init() {
+    if (!sidebar) return;
+
+    // Desktop edge + sidebar hover
+    document.addEventListener('mousemove', onMouseMove, { passive: true });
+    sidebar.addEventListener('mouseenter', onSidebarEnter);
+    sidebar.addEventListener('mouseleave', onSidebarLeave);
+
+    // Keyboard
+    document.addEventListener('keydown', onKeyDown);
+
+    // Mobile toggle wiring (button already calls toggleSidebar in HTML)
+    // Override the old toggleSidebar function
+    window.toggleSidebar = toggle_;
+
+    // Close on sidebar internal link click (navigate away — close first)
+    sidebar.addEventListener('click', e => {
+      const a = e.target.closest('a[href], .cat-item');
+      if (a && !isMobile()) {
+        // Small delay so the click registers before closing
+        setTimeout(() => close(), 120);
+      }
+    });
+  }
+
+  return { init, open, close, toggle: toggle_ };
+
+})();
+
+document.addEventListener('DOMContentLoaded', () => SidebarCtrl.init());
+</script>
+</body>
+</html>

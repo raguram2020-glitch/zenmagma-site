@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Shooter - Kids Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', Arial;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+            color: #00ff00;
+        }
+
+        .info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: rgba(0, 255, 0, 0.1);
+            border: 3px solid #00ff00;
+            padding: 15px 25px;
+            border-radius: 10px;
+        }
+
+        .info-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00ff00;
+            margin-top: 5px;
+        }
+
+        #gameCanvas {
+            border: 4px solid #00ff00;
+            background: #0a0a1f;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            display: block;
+            margin: 0 auto 30px;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 40px;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Comic Sans MS', Arial;
+            background: transparent;
+            color: #00ff00;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 0, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border: 3px solid #00ff00;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            color: #00ff00;
+        }
+
+        .modal-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .modal-score {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SPACE SHOOTER 👽</h1>
+
+        <div class="info">
+            <div class="info-box">
+                <div>Score: <span id="score">0</span></div>
+            </div>
+            <div class="info-box">
+                <div>Lives: <span id="lives">3</span></div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="500"></canvas>
+
+        <div class="controls">
+            <button onclick="startGame()">Start Game</button>
+            
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <div class="modal-title">GAME OVER!</div>
+            <div class="modal-score" id="finalScore">0</div>
+            <div class="modal-buttons">
+                <button onclick="startGame()">Play Again</button>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+        let gameLoopId = null;
+
+        const player = {
+            x: canvas.width / 2 - 20,
+            y: canvas.height - 50,
+            width: 40,
+            height: 40,
+            speed: 7
+        };
+
+        let enemies = [];
+        let bullets = [];
+        let keys = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keydown', (e) => {
+                keys[e.key] = true;
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    if (!gameRunning) startGame();
+                    else shoot();
+                }
+            });
+            document.addEventListener('keyup', (e) => keys[e.key] = false);
+            drawStartScreen();
+        });
+
+        function shoot() {
+            bullets.push({
+                x: player.x + player.width / 2 - 2,
+                y: player.y,
+                width: 4,
+                height: 15,
+                speed: 8
+            });
+        }
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            enemies = [];
+            bullets = [];
+            gameRunning = true;
+            document.getElementById('gameOverModal').classList.remove('active');
+
+            for (let i = 0; i < 3; i++) {
+                enemies.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: 30 + i * 80,
+                    width: 40,
+                    height: 40,
+                    speed: 2 + Math.random() * 2
+                });
+            }
+
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            update();
+            draw();
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            // Player movement
+            if (keys['ArrowLeft'] || keys['a']) player.x = Math.max(0, player.x - player.speed);
+            if (keys['ArrowRight'] || keys['d']) player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+
+            // Update bullets
+            bullets = bullets.filter((bullet, index) => {
+                bullet.y -= bullet.speed;
+                return bullet.y > 0;
+            });
+
+            // Update enemies
+            enemies.forEach((enemy, index) => {
+                enemy.x += enemy.speed;
+                if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+                    enemy.speed *= -1;
+                }
+
+                // Check bullet collisions
+                bullets.forEach((bullet, bIndex) => {
+                    if (bullet.x < enemy.x + enemy.width &&
+                        bullet.x + bullet.width > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + bullet.height > enemy.y) {
+                        enemies.splice(index, 1);
+                        bullets.splice(bIndex, 1);
+                        score += 10;
+
+                        if (enemies.length === 0) {
+                            for (let i = 0; i < 4; i++) {
+                                enemies.push({
+                                    x: Math.random() * (canvas.width - 40),
+                                    y: 30 + i * 70,
+                                    width: 40,
+                                    height: 40,
+                                    speed: 2 + Math.random() * 3
+                                });
+                            }
+                        }
+                    }
+                });
+
+                // Check if enemy reaches bottom
+                if (enemy.y > canvas.height) {
+                    lives--;
+                    enemy.y = -40;
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                }
+            });
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0a0a1f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Stars
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 100; i++) {
+                const x = (i * 73) % canvas.width;
+                const y = (i * 97) % canvas.height;
+                ctx.fillRect(x, y, 2, 2);
+            }
+
+            // Draw player
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillRect(player.x + 5, player.y - 10, 6, 10);
+
+            // Draw bullets
+            ctx.fillStyle = '#ffff00';
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+
+            // Draw enemies
+            ctx.fillStyle = '#ff0000';
+            enemies.forEach(enemy => {
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                ctx.fillRect(enemy.x + 5, enemy.y + 35, 6, 5);
+                ctx.fillRect(enemy.x + 29, enemy.y + 35, 6, 5);
+            });
+        }
+
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        function drawStartScreen() {
+            ctx.fillStyle = '#0a0a1f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff00';
+            ctx.font = 'bold 40px Comic Sans MS';
+            ctx.textAlign = 'center';
+            ctx.fillText('🚀 SPACE SHOOTER 👽', canvas.width / 2, 100);
+            ctx.font = '20px Comic Sans MS';
+            ctx.fillText('Arrow Keys to Move', canvas.width / 2, 200);
+            ctx.fillText('SPACE to Shoot', canvas.width / 2, 240);
+        }
+    </script>
+</body>
+</html>

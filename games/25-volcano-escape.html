@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Volcano Escape - ZenMagma</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0200;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}#hud{display:flex;gap:12px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em}.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ff4500,#ff8c00);color:#fff;transition:.2s}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:360px;width:90%;border:2px solid #ff4500}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#ff4500,#ff8c00);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+
+<div id="hud"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Lives:<b id="lf"> 3</b></span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<canvas id="c" width="420" height="480"></canvas>
+<p style="text-align:center;color:#aaa;font-size:.8em">Arrow keys / tap sides to move. Dodge falling lava bombs!</p>
+<div id="ov"><div id="ob"><h2>Volcano Escape</h2><p>Lava bombs rain from above! Move left and right to dodge them. Collect the blue crystals for bonus points!</p><button class="btn" onclick="go()">Run!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=420,H=480;
+let player,bombs,crystals,particles,score,lives,level,frame,running,timer;
+const keys={};
+function init(){player={x:W/2,y:H-40,r:14,spd:5};bombs=[];crystals=[];particles=[];score=0;lives=3;level=1;frame=0;timer=0;}
+function spawnBomb(){const x=20+Math.random()*(W-40);bombs.push({x,y:-20,r:12+level*2,dy:3+level*.5+Math.random()*2,hot:Math.random()<0.3});}
+function spawnCrystal(){if(Math.random()<0.1)crystals.push({x:20+Math.random()*(W-40),y:-20,r:10,dy:2});}
+document.addEventListener("keydown",e=>keys[e.key]=true);document.addEventListener("keyup",e=>keys[e.key]=false);
+let touchX=null;cv.addEventListener("touchstart",e=>{touchX=e.touches[0].clientX;},{passive:true});
+cv.addEventListener("touchmove",e=>{if(touchX!==null){const dx=e.touches[0].clientX-touchX;player.x=Math.max(player.r,Math.min(W-player.r,player.x+dx));touchX=e.touches[0].clientX;}},{passive:true});
+function update(){
+  frame++;timer++;
+  if(keys["ArrowLeft"])player.x=Math.max(player.r,player.x-player.spd);
+  if(keys["ArrowRight"])player.x=Math.min(W-player.r,player.x+player.spd);
+  if(timer%(Math.max(10,30-level*3))===0)spawnBomb();spawnCrystal();
+  bombs=bombs.filter(b=>{b.y+=b.dy;if(b.y>H){return false;}if(Math.hypot(b.x-player.x,b.y-player.y)<b.r+player.r){lives--;document.getElementById("lf").textContent=lives;for(let i=0;i<10;i++)particles.push({x:player.x,y:player.y,dx:(Math.random()-.5)*5,dy:-Math.random()*5,life:30,color:"#ff4500"});if(lives<=0){running=false;setTimeout(()=>alert("Caught by lava! Score: "+score),200);}return false;}return true;});
+  crystals=crystals.filter(cr=>{cr.y+=cr.dy;if(Math.hypot(cr.x-player.x,cr.y-player.y)<cr.r+player.r){score+=50*level;document.getElementById("sc").textContent=score;return false;}return cr.y<H;});
+  particles=particles.filter(p=>{p.x+=p.dx;p.y+=p.dy;p.life--;return p.life>0;});
+  score+=0.01*level;document.getElementById("sc").textContent=Math.round(score);
+  if(Math.round(score)>level*300){level++;document.getElementById("lv").textContent=level;}
+}
+function draw(){
+  // Sky to lava gradient
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#0a0200");g.addColorStop(1,"#2a0800");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // Volcano
+  ctx.fillStyle="#cc3300";ctx.beginPath();ctx.moveTo(W/2,H*.3);ctx.lineTo(W/2-80,H*.6);ctx.lineTo(W/2+80,H*.6);ctx.closePath();ctx.fill();ctx.fillStyle="#ff4500";ctx.beginPath();ctx.moveTo(W/2,H*.25);ctx.ellipse(W/2,H*.3,30,15,0,0,Math.PI*2);ctx.fill();
+  // Ground
+  ctx.fillStyle="#1a0800";ctx.fillRect(0,H-30,W,30);
+  // Lava river
+  ctx.fillStyle=`hsl(${20+Math.sin(frame*.1)*10},90%,50%)`;ctx.fillRect(0,H-15,W,15);
+  bombs.forEach(b=>{ctx.fillStyle=b.hot?"#ff0000":"#ff4500";ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();if(b.hot){ctx.fillStyle="rgba(255,200,0,.4)";ctx.beginPath();ctx.arc(b.x,b.y,b.r+5,0,Math.PI*2);ctx.fill();}});
+  crystals.forEach(cr=>{ctx.fillStyle="#00bfff";ctx.beginPath();ctx.moveTo(cr.x,cr.y-cr.r);ctx.lineTo(cr.x+cr.r,cr.y);ctx.lineTo(cr.x,cr.y+cr.r);ctx.lineTo(cr.x-cr.r,cr.y);ctx.closePath();ctx.fill();});
+  ctx.fillStyle="#4a90d9";ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="18px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🧍",player.x,player.y);
+  particles.forEach(p=>{ctx.globalAlpha=p.life/30;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;});
+}
+function go(){document.getElementById("ov").style.display="none";running=true;(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
+init();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  init();
+}
+</script></body></html>

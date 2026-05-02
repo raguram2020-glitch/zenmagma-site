@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinosaur Jump</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { height: 100%; }
+        body {
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            background: linear-gradient(180deg, #87ceeb 0%, #c9e8f5 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 8px;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 36px;
+            color: #2c3e50;
+            text-shadow: 2px 2px 0 rgba(0,0,0,.15);
+            margin-bottom: 10px;
+        }
+        .hud {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .hud-box {
+            background: rgba(255,255,255,.92);
+            border: 3px solid #ff6b6b;
+            border-radius: 10px;
+            padding: 8px 20px;
+            text-align: center;
+            min-width: 90px;
+        }
+        .hud-label { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px; }
+        .hud-value { font-size: 26px; font-weight: bold; color: #ff6b6b; margin-top: 2px; }
+        #lives-display { font-size: 22px; margin-top: 2px; letter-spacing: 2px; }
+
+        canvas {
+            border: 4px solid #2c3e50;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.2);
+            display: block;
+            width: 100%;
+            max-width: 620px;
+            height: auto;
+            cursor: pointer;
+        }
+
+        .btn-row { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; justify-content:center; }
+        button {
+            padding: 12px 36px;
+            border: none; border-radius: 10px;
+            font-size: 17px; font-weight: bold;
+            cursor: pointer; font-family: inherit;
+            text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 4px 8px rgba(0,0,0,.2);
+            transition: transform .15s, box-shadow .15s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,.25); }
+        .btn-start { background: linear-gradient(135deg,#ff6b6b,#ff8787); color:#fff; }
+        .btn-mute  { background: linear-gradient(135deg,#4ecdc4,#44a08d); color:#fff; }
+
+        /* Modal */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.65); z-index: 100;
+            align-items: center; justify-content: center;
+        }
+        .modal.on { display: flex; }
+        .modal-box {
+            background: linear-gradient(135deg,#fff,#f5f5f5);
+            border: 4px solid #ff6b6b; border-radius: 20px;
+            padding: 36px 40px; text-align: center; max-width: 360px;
+            box-shadow: 0 12px 40px rgba(0,0,0,.3);
+            animation: pop .3s ease-out;
+        }
+        @keyframes pop {
+            from { transform: scale(.8) translateY(20px); opacity:0; }
+            to   { transform: scale(1) translateY(0);     opacity:1; }
+        }
+        .modal-title { font-size: 34px; color: #2c3e50; margin-bottom: 8px; }
+        .modal-score { font-size: 52px; font-weight: bold; color: #ff6b6b; margin: 12px 0; }
+        .modal-hi    { font-size: 15px; color: #888; margin-bottom: 6px; }
+        .modal-msg   { font-size: 17px; color: #555; margin-bottom: 4px; }
+        .modal-btns  { display:flex; gap:12px; justify-content:center; margin-top:24px; flex-wrap:wrap; }
+    </style>
+</head>
+<body>
+    <h1>🦕 DINOSAUR JUMP</h1>
+
+    <div class="hud">
+        <div class="hud-box">
+            <div class="hud-label">Score</div>
+            <div class="hud-value" id="hud-score">0</div>
+        </div>
+        <div class="hud-box">
+            <div class="hud-label">Best</div>
+            <div class="hud-value" id="hud-best">0</div>
+        </div>
+        <div class="hud-box">
+            <div class="hud-label">Lives</div>
+            <div id="lives-display">❤️❤️❤️</div>
+        </div>
+        <div class="hud-box">
+            <div class="hud-label">Speed</div>
+            <div class="hud-value" id="hud-speed">1.0×</div>
+        </div>
+    </div>
+
+    <canvas id="c" width="620" height="220"></canvas>
+
+    <div class="btn-row">
+        <button class="btn-start" id="startBtn" onclick="startGame()">▶ Start</button>
+        <button class="btn-mute"  onclick="toggleMute()">🔊 Sound</button>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-box">
+            <div class="modal-title" id="m-title">Game Over! 😢</div>
+            <div class="modal-score" id="m-score">0</div>
+            <div class="modal-hi"   id="m-hi"></div>
+            <div class="modal-msg"  id="m-msg">Keep practicing! 💪</div>
+            <div class="modal-btns">
+                <button class="btn-start" onclick="startGame()">🔄 Try Again</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/* ─── CONFIG ───────────────────────────────── */
+const GRAVITY     = 0.55;
+const JUMP_POWER  = 13;
+const GROUND_Y    = 220 - 30;  // canvas.height - ground strip
+const DINO_W      = 44;
+const DINO_H      = 52;
+const MAX_LIVES   = 3;
+const OBS_DELAY   = 150;       // frames before first obstacle
+const HIT_SHRINK  = 0.70;      // hitbox = 70% of visual size (forgiving)
+
+/* ─── STATE ────────────────────────────────── */
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+let score, hiScore, lives, speed, spawnRate, spawnTimer, obsDelay;
+let running, muted, animId;
+let invTimer = 0;  // invincibility frames after hit
+let clouds = [];
+let obstacles = [];
+let particles = [];
+
+const dino = {
+  x: 60, y: GROUND_Y - DINO_H,
+  vy: 0, onGround: true,
+  jumpCount: 0,  // allow double-jump
+};
+
+/* ─── INIT ─────────────────────────────────── */
+hiScore = +localStorage.getItem('dj_hi') || 0;
+document.getElementById('hud-best').textContent = hiScore;
+muted = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('keydown', e => {
+        if (e.code === 'Space' || e.code === 'ArrowUp') {
+            e.preventDefault();
+            if (!running) startGame();
+            else handleJump();
+        }
+    });
+    canvas.addEventListener('click', () => {
+        if (!running) startGame();
+        else handleJump();
+    });
+
+    // Build initial clouds
+    for (let i = 0; i < 4; i++) clouds.push(makeCloud(Math.random() * 620));
+    drawStartScreen();
+});
+
+/* ─── CLOUD ────────────────────────────────── */
+function makeCloud(x) {
+    return { x, y: 20 + Math.random() * 60, w: 60 + Math.random() * 80, spd: 0.4 + Math.random() * 0.6 };
+}
+
+/* ─── JUMP ─────────────────────────────────── */
+function handleJump() {
+    if (dino.jumpCount < 2) {
+        dino.vy = -JUMP_POWER - (dino.jumpCount > 0 ? -2 : 0);
+        dino.onGround = false;
+        dino.jumpCount++;
+        sound('jump');
+    }
+}
+
+/* ─── START ────────────────────────────────── */
+function startGame() {
+    cancelAnimationFrame(animId);
+    score      = 0;
+    lives      = MAX_LIVES;
+    speed      = 5;
+    spawnRate  = 100;
+    spawnTimer = 0;
+    obsDelay   = OBS_DELAY;
+    obstacles  = [];
+    particles  = [];
+    invTimer   = 0;
+    dino.y     = GROUND_Y - DINO_H;
+    dino.vy    = 0;
+    dino.onGround = true;
+    dino.jumpCount = 0;
+    running    = true;
+    document.getElementById('modal').classList.remove('on');
+    document.getElementById('startBtn').textContent = '↺ Restart';
+    updateHUD();
+    loop();
+}
+
+/* ─── MAIN LOOP ─────────────────────────────── */
+function loop() {
+    if (!running) return;
+    update();
+    draw();
+    animId = requestAnimationFrame(loop);
+}
+
+/* ─── UPDATE ────────────────────────────────── */
+function update() {
+    // Score & difficulty
+    score++;
+    if (score % 400 === 0) {
+        speed     = Math.min(speed + 0.4, 14);
+        spawnRate = Math.max(55, spawnRate - 3);
+    }
+
+    // Dino physics
+    if (!dino.onGround) {
+        dino.vy += GRAVITY;
+        dino.y  += dino.vy;
+        if (dino.y >= GROUND_Y - DINO_H) {
+            dino.y = GROUND_Y - DINO_H;
+            dino.vy = 0;
+            dino.onGround  = true;
+            dino.jumpCount = 0;
+        }
+    }
+
+    // Invincibility countdown
+    if (invTimer > 0) invTimer--;
+
+    // Clouds
+    clouds.forEach(c => { c.x -= c.spd; });
+    clouds = clouds.filter(c => c.x > -150);
+    if (clouds.length < 5) clouds.push(makeCloud(630));
+
+    // Spawn obstacle
+    if (obsDelay > 0) { obsDelay--; }
+    else {
+        spawnTimer++;
+        if (spawnTimer >= spawnRate) {
+            spawnTimer = 0;
+            spawnObs();
+        }
+    }
+
+    // Move obstacles
+    obstacles.forEach(o => { o.x -= speed; });
+    obstacles = obstacles.filter(o => o.x > -80);
+
+    // Collision (shrunk hitbox)
+    if (invTimer === 0) {
+        const dx = DINO_W * (1 - HIT_SHRINK) / 2;
+        const dy = DINO_H * (1 - HIT_SHRINK) / 2;
+        const px = dino.x + dx, py = dino.y + dy;
+        const pw = DINO_W * HIT_SHRINK, ph = DINO_H * HIT_SHRINK;
+
+        for (const o of obstacles) {
+            const ox = o.x + 4, ow = o.w - 8;  // shrink cactus hitbox too
+            if (px < ox + ow && px + pw > ox &&
+                py < o.y + o.h && py + ph > o.y) {
+                hit();
+                break;
+            }
+        }
+    }
+
+    // Particles
+    particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.15; p.life--;
+    });
+    particles = particles.filter(p => p.life > 0);
+
+    updateHUD();
+}
+
+/* ─── SPAWN OBSTACLE ────────────────────────── */
+function spawnObs() {
+    const types = [
+        { w:28, h:55 },   // tall thin
+        { w:40, h:40 },   // wide short
+        { w:22, h:70 },   // very tall
+    ];
+    const t = types[Math.floor(Math.random() * types.length)];
+    // Random gap so two cacti sometimes appear close together
+    obstacles.push({ x: canvas.width + Math.random() * 40, y: GROUND_Y - t.h, w: t.w, h: t.h });
+    // 30% chance second cactus right after
+    if (Math.random() < 0.30) {
+        obstacles.push({ x: canvas.width + t.w + 18 + Math.random() * 30, y: GROUND_Y - t.h, w: t.w, h: t.h });
+    }
+}
+
+/* ─── HIT ────────────────────────────────────── */
+function hit() {
+    lives--;
+    invTimer = 90;
+    sound('hit');
+    // Spawn hit particles
+    for (let i = 0; i < 12; i++) {
+        particles.push({
+            x: dino.x + DINO_W / 2, y: dino.y + DINO_H / 2,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 2) * 3,
+            life: 30 + Math.random() * 20,
+            color: '#ff6b6b',
+        });
+    }
+    updateHUD();
+    if (lives <= 0) { endGame(); }
+}
+
+/* ─── END GAME ──────────────────────────────── */
+function endGame() {
+    running = false;
+    sound('gameover');
+    const sc = Math.floor(score / 10);
+    let isNew = false;
+    if (sc > hiScore) { hiScore = sc; localStorage.setItem('dj_hi', hiScore); isNew = true; }
+
+    document.getElementById('m-title').textContent = 'Game Over! 😢';
+    document.getElementById('m-score').textContent = sc;
+    document.getElementById('m-hi').textContent    = isNew ? '🏆 New High Score!' : `Best: ${hiScore}`;
+    document.getElementById('m-msg').textContent   =
+        sc > 50 ? 'Amazing run! 🔥' : sc > 20 ? 'Great job! Keep it up! 💪' : 'You can do better! 🦕';
+    document.getElementById('modal').classList.add('on');
+}
+
+/* ─── UPDATE HUD ─────────────────────────────── */
+function updateHUD() {
+    document.getElementById('hud-score').textContent = Math.floor(score / 10);
+    document.getElementById('hud-best').textContent  = hiScore;
+    document.getElementById('hud-speed').textContent = (speed / 5).toFixed(1) + '×';
+    const hearts = '❤️'.repeat(lives) + '🖤'.repeat(MAX_LIVES - lives);
+    document.getElementById('lives-display').textContent = hearts;
+}
+
+/* ─── DRAW ───────────────────────────────────── */
+function draw() {
+    // Sky gradient
+    const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    sky.addColorStop(0, '#87ceeb');
+    sky.addColorStop(1, '#c9e8f5');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Clouds
+    clouds.forEach(c => drawCloud(c.x, c.y, c.w));
+
+    // Ground
+    ctx.fillStyle = '#90EE90';
+    ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+    ctx.fillStyle = '#7cb342';
+    ctx.fillRect(0, GROUND_Y, canvas.width, 4);
+
+    // Ground detail dots
+    ctx.fillStyle = '#6aaa35';
+    for (let i = 0; i < canvas.width; i += 30) {
+        ctx.beginPath();
+        ctx.arc(i + (Date.now() / 60 * speed % 30), GROUND_Y + 10, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Obstacles
+    obstacles.forEach(o => drawCactus(o.x, o.y, o.w, o.h));
+
+    // Particles
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life / 50;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // Dino (flicker when invincible)
+    const blink = invTimer > 0 && Math.floor(invTimer / 6) % 2 === 0;
+    if (!blink) drawDino(dino.x, dino.y, !dino.onGround);
+
+    // Hitbox debug: uncomment to see
+    // ctx.strokeStyle='red'; const dx=DINO_W*(1-HIT_SHRINK)/2; const dy=DINO_H*(1-HIT_SHRINK)/2;
+    // ctx.strokeRect(dino.x+dx, dino.y+dy, DINO_W*HIT_SHRINK, DINO_H*HIT_SHRINK);
+}
+
+/* ─── DRAW DINO ─────────────────────────────── */
+function drawDino(x, y, jumping) {
+    ctx.save();
+    // Squash/stretch
+    const scaleY = jumping ? 1.12 : dino.vy > 3 ? 0.9 : 1;
+    const scaleX = jumping ? 0.90 : dino.vy > 3 ? 1.1 : 1;
+    ctx.translate(x + DINO_W / 2, y + DINO_H);
+    ctx.scale(scaleX, scaleY);
+    ctx.translate(-DINO_W / 2, -DINO_H);
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath();
+    ctx.ellipse(DINO_W/2, DINO_H + 2, DINO_W/2 + 4, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.roundRect(0, 8, 38, 28, 8);
+    ctx.fill();
+
+    // Belly
+    ctx.fillStyle = '#fff8dc';
+    ctx.beginPath();
+    ctx.ellipse(19, 22, 12, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tail
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.moveTo(0, 18); ctx.lineTo(-16, 8); ctx.lineTo(-10, 22); ctx.closePath();
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.roundRect(28, -2, 26, 22, [4, 10, 6, 4]);
+    ctx.fill();
+
+    // Nostril
+    ctx.fillStyle = '#e6b800';
+    ctx.beginPath();
+    ctx.ellipse(50, 9, 2, 1.5, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(44, 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(45.5, 3, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Spines
+    ctx.fillStyle = '#e6b800';
+    [12, 18, 24].forEach(sx => {
+        ctx.beginPath();
+        ctx.moveTo(sx, 8); ctx.lineTo(sx - 4, -2); ctx.lineTo(sx + 4, -2); ctx.closePath();
+        ctx.fill();
+    });
+
+    // Legs (animated)
+    const legPhase = Date.now() / 100;
+    ctx.fillStyle = '#FFD700';
+    if (dino.onGround) {
+        // Running legs
+        const l1 = Math.sin(legPhase) * 6;
+        const l2 = Math.sin(legPhase + Math.PI) * 6;
+        ctx.fillRect(8,  36, 8, 12 + l1);
+        ctx.fillRect(22, 36, 8, 12 + l2);
+    } else {
+        // Tucked jump pose
+        ctx.fillRect(8,  34, 8, 10);
+        ctx.fillRect(22, 34, 8, 10);
+    }
+
+    ctx.restore();
+}
+
+/* ─── DRAW CACTUS ────────────────────────────── */
+function drawCactus(x, y, w, h) {
+    ctx.fillStyle = '#2d8c2d';
+
+    // Main stem
+    ctx.beginPath();
+    ctx.roundRect(x + w/2 - 6, y, 12, h, 3);
+    ctx.fill();
+
+    // Left arm
+    ctx.beginPath();
+    ctx.roundRect(x, y + h * 0.25, w/2 - 4, 9, 3);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(x, y + h * 0.1, 9, h * 0.22, 3);
+    ctx.fill();
+
+    // Right arm
+    ctx.beginPath();
+    ctx.roundRect(x + w/2 + 4, y + h * 0.35, w/2 - 4, 9, 3);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(x + w - 9, y + h * 0.2, 9, h * 0.22, 3);
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = '#3db33d';
+    ctx.beginPath();
+    ctx.roundRect(x + w/2 - 4, y + 4, 4, h - 8, 2);
+    ctx.fill();
+}
+
+/* ─── DRAW CLOUD ─────────────────────────────── */
+function drawCloud(x, y, w) {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(x + w*0.5,  y,      w*0.5, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + w*0.25, y + 6,  w*0.3, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + w*0.75, y + 6,  w*0.3, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+/* ─── START SCREEN ───────────────────────────── */
+function drawStartScreen() {
+    const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    sky.addColorStop(0, '#87ceeb'); sky.addColorStop(1, '#c9e8f5');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#90EE90';
+    ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+    ctx.fillStyle = '#7cb342';
+    ctx.fillRect(0, GROUND_Y, canvas.width, 4);
+
+    drawCloud(80, 30, 100);
+    drawCloud(350, 20, 80);
+    drawCloud(520, 40, 70);
+
+    drawDino(canvas.width / 2 - 22, GROUND_Y - DINO_H, false);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#2c3e50';
+    ctx.font = 'bold 22px Comic Sans MS';
+    ctx.fillText('Click or Press SPACE to Start!', canvas.width / 2, 50);
+    ctx.font = '16px Comic Sans MS';
+    ctx.fillStyle = '#555';
+    ctx.fillText(`🏆 Best Score: ${hiScore}`, canvas.width / 2, 78);
+    ctx.textAlign = 'left';
+}
+
+/* ─── SOUND ─────────────────────────────────── */
+let audioCtx;
+function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+function sound(type) {
+    if (muted) return;
+    try {
+        const a = getAudio();
+        const o = a.createOscillator();
+        const g = a.createGain();
+        o.connect(g); g.connect(a.destination);
+        if (type === 'jump') {
+            o.frequency.setValueAtTime(350, a.currentTime);
+            o.frequency.exponentialRampToValueAtTime(600, a.currentTime + 0.12);
+            g.gain.setValueAtTime(0.25, a.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.15);
+            o.start(); o.stop(a.currentTime + 0.15);
+        } else if (type === 'hit') {
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(280, a.currentTime);
+            o.frequency.exponentialRampToValueAtTime(80, a.currentTime + 0.25);
+            g.gain.setValueAtTime(0.3, a.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.25);
+            o.start(); o.stop(a.currentTime + 0.25);
+        } else if (type === 'gameover') {
+            [440, 370, 300, 220].forEach((f, i) => {
+                const o2 = a.createOscillator();
+                const g2 = a.createGain();
+                o2.connect(g2); g2.connect(a.destination);
+                o2.frequency.value = f;
+                o2.type = 'triangle';
+                g2.gain.setValueAtTime(0.2, a.currentTime + i * 0.08);
+                g2.gain.exponentialRampToValueAtTime(0.001, a.currentTime + i * 0.08 + 0.15);
+                o2.start(a.currentTime + i * 0.08);
+                o2.stop(a.currentTime + i * 0.08 + 0.2);
+            });
+            return;
+        }
+    } catch(e) {}
+}
+
+function toggleMute() {
+    muted = !muted;
+    document.querySelector('.btn-mute').textContent = muted ? '🔇 Muted' : '🔊 Sound';
+}
+</script>
+</body>
+</html>

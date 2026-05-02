@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Spin and Match - ZenMagma</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0008;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:8px;overflow:hidden}canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ff9a9e,#fecfef);color:#fff;transition:.2s;margin:3px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #ff9a9e}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#ff9a9e,#fecfef);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<div style="text-align:center"><div style="padding:6px"><span class="hv">Balance:<b id="bal"> 100</b></span><span class="hv">Wins:<b id="wins"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<canvas id="c" width="420" height="380"></canvas>
+<div style="padding:8px"><button class="btn" id="spinBtn" onclick="spinWheel()">🎡 Spin! (10)</button></div>
+<div id="result" style="font-size:1.4em;height:36px;padding:4px;text-align:center"></div></div>
+<div id="ov"><div id="ob"><h2>Spin &amp; Match</h2><p>Spin the slot wheel and match symbols to win! Match 2 for small prize, 3 for jackpot! Start with 100 coins.</p><button class="btn" onclick="go()">Spin!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=420,H=380;
+const SYMBOLS=["🍒","🍋","🍇","⭐","💎","🎰","🔔","🎁"];
+let reels,spinning,balance=100,wins=0,level=1,running=false;
+const SY=3;
+function init(){reels=Array.from({length:3},()=>({offset:0,spd:0,symbols:[...SYMBOLS].sort(()=>Math.random()-.5)}));}
+function spinWheel(){
+  if(spinning||balance<10)return;
+  balance-=10;document.getElementById("bal").textContent=balance;document.getElementById("result").textContent="";
+  spinning=true;document.getElementById("spinBtn").disabled=true;
+  reels.forEach((r,i)=>{r.spd=15+i*3;r.targetOffset=Math.floor(Math.random()*SYMBOLS.length)*60;});
+  setTimeout(()=>{spinning=false;document.getElementById("spinBtn").disabled=false;checkWin();},2000+reels.length*300);
+}
+function checkWin(){
+  const top=reels.map(r=>r.symbols[Math.floor(r.offset/60)%r.symbols.length]);
+  const win3=top[0]===top[1]&&top[1]===top[2];
+  const win2=top[0]===top[1]||top[1]===top[2]||top[0]===top[2];
+  if(win3){const prize=50+level*20;balance+=prize;wins++;document.getElementById("result").innerHTML=`<span style="color:#f1c40f">🎉 JACKPOT! +${prize} coins!</span>`;if(wins%3===0){level++;document.getElementById("lv").textContent=level;}}
+  else if(win2){balance+=20;document.getElementById("result").innerHTML='<span style="color:#2ecc71">✨ Match! +20 coins</span>';}
+  else document.getElementById("result").innerHTML='<span style="color:#aaa">No match. Try again!</span>';
+  document.getElementById("bal").textContent=balance;document.getElementById("wins").textContent=wins;
+  if(balance<=0)setTimeout(()=>alert("Out of coins! Wins: "+wins),200);
+}
+function draw(){
+  ctx.fillStyle="#0a0008";ctx.fillRect(0,0,W,H);
+  // Machine body
+  ctx.fillStyle="#1a0020";ctx.fillRect(60,40,300,260);ctx.strokeStyle="#f9d423";ctx.lineWidth=4;ctx.strokeRect(60,40,300,260);
+  // Reels
+  reels.forEach((r,i)=>{
+    if(r.spd>0){r.offset=(r.offset+r.spd)%(SYMBOLS.length*60);r.spd=Math.max(0,r.spd-0.3);}
+    const rx=100+i*100,ry=80;ctx.fillStyle="#0f0018";ctx.fillRect(rx-30,ry,60,160);ctx.strokeStyle="#888";ctx.lineWidth=2;ctx.strokeRect(rx-30,ry,60,160);
+    for(let j=-1;j<3;j++){const s=r.symbols[Math.floor((r.offset/60+j+SYMBOLS.length)%SYMBOLS.length)];const y=ry+(j*60)-(r.offset%60)+30;if(y>ry-10&&y<ry+170){ctx.font="36px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(s,rx,y);}}
+    // Window mask
+    ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(rx-30,ry-5,60,15);ctx.fillRect(rx-30,ry+150,60,20);
+  });
+  // Center line
+  ctx.strokeStyle="#f9d423";ctx.lineWidth=3;ctx.setLineDash([8,4]);ctx.beginPath();ctx.moveTo(70,H/2-10);ctx.lineTo(W-70,H/2-10);ctx.stroke();ctx.setLineDash([]);
+  if(spinning){reels.forEach(r=>{if(r.spd>0)r.offset=(r.offset+r.spd)%(SYMBOLS.length*60);});}
+}
+function go(){document.getElementById("ov").style.display="none";running=true;init();(function lp(){if(!running)return;draw();requestAnimationFrame(lp);})();}
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  init();
+}
+</script></body></html>
