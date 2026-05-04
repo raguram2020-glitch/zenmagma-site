@@ -3,10 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <title>Pixel Dash</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0}</style>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block;position:fixed;top:0;left:0}
+#touch-btns{display:none;position:fixed;bottom:18px;left:0;width:100%;z-index:10;pointer-events:none}
+#touch-btns button{pointer-events:all;width:110px;height:72px;font-size:18px;font-weight:bold;font-family:monospace;border:3px solid rgba(255,255,255,0.5);border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#btn-jump{position:absolute;left:24px;bottom:0;background:rgba(0,0,100,0.7);border-color:#4488ff}
+#btn-slide{position:absolute;right:24px;bottom:0;background:rgba(100,0,0,0.7);border-color:#ff8844}
+@media(hover:none)and(pointer:coarse){#touch-btns{display:block}}
+</style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="touch-btns">
+  <button id="btn-jump">⬆️ JUMP</button>
+  <button id="btn-slide">⬇️ SLIDE</button>
+</div>
 <script>
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 let W,H,GY;
@@ -25,6 +38,29 @@ window.addEventListener('keyup',e=>{keys[e.code]=false;});
 cv.addEventListener('click',e=>{
   if(state==='start'||state==='over'){startGame();return;}
 });
+
+// ── Touch controls ───────────────────────────────────────────────────────────
+let _ty0=null;
+function _onTouchStart(e){
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  _ty0=t.clientY;
+  if(state==='start'||state==='over'){startGame();return;}
+  if(state==='play') doJump();
+}
+function _onTouchEnd(e){
+  e.preventDefault();
+  if(state!=='play'||_ty0===null)return;
+  const dy=e.changedTouches[0].clientY-_ty0;
+  if(dy>40) doSlide();   // swipe down → slide
+  _ty0=null;
+}
+cv.addEventListener('touchstart',_onTouchStart,{passive:false});
+cv.addEventListener('touchend',_onTouchEnd,{passive:false});
+
+// On-screen buttons
+document.getElementById('btn-jump').addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();if(state==='play')doJump();else startGame();},{passive:false});
+document.getElementById('btn-slide').addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();if(state==='play')doSlide();else startGame();},{passive:false});
 function doJump(){if(py>=GY-2){vy=JV;spawnP(W*0.22,py,'#ffff00',5);}}
 function doSlide(){if(!sliding){sliding=true;stmr=SDUR;}}
 function startGame(){state='play';init();}
@@ -106,7 +142,8 @@ function drawStart(){
   cx.fillStyle='#228b22';cx.fillRect(0,GY,W,H-GY);
   cx.fillStyle='#ffff00';cx.font='bold 48px monospace';cx.textAlign='center';cx.fillText('PIXEL DASH',W/2,H*0.35);
   cx.fillStyle='#fff';cx.font='20px monospace';cx.fillText('RETRO 8-BIT RUNNER',W/2,H*0.45);
-  cx.fillStyle='#00ff00';cx.font='18px monospace';cx.fillText('↑/SPACE: JUMP   ↓/S: SLIDE',W/2,H*0.57);
+  const isMob=window.matchMedia('(hover:none)and(pointer:coarse)').matches;
+  cx.fillStyle='#00ff00';cx.font='18px monospace';cx.fillText(isMob?'TAP: JUMP  SWIPE DOWN: SLIDE':'↑/SPACE: JUMP   ↓/S: SLIDE',W/2,H*0.57);
   cx.fillStyle='#0000aa';cx.fillRect(W/2-80,H*0.66,160,44);cx.fillStyle='#fff';cx.font='bold 22px monospace';cx.fillText('START',W/2,H*0.66+28);
   if(best>0){cx.fillStyle='#ffff00';cx.font='16px monospace';cx.fillText('BEST: '+best,W/2,H*0.82);}
   cx.textAlign='left';
@@ -173,7 +210,7 @@ function draw(){
     }
   }
   ftxts.forEach(f=>{cx.globalAlpha=f.life/60;cx.font='bold 16px monospace';cx.fillStyle=f.col;cx.textAlign='center';cx.fillText(f.txt,f.x,f.y);cx.globalAlpha=1;cx.textAlign='left';});
-  if(hintT>0&&state==='play'){cx.globalAlpha=Math.min(1,hintT/60);cx.fillStyle='rgba(0,0,0,0.55)';cx.fillRect(W/2-165,H*0.78,330,38);cx.fillStyle='#fff';cx.font='16px monospace';cx.textAlign='center';cx.fillText('↑/SPACE: JUMP   ↓/S: SLIDE',W/2,H*0.78+24);cx.globalAlpha=1;cx.textAlign='left';}
+  if(hintT>0&&state==='play'){const isMob=window.matchMedia('(hover:none)and(pointer:coarse)').matches;cx.globalAlpha=Math.min(1,hintT/60);cx.fillStyle='rgba(0,0,0,0.55)';cx.fillRect(W/2-165,H*0.78,330,38);cx.fillStyle='#fff';cx.font='16px monospace';cx.textAlign='center';cx.fillText(isMob?'TAP: JUMP  SWIPE ↓: SLIDE':'↑/SPACE: JUMP   ↓/S: SLIDE',W/2,H*0.78+24);cx.globalAlpha=1;cx.textAlign='left';}
   drawHUD();
 }
 function loop(){
