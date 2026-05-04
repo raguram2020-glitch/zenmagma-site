@@ -19,6 +19,7 @@ body{touch-action:none;user-select:none;-webkit-user-select:none}
 </div>
 <script>
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
+const BG=new Image(); BG.src='../assets/backgrounds/cosmic-run-bg.jpg';
 let W,H,GY;
 function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
 resize();window.addEventListener('resize',resize);
@@ -63,62 +64,103 @@ function spawnObs(){const t=['short','tall','low'][Math.floor(Math.random()*3)];
 function spawnCoin(x){coll.push({x,y:GY-45-Math.random()*75,collected:false,a:0});}
 function spawnPup(x){const t=['shield','magnet','slow'][Math.floor(Math.random()*3)];pups.push({x,y:GY-65,t,collected:false,a:0});}
 function addFT(x,y,txt,col){ftxts.push({x,y,txt,col,life:60,vy:-1.5});}
-// Draw astronaut
 function drawPlayer(x,y,sl){
-  const bob=Math.sin(fr*0.18)*2.5;
-  if(!sl){
-    // Jetpack
-    cx.fillStyle='#888';cx.fillRect(x-22,y-38+bob,10,24);
-    cx.fillStyle='#555';cx.fillRect(x-20,y-36+bob,6,20);
-    // Body suit (white)
-    cx.fillStyle='#e0e0e0';
-    cx.beginPath();cx.ellipse(x,y-22+bob,14,22,0,0,Math.PI*2);cx.fill();
-    // Helmet
-    cx.fillStyle='#ddd';cx.beginPath();cx.arc(x,y-46+bob,16,0,Math.PI*2);cx.fill();
-    // Visor (cyan)
-    cx.fillStyle='#00ccff';cx.beginPath();cx.arc(x,y-46+bob,11,0.3,Math.PI-0.3);cx.closePath();cx.fill();
-    // Helmet glare
-    cx.fillStyle='rgba(255,255,255,0.6)';cx.beginPath();cx.ellipse(x-4,y-50+bob,4,3,0,0,Math.PI*2);cx.fill();
+  const t=cx,bob=Math.sin(fr*0.18)*2;
+  t.save(); t.translate(Math.floor(x),Math.floor(y));
+  if(sl){
+    // Sliding astronaut - horizontal float
+    t.fillStyle='#ddeeff'; t.fillRect(-24,-12,48,14); // suit body flat
+    t.fillStyle='#aabbcc'; t.fillRect(-24,-12,48,5);
+    // Helmet visor
+    t.fillStyle='#334455'; t.beginPath(); t.ellipse(14,-6,10,8,0,0,Math.PI*2); t.fill();
+    t.fillStyle='rgba(100,200,255,0.5)'; t.beginPath(); t.ellipse(14,-6,7,5,0,0,Math.PI*2); t.fill();
+    // Thruster puff
+    for(let i=0;i<3;i++){t.fillStyle=`rgba(0,200,255,${0.6-i*0.15})`; t.beginPath(); t.arc(-28+i*2,y*0+Math.random()*4-2,4-i,0,Math.PI*2); t.fill();}
+  } else {
+    const lk=Math.sin(fr*0.22)*10;
+    // Jet pack fire
+    t.fillStyle='rgba(0,150,255,0.8)'; t.beginPath(); t.ellipse(-8,20+lk*0.2,5,10+Math.abs(lk)*0.3,0,0,Math.PI*2); t.fill();
+    t.fillStyle='rgba(0,200,255,0.5)'; t.beginPath(); t.ellipse(-8,28,3,6,0,0,Math.PI*2); t.fill();
     // Legs
-    const lg=Math.sin(fr*0.25)*8;
-    cx.fillStyle='#bbb';cx.fillRect(x-10,y,8,18-lg);cx.fillRect(x+2,y,8,18+lg);
-    cx.fillStyle='#888';cx.fillRect(x-12,y+14-lg,12,6);cx.fillRect(x,y+14+lg,12,6);
+    t.fillStyle='#ccd9e8';
+    t.fillRect(-14,0+bob,12,20+lk); t.fillRect(2,0+bob,12,20-lk);
+    // Boots
+    t.fillStyle='#8899aa'; t.fillRect(-16,18+bob,14,8); t.fillRect(1,18+bob,14,8);
+    // Body / suit
+    const sg=t.createLinearGradient(-16,-42+bob,16,-42+bob); sg.addColorStop(0,'#e8f0f8'); sg.addColorStop(1,'#aabbcc');
+    t.fillStyle=sg; t.beginPath(); t.roundRect(-16,-42+bob,32,44,6); t.fill();
+    // Jetpack
+    t.fillStyle='#445566'; t.fillRect(-20,-30+bob,8,22);
+    // Chest NASA stripe
+    t.fillStyle='#3399ff'; t.fillRect(-12,-28+bob,24,6);
     // Arms
-    const ar=Math.sin(fr*0.25)*5;
-    cx.fillStyle='#bbb';cx.fillRect(x-22,y-30+bob+ar,8,14);cx.fillRect(x+14,y-30+bob-ar,8,14);
-  }else{
-    // Sliding
-    cx.fillStyle='#888';cx.fillRect(x-28,y-12,12,10);
-    cx.fillStyle='#e0e0e0';cx.fillRect(x-14,y-12,36,14);
-    cx.fillStyle='#ddd';cx.beginPath();cx.arc(x+6,y-16,14,0,Math.PI*2);cx.fill();
-    cx.fillStyle='#00ccff';cx.beginPath();cx.arc(x+6,y-16,9,0.3,Math.PI-0.3);cx.closePath();cx.fill();
-    cx.fillStyle='#bbb';cx.fillRect(x+20,y-4,16,8);cx.fillRect(x+28,y+4,14,6);
+    t.fillStyle='#ccd9e8';
+    t.save(); t.rotate(lk*0.03); t.fillRect(-26,-40+bob,12,24); t.restore();
+    t.save(); t.rotate(-lk*0.03); t.fillRect(14,-40+bob,12,24); t.restore();
+    // Gloves
+    t.fillStyle='#8899aa'; t.fillRect(-26,-18+bob,12,8); t.fillRect(14,-18+bob,12,8);
+    // Helmet
+    t.fillStyle='#ddeeff'; t.beginPath(); t.arc(0,-56+bob,18,0,Math.PI*2); t.fill();
+    // Visor
+    t.fillStyle='#1a2a3a'; t.beginPath(); t.arc(0,-56+bob,14,0,Math.PI*2); t.fill();
+    t.fillStyle='rgba(100,200,255,0.6)'; t.beginPath(); t.arc(-3,-58+bob,10,0,Math.PI*2); t.fill();
+    // Stars reflection in visor
+    t.fillStyle='rgba(255,255,255,0.8)'; t.fillRect(-6,-62+bob,2,2); t.fillRect(2,-58+bob,2,2);
   }
+  t.restore();
 }
 function drawObs(o){
   if(o.type==='short'){
-    // Meteor
-    cx.fillStyle='#554433';cx.beginPath();cx.ellipse(o.x+o.w/2,o.y+o.h/2,o.w/2,o.h/2,0.3,0,Math.PI*2);cx.fill();
-    cx.fillStyle='#332211';cx.beginPath();cx.ellipse(o.x+o.w/2-4,o.y+o.h/2-4,o.w/4,o.h/4,0,0,Math.PI*2);cx.fill();
-    cx.fillStyle='#aa6644';cx.beginPath();cx.ellipse(o.x+o.w/2+4,o.y+o.h/2+2,6,4,0.5,0,Math.PI*2);cx.fill();
+    // Asteroid - jagged rock polygon
+    const cx2=cx,ox=o.x+o.w/2,oy2=o.y+o.h/2,rx=o.w/2,ry=o.h/2;
+    cx2.fillStyle='#4a3a2a';
+    cx2.beginPath();
+    cx2.moveTo(ox+rx*0.6,oy2-ry);
+    cx2.lineTo(ox+rx,oy2-ry*0.3);
+    cx2.lineTo(ox+rx*0.9,oy2+ry*0.4);
+    cx2.lineTo(ox+rx*0.3,oy2+ry);
+    cx2.lineTo(ox-rx*0.5,oy2+ry*0.8);
+    cx2.lineTo(ox-rx,oy2+ry*0.2);
+    cx2.lineTo(ox-rx*0.8,oy2-ry*0.5);
+    cx2.lineTo(ox-rx*0.2,oy2-ry);
+    cx2.closePath();cx2.fill();
+    cx2.fillStyle='#6a5a3a';
+    cx2.beginPath();cx2.ellipse(ox-4,oy2-6,rx*0.3,ry*0.25,0.3,0,Math.PI*2);cx2.fill();
+    cx2.fillStyle='#2a1a0a';
+    cx2.beginPath();cx2.ellipse(ox+5,oy2+4,rx*0.2,ry*0.15,0,0,Math.PI*2);cx2.fill();
   }else if(o.type==='tall'){
-    // Energy barrier
-    cx.fillStyle='rgba(0,255,255,0.15)';cx.fillRect(o.x,o.y,o.w,o.h);
-    for(let i=0;i<o.h;i+=12){
-      const alpha=0.5+Math.sin(fr*0.2+i*0.3)*0.4;
-      cx.strokeStyle=`rgba(0,255,255,${alpha})`;cx.lineWidth=2;
-      cx.beginPath();cx.moveTo(o.x,o.y+i);cx.lineTo(o.x+o.w,o.y+i);cx.stroke();
-    }
-    cx.fillStyle='#00ffff';cx.fillRect(o.x,o.y,o.w,4);cx.fillRect(o.x,o.y+o.h-4,o.w,4);
-    cx.fillRect(o.x,o.y,4,o.h);cx.fillRect(o.x+o.w-4,o.y,4,o.h);
-    // Sparks
-    for(let i=0;i<3;i++){const sx=o.x+Math.random()*o.w,sy=o.y+Math.random()*o.h;cx.fillStyle='#fff';cx.fillRect(sx,sy,2,2);}
+    // Space debris / crashed satellite
+    const bx=o.x,by=o.y;
+    // Main body
+    cx.fillStyle='#778899';cx.fillRect(bx+4,by+10,o.w-8,o.h-20);
+    cx.fillStyle='#556677';cx.fillRect(bx+4,by+10,o.w-8,8);
+    // Solar panel left
+    cx.fillStyle='#2244aa';cx.fillRect(bx-22,by+18,22,10);
+    cx.strokeStyle='#4466cc';cx.lineWidth=1;
+    for(let i=0;i<22;i+=6){cx.beginPath();cx.moveTo(bx-22+i,by+18);cx.lineTo(bx-22+i,by+28);cx.stroke();}
+    // Solar panel right (broken)
+    cx.fillStyle='#1a3388';cx.fillRect(bx+o.w,by+18,14,10);
+    cx.strokeStyle='#3355bb';cx.lineWidth=1;
+    for(let i=0;i<14;i+=6){cx.beginPath();cx.moveTo(bx+o.w+i,by+18);cx.lineTo(bx+o.w+i,by+28);cx.stroke();}
+    // Antenna
+    cx.strokeStyle='#aabbcc';cx.lineWidth=2;cx.beginPath();cx.moveTo(bx+o.w/2,by+10);cx.lineTo(bx+o.w/2-5,by);cx.stroke();
+    cx.beginPath();cx.moveTo(bx+o.w/2,by+10);cx.lineTo(bx+o.w/2+8,by+2);cx.stroke();
+    // Damage marks
+    cx.fillStyle='#334455';cx.fillRect(bx+8,by+22,6,4);cx.fillRect(bx+16,by+30,4,6);
   }else{
-    // Space debris low bar
-    cx.fillStyle='rgba(180,80,0,0.8)';cx.fillRect(o.x,o.y,o.w,o.h);
-    cx.fillStyle='#ff4400';cx.fillRect(o.x,o.y,o.w,3);
-    cx.fillStyle='rgba(255,100,0,0.4)';cx.fillRect(o.x,o.y,o.w,o.h);
-    for(let i=0;i<o.w;i+=20){cx.fillStyle='#ff6600';cx.beginPath();cx.ellipse(o.x+i+10,o.y+9,6,4,0,0,Math.PI*2);cx.fill();}
+    // Energy barrier - glowing horizontal beam
+    const alpha=0.6+Math.sin(fr*0.15)*0.3;
+    cx.fillStyle=`rgba(0,200,255,${alpha*0.2})`;cx.fillRect(o.x,o.y,o.w,o.h);
+    cx.strokeStyle=`rgba(0,220,255,${alpha})`;cx.lineWidth=3;
+    cx.beginPath();cx.moveTo(o.x,o.y+o.h/2);cx.lineTo(o.x+o.w,o.y+o.h/2);cx.stroke();
+    cx.strokeStyle=`rgba(100,240,255,${alpha*0.5})`;cx.lineWidth=7;
+    cx.beginPath();cx.moveTo(o.x,o.y+o.h/2);cx.lineTo(o.x+o.w,o.y+o.h/2);cx.stroke();
+    // End nodes
+    cx.fillStyle=`rgba(0,255,255,${alpha})`;
+    cx.beginPath();cx.arc(o.x,o.y+o.h/2,6,0,Math.PI*2);cx.fill();
+    cx.beginPath();cx.arc(o.x+o.w,o.y+o.h/2,6,0,Math.PI*2);cx.fill();
+    // Sparks
+    for(let i=0;i<2;i++){const sx=o.x+Math.random()*o.w;cx.fillStyle='#fff';cx.fillRect(sx,o.y+Math.random()*o.h,2,2);}
   }
 }
 function drawCoin(c){
@@ -132,24 +174,13 @@ function drawCoin(c){
   for(let i=0;i<5;i++){const a=i/5*Math.PI*2-Math.PI/2;cx.beginPath();cx.moveTo(c.x,c.y);cx.lineTo(c.x+Math.cos(a)*r,c.y+Math.sin(a)*r);cx.stroke();}
 }
 function drawBG(){
-  // Deep space gradient
-  const grad=cx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'#000005');grad.addColorStop(0.5,'#0a0020');grad.addColorStop(1,'#0d1a0d');
-  cx.fillStyle=grad;cx.fillRect(0,0,W,H);
-  // Nebula clouds
-  cx.fillStyle='rgba(80,0,120,0.08)';cx.beginPath();cx.ellipse(W*0.6,H*0.3,200,100,0,0,Math.PI*2);cx.fill();
-  cx.fillStyle='rgba(0,50,120,0.07)';cx.beginPath();cx.ellipse(W*0.3,H*0.2,150,80,0,0,Math.PI*2);cx.fill();
-  // Stars
+  cx.drawImage(BG,0,0,W,H);
+  cx.fillStyle='rgba(0,0,20,0.35)'; cx.fillRect(0,GY,W,H-GY);
+  // Stars overlay
   stars.forEach(s=>{
     const twink=0.5+0.5*Math.sin(fr*0.03+s.twk);
     cx.fillStyle=`rgba(255,255,255,${twink})`;
     cx.beginPath();cx.arc(s.x*W,s.y*H,s.s,0,Math.PI*2);cx.fill();
-  });
-  // Planets
-  planets.forEach(p=>{
-    cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x*W,p.y*H,p.r,0,Math.PI*2);cx.fill();
-    if(p.ring){cx.strokeStyle='rgba(200,150,50,0.6)';cx.lineWidth=4;cx.beginPath();cx.ellipse(p.x*W,p.y*H,p.r+20,p.r*0.3,0.3,0,Math.PI*2);cx.stroke();}
-    cx.fillStyle='rgba(0,0,0,0.2)';cx.beginPath();cx.arc(p.x*W+p.r*0.2,p.y*H-p.r*0.1,p.r*0.7,0,Math.PI*2);cx.fill();
   });
   // Ground - alien rock
   cx.fillStyle='#2a2a2a';cx.fillRect(0,GY,W,H-GY);

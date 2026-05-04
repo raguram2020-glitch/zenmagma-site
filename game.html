@@ -217,6 +217,10 @@
 <script src="js/post-game.js"></script>
 <script src="js/animations.js"></script>
 <script>
+/* ── Fix viewport height on mobile (accounts for browser chrome) ── */
+function setVH() { document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); }
+setVH(); window.addEventListener('resize', setVH);
+
 /* ── INIT GAME PAGE ── */
 document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);

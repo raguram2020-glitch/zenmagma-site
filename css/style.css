@@ -1340,6 +1340,13 @@ footer {
   #gamification-bar { gap:12px; }
   #daily-challenge { flex-direction:column; text-align:center; }
   .dc-badge { width:fit-content; margin:0 auto; }
+  /* Game frame — fill most of the viewport height on mobile */
+  .game-frame-wrap {
+    height: calc(var(--vh, 1vh) * 65);
+    min-height: 300px;
+    border-radius: 12px;
+    touch-action: none;
+  }
 }
 @media (max-width:480px) {
   .games-grid { grid-template-columns:repeat(2,1fr); }

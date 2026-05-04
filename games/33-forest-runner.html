@@ -39,6 +39,7 @@ function showWin(msg){
   if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
 }
 
+const BG=new Image(); BG.src='../assets/backgrounds/forest-runner-bg.jpg';
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=420;
 let player,platforms,gems,enemies,score,lives,level,camera,frame,running,keys={};
 function mkLevel(){
@@ -82,15 +83,68 @@ function update(){
   if(player.y>H+50){lives--;player.x=60;player.y=H-100;player.vy=0;document.getElementById("lf").textContent=lives;if(lives<=0){running=false;showGameOver("Score: "+score);}};
   if(gems.length===0){level++;document.getElementById("lv").textContent=level;score+=level*50;document.getElementById("sc").textContent=score;mkLevel();}
 }
+function drawPlayerChar(p) {
+  const t=ctx, x=p.x+p.w/2, y=p.y+p.h, bob=Math.sin(Date.now()*0.008)*2;
+  t.save(); t.translate(x, y);
+  // Legs
+  t.fillStyle='#2d5a1b';
+  t.fillRect(-7,bob-28,6,16); t.fillRect(2,bob-28,6,16);
+  // Boots
+  t.fillStyle='#4a2800'; t.fillRect(-9,bob-14,8,8); t.fillRect(2,bob-14,8,8);
+  // Body - elvish tunic
+  const tg=t.createLinearGradient(-10,bob-44,10,bob-44); tg.addColorStop(0,'#4a9e3f'); tg.addColorStop(1,'#2d7a28');
+  t.fillStyle=tg; t.fillRect(-10,bob-44,20,18);
+  // Belt
+  t.fillStyle='#8B4513'; t.fillRect(-10,bob-28,20,4);
+  // Arms
+  t.fillStyle='#4a9e3f'; t.fillRect(-16,bob-44,7,14); t.fillRect(10,bob-44,7,14);
+  // Bow hint
+  t.strokeStyle='#8B4513'; t.lineWidth=2;
+  t.beginPath(); t.arc(18,bob-38,10,0.5,2.5); t.stroke();
+  t.strokeStyle='#f5c87a'; t.lineWidth=1;
+  t.beginPath(); t.moveTo(18,bob-48); t.lineTo(18,bob-28); t.stroke();
+  // Head
+  t.fillStyle='#f5c87a'; t.beginPath(); t.arc(0,bob-52,11,0,Math.PI*2); t.fill();
+  // Elvish ears (pointed)
+  t.fillStyle='#f0bc6a';
+  t.beginPath(); t.moveTo(-10,bob-54); t.lineTo(-18,bob-58); t.lineTo(-10,bob-48); t.closePath(); t.fill();
+  t.beginPath(); t.moveTo(10,bob-54); t.lineTo(18,bob-58); t.lineTo(10,bob-48); t.closePath(); t.fill();
+  // Hair - silver/white elvish
+  t.fillStyle='#ddeeff'; t.beginPath(); t.arc(0,bob-56,9,Math.PI,0); t.fill();
+  t.fillRect(-9,bob-58,3,10); t.fillRect(6,bob-58,3,10);
+  // Eyes (glowing green)
+  t.fillStyle='#00ff88'; t.fillRect(-4,bob-54,3,3); t.fillRect(2,bob-54,3,3);
+  // Leaf crown
+  t.fillStyle='#2d8a20';
+  for(let i=-2;i<=2;i++){t.beginPath(); t.ellipse(i*4,bob-64,3,6,i*0.3,0,Math.PI*2); t.fill();}
+  t.restore();
+}
+function drawEnemy(e) {
+  const t=ctx, pulse=0.6+Math.sin(Date.now()*0.005+e.x)*0.4;
+  // Glow
+  const g=t.createRadialGradient(e.x,e.y,2,e.x,e.y,e.r+8);
+  g.addColorStop(0,`rgba(180,0,255,${pulse*0.6})`); g.addColorStop(1,'rgba(180,0,255,0)');
+  t.fillStyle=g; t.beginPath(); t.arc(e.x,e.y,e.r+8,0,Math.PI*2); t.fill();
+  // Body
+  t.fillStyle=`rgba(120,0,200,${pulse})`;
+  t.beginPath(); t.arc(e.x,e.y,e.r,0,Math.PI*2); t.fill();
+  // Face
+  t.fillStyle='#ff0066'; t.fillRect(e.x-5,e.y-4,4,4); t.fillRect(e.x+2,e.y-4,4,4);
+  t.fillStyle='#ff0066'; t.beginPath(); t.arc(e.x,e.y+3,5,0,Math.PI); t.stroke();
+  // Tendrils
+  t.strokeStyle=`rgba(180,0,255,${pulse*0.7})`; t.lineWidth=2;
+  for(let i=0;i<4;i++){const a=Date.now()*0.003+i*1.57; t.beginPath(); t.moveTo(e.x,e.y); t.lineTo(e.x+Math.cos(a)*(e.r+6),e.y+Math.sin(a)*(e.r+6)); t.stroke();}
+}
 function draw(){
   const cam=Math.round(camera);
-  ctx.fillStyle="#001a00";ctx.fillRect(0,0,W,H);
+  ctx.drawImage(BG,0,0,480,420);
+  ctx.fillStyle='rgba(0,20,10,0.25)'; ctx.fillRect(0,0,480,420);
   
   ctx.save();ctx.translate(-cam,0);
   platforms.forEach(p=>{ctx.fillStyle="#2ecc71";ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(p.x,p.y,p.w,4);});
   gems.forEach(g=>{ctx.fillStyle="#f1c40f";ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("💎",g.x,g.y);});
-  enemies.forEach(e=>{ctx.fillStyle="#e74c3c";ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="22px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("👾",e.x,e.y);});
-  ctx.fillStyle="#27ae60";ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle="#fff";ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("😊",player.x+player.w/2,player.y+player.h/2);
+  enemies.forEach(e=>drawEnemy(e));
+  drawPlayerChar(player);
   ctx.restore();
 }
 function go(){score=0;lives=5;level=1;frame=0;document.getElementById("ov").style.display="none";running=true;addTouchControls();mkLevel();document.getElementById("sc").textContent=score;document.getElementById("lf").textContent=lives;document.getElementById("lv").textContent=level;(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}

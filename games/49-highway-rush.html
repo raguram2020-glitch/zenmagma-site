@@ -18,6 +18,7 @@ body{touch-action:none;user-select:none;-webkit-user-select:none}
   <button id="btn-slide">⬇️ SLIDE</button>
 </div>
 <script>
+const BG=new Image(); BG.src='../assets/backgrounds/highway-rush-bg.jpg';
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 let W,H,GY;
 function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
@@ -65,54 +66,84 @@ function spawnCoin(x){coll.push({x,y:GY-40-Math.random()*80,collected:false,a:0}
 function spawnPup(x){const t=['shield','magnet','slow'][Math.floor(Math.random()*3)];pups.push({x,y:GY-65,t,collected:false,a:0});}
 function addFT(x,y,txt,col){ftxts.push({x,y,txt,col,life:60,vy:-1.5});}
 function drawPlayer(x,y,sl){
-  const bob=Math.sin(fr*0.22)*1.2;
-  if(!sl){
-    // Cap
-    cx.fillStyle='#223388';cx.fillRect(x-14,y-58+bob,28,8);cx.fillRect(x-10,y-70+bob,20,14);
-    cx.fillStyle='#112266';cx.fillRect(x-14,y-60+bob,28,4);
-    // Head
-    cx.fillStyle='#f4c090';cx.beginPath();cx.arc(x,y-46+bob,12,0,Math.PI*2);cx.fill();
-    // Eyes
-    cx.fillStyle='#222';cx.beginPath();cx.arc(x-3,y-47+bob,2,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(x+4,y-47+bob,2,0,Math.PI*2);cx.fill();
-    // Hoodie
-    cx.fillStyle='#334499';cx.beginPath();cx.ellipse(x,y-24+bob,12,20,0,0,Math.PI*2);cx.fill();
+  const t=cx,bob=Math.sin(fr*0.2)*2;
+  t.save(); t.translate(Math.floor(x),Math.floor(y));
+  if(sl){
+    // Crouched low on skateboard
+    t.fillStyle='#cc4400'; t.fillRect(-22,0,44,8); // board
+    t.fillStyle='#333'; t.beginPath(); t.arc(-14,8,5,0,Math.PI*2); t.fill(); t.beginPath(); t.arc(14,8,5,0,Math.PI*2); t.fill(); // wheels
+    t.fillStyle='#ff6600'; t.fillRect(-18,-14,36,14); // body crouched
+    t.fillStyle='#f5c87a'; t.beginPath(); t.arc(12,-18,9,0,Math.PI*2); t.fill(); // head
+    t.fillStyle='#333'; t.fillRect(-20,-18,38,4); // cap brim
+    t.fillStyle='#222'; t.fillRect(-10,-28,22,12); // cap top
+  } else {
+    const lk=Math.sin(fr*0.23)*12;
     // Skateboard
-    cx.fillStyle='#882200';cx.fillRect(x-18,y+2,36,7);
-    cx.fillStyle='#555';cx.beginPath();cx.arc(x-12,y+10,5,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(x+12,y+10,5,0,Math.PI*2);cx.fill();
-    cx.fillStyle='#888';cx.beginPath();cx.arc(x-12,y+10,3,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(x+12,y+10,3,0,Math.PI*2);cx.fill();
+    t.fillStyle='#cc4400'; t.fillRect(-18,2+bob,36,7);
+    t.fillStyle='#ff8800'; t.fillRect(-16,2+bob,36,3); // deck stripe
+    t.fillStyle='#222'; t.beginPath(); t.arc(-10,10+bob,5,0,Math.PI*2); t.fill(); t.beginPath(); t.arc(10,10+bob,5,0,Math.PI*2); t.fill(); // wheels
     // Legs
-    cx.fillStyle='#3355aa';cx.fillRect(x-8,y-4+bob,7,10);cx.fillRect(x+1,y-4+bob,7,10);
+    t.fillStyle='#1a1a5a'; // dark jeans
+    t.save(); t.rotate(lk*0.025); t.fillRect(-10,0+bob,10,18); t.restore();
+    t.save(); t.rotate(-lk*0.025); t.fillRect(1,0+bob,10,18); t.restore();
+    // Sneakers
+    t.fillStyle='#fff'; t.fillRect(-12,14+bob,14,7); t.fillRect(0,14+bob,14,7);
+    // Body - hoodie
+    const hg=t.createLinearGradient(-14,-42+bob,14,-42+bob); hg.addColorStop(0,'#ff6600'); hg.addColorStop(1,'#cc3300');
+    t.fillStyle=hg; t.fillRect(-14,-42+bob,28,44);
+    // Hood up detail
+    t.fillStyle='#aa2200'; t.fillRect(-14,-44+bob,28,4);
     // Arms
-    const ar=Math.sin(fr*0.25)*5;
-    cx.fillStyle='#334499';cx.fillRect(x-20,y-30+bob+ar,7,12);cx.fillRect(x+13,y-30+bob-ar,7,12);
-  }else{
-    // Crouching on skateboard
-    cx.fillStyle='#882200';cx.fillRect(x-20,y-2,40,7);
-    cx.fillStyle='#555';cx.beginPath();cx.arc(x-13,y+6,4,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(x+13,y+6,4,0,Math.PI*2);cx.fill();
-    cx.fillStyle='#334499';cx.fillRect(x-16,y-12,36,14);
-    cx.fillStyle='#f4c090';cx.beginPath();cx.arc(x-4,y-16,11,0,Math.PI*2);cx.fill();
-    cx.fillStyle='#223388';cx.fillRect(x-16,y-24,22,10);cx.fillRect(x-12,y-34,16,12);
+    t.fillStyle='#ff6600';
+    t.save(); t.rotate(-lk*0.04); t.fillRect(-24,-40+bob,10,24); t.restore();
+    t.save(); t.rotate(lk*0.04); t.fillRect(14,-40+bob,10,24); t.restore();
+    // Hands
+    t.fillStyle='#f5c87a'; t.fillRect(-24,-18+bob,10,8); t.fillRect(14,-18+bob,10,8);
+    // Head
+    t.fillStyle='#f5c87a'; t.beginPath(); t.arc(0,-54+bob,13,0,Math.PI*2); t.fill();
+    // Cap
+    t.fillStyle='#222'; t.fillRect(-14,-66+bob,28,14); // cap
+    t.fillRect(-16,-56+bob,32,5); // brim
+    // Eyes + headphones hint
+    t.fillStyle='#333'; t.fillRect(-5,-56+bob,4,4); t.fillRect(3,-56+bob,4,4);
+    t.fillStyle='#ff6600'; t.fillRect(-16,-58+bob,4,8); t.fillRect(12,-58+bob,4,8); // headphones
   }
+  t.restore();
 }
 function drawObs(o){
   if(o.type==='short'){
-    // Traffic cone
-    cx.fillStyle='#ff6600';cx.beginPath();cx.moveTo(o.x+o.w/2,o.y);cx.lineTo(o.x,o.y+o.h);cx.lineTo(o.x+o.w,o.y+o.h);cx.closePath();cx.fill();
-    cx.fillStyle='#fff';cx.fillRect(o.x+o.w*0.2,o.y+o.h*0.35,o.w*0.6,o.h*0.12);cx.fillRect(o.x+o.w*0.25,o.y+o.h*0.6,o.w*0.5,o.h*0.1);
-    cx.fillStyle='#cc4400';cx.fillRect(o.x,o.y+o.h-6,o.w,6);
+    // Crashed traffic cone cluster
+    const cx2=cx,bx=o.x,by=o.y+o.h;
+    for(let ci=0;ci<3;ci++){
+      const cx3=bx+ci*10-2,tilt=(ci-1)*0.3;
+      cx2.save(); cx2.translate(cx3+7,by); cx2.rotate(tilt);
+      cx2.fillStyle='#ff6600'; cx2.beginPath(); cx2.moveTo(0,0); cx2.lineTo(-8,-28); cx2.lineTo(8,-28); cx2.closePath(); cx2.fill();
+      cx2.fillStyle='#fff'; cx2.fillRect(-6,-20,12,4); cx2.fillRect(-5,-11,10,3);
+      cx2.fillStyle='#cc4400'; cx2.fillRect(-9,0,18,5);
+      cx2.restore();
+    }
   }else if(o.type==='tall'){
-    // Road barrier
-    cx.fillStyle='#888';cx.fillRect(o.x,o.y,o.w,o.h);
-    cx.fillStyle='#aaa';cx.fillRect(o.x,o.y,o.w,10);cx.fillRect(o.x,o.y+o.h-10,o.w,10);
-    // Stripes
-    for(let i=0;i<o.h;i+=24){cx.fillStyle='#ff8800';cx.fillRect(o.x,o.y+i,o.w,12);}
-    cx.fillStyle='#aaa';cx.fillRect(o.x,o.y,o.w,8);cx.fillRect(o.x,o.y+o.h-8,o.w,8);
+    // Street lamp post
+    cx.fillStyle='#223'; cx.fillRect(o.x+o.w/2-4,o.y,8,o.h);
+    cx.fillStyle='#334'; cx.fillRect(o.x+o.w/2-4,o.y,8,o.h*0.7);
+    // Lamp arm
+    cx.fillStyle='#445'; cx.fillRect(o.x,o.y,o.w,6);
+    // Glowing orange light
+    const lg=cx.createRadialGradient(o.x+o.w/2,o.y+3,2,o.x+o.w/2,o.y+3,28);
+    lg.addColorStop(0,'rgba(255,200,80,0.9)'); lg.addColorStop(0.4,'rgba(255,140,20,0.5)'); lg.addColorStop(1,'rgba(255,100,0,0)');
+    cx.fillStyle=lg; cx.fillRect(o.x-10,o.y-20,o.w+20,40);
+    cx.fillStyle='#ffdd88'; cx.beginPath(); cx.arc(o.x+o.w/2,o.y+3,6,0,Math.PI*2); cx.fill();
   }else{
-    // Manhole / low bar
-    cx.fillStyle='#444';cx.fillRect(o.x,o.y,o.w,o.h);
-    cx.fillStyle='#666';cx.fillRect(o.x,o.y,o.w,4);cx.fillRect(o.x,o.y+o.h-4,o.w,4);
-    for(let i=0;i<o.w;i+=25){cx.fillStyle='#555';cx.fillRect(o.x+i,o.y,4,o.h);}
-    cx.fillStyle='rgba(255,100,0,0.6)';cx.fillRect(o.x,o.y+2,o.w,o.h-4);
+    // Road barrier - yellow/black striped metal
+    cx.fillStyle='#888'; cx.fillRect(o.x,o.y,o.w,o.h);
+    const stripeW=18;
+    for(let i=0;i<o.w;i+=stripeW*2){
+      cx.fillStyle='#ffdd00'; cx.fillRect(o.x+i,o.y,stripeW,o.h);
+      cx.fillStyle='#222'; cx.fillRect(o.x+i+stripeW,o.y,stripeW,o.h);
+    }
+    cx.fillStyle='#aaa'; cx.fillRect(o.x,o.y,o.w,4); cx.fillRect(o.x,o.y+o.h-4,o.w,4);
+    // Reflectors
+    for(let i=12;i<o.w;i+=30){cx.fillStyle='#fff';cx.beginPath();cx.arc(o.x+i,o.y+o.h/2,3,0,Math.PI*2);cx.fill();}
   }
 }
 function drawCoin(c){
@@ -125,10 +156,8 @@ function drawCoin(c){
   for(let i=0;i<6;i++){const a=i/6*Math.PI*2;cx.beginPath();cx.moveTo(c.x+Math.cos(a)*6,c.y+Math.sin(a)*6);cx.lineTo(c.x+Math.cos(a)*10+pulse,c.y+Math.sin(a)*10+pulse);cx.stroke();}
 }
 function drawBG(){
-  // Night sky
-  cx.fillStyle='#0a0a1a';cx.fillRect(0,0,W,H);
-  // Stars
-  for(let i=0;i<40;i++){const sx=(i*137+bgOff*0.01)%W,sy=(i*79)%H*0.5;cx.fillStyle='rgba(255,255,255,0.6)';cx.fillRect(sx,sy,1.5,1.5);}
+  cx.drawImage(BG,0,0,W,H);
+  cx.fillStyle='rgba(0,0,20,0.4)'; cx.fillRect(0,GY,W,H-GY);
   // Building silhouettes
   blds.forEach(b=>{
     const bx=((b.x-bgOff*0.0005)%1.1-0.05)*W;
