@@ -19,6 +19,12 @@ body{touch-action:none;user-select:none;-webkit-user-select:none}
 </div>
 <script>
 const BG=new Image(); BG.src='../assets/backgrounds/desert-racer-bg.jpg';
+const BG_STORM=new Image(); BG_STORM.src='../assets/backgrounds/desert-racer-storm.jpg';
+const MOOD_BGS=[BG,BG_STORM,BG];
+const MOOD_LABELS=['SCORCHING DUNES','SANDSTORM!','BLOOD SUN'];
+const MOOD_OVERLAYS=['rgba(255,150,0,0.05)','rgba(180,100,0,0.45)','rgba(180,0,0,0.25)'];
+let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0,sandStorm=[];
+function triggerMood(n){moodIdx=n%MOOD_BGS.length;moodFade=0;moodChanging=true;moodText=MOOD_LABELS[moodIdx];moodTextT=120;if(moodIdx===1){sandStorm=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,spd:8+Math.random()*6,len:12+Math.random()*10}));}else{sandStorm=[];}}
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 let W,H,GY;
 function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
@@ -31,7 +37,7 @@ const sandParts=Array.from({length:30},()=>({x:Math.random(),y:0.65+Math.random(
 let state='start',sc,dist,coins,mult,spd,fr,sclk,best,vy,py,sliding,stmr,dead,inv,invT,lives;
 let obs=[],coll=[],parts=[],pups=[],ftxts=[];
 let shield,mag,slow,shT,mgT,slT,hintT,bgOff=0;
-function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;lives=MAX_LIVES;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');}
+function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;lives=MAX_LIVES;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');moodIdx=0;moodFade=0;moodChanging=false;moodText='';moodTextT=0;sandStorm=[];}
 const keys={};
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(state==='play'){if(e.code==='ArrowUp'||e.code==='Space')doJump();if(e.code==='ArrowDown'||e.code==='KeyS')doSlide();}if((e.code==='Space'||e.code==='Enter')&&state!=='play')startGame();e.preventDefault();});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -181,7 +187,12 @@ function drawCoin(c){
   cx.fillStyle='#e8c87a';cx.fillRect(c.x-10,c.y+5,20,6);
 }
 function drawBG(){
-  cx.drawImage(BG,0,0,W,H);
+  const curBg=MOOD_BGS[moodIdx];
+  if(curBg.complete&&curBg.naturalWidth)cx.drawImage(curBg,0,0,W,H);
+  if(moodChanging&&moodFade>0){const nb=MOOD_BGS[moodIdx];cx.globalAlpha=moodFade;if(nb.complete&&nb.naturalWidth)cx.drawImage(nb,0,0,W,H);cx.globalAlpha=1;}
+  cx.fillStyle=MOOD_OVERLAYS[moodIdx];cx.fillRect(0,0,W,H);
+  if(sandStorm.length){cx.strokeStyle='rgba(220,180,80,0.5)';cx.lineWidth=1;sandStorm.forEach(s=>{cx.beginPath();cx.moveTo(s.x,s.y);cx.lineTo(s.x+s.len,s.y+2);cx.stroke();});}
+  if(moodTextT>0){cx.globalAlpha=Math.min(1,moodTextT/20);cx.fillStyle='rgba(80,30,0,0.75)';cx.fillRect(W/2-160,H*0.18-28,320,46);cx.fillStyle='#ffdd44';cx.font='bold 26px monospace';cx.textAlign='center';cx.fillText('⚡ '+moodText,W/2,H*0.18+8);cx.textAlign='left';cx.globalAlpha=1;}
   cx.fillStyle='rgba(80,40,0,0.3)'; cx.fillRect(0,GY,W,H-GY);
   // Dune hills parallax
   dunes.forEach((d,i)=>{
@@ -216,6 +227,10 @@ function hit(px2,py2,pw,ph,o){return px2<o.x+o.w&&px2+pw>o.x&&py2<o.y+o.h&&py2+p
 function update(){
   if(state!=='play')return;
   fr++;bgOff+=spd;dist+=spd*0.05;sc=Math.floor(dist*mult);
+  const _dm=Math.floor(dist/100);if(_dm>0&&Math.floor((dist-spd*0.05)/100)<_dm){triggerMood(_dm);}
+  if(moodChanging){moodFade=Math.min(1,moodFade+0.018);if(moodFade>=1)moodChanging=false;}
+  if(moodTextT>0)moodTextT--;
+  if(sandStorm.length){sandStorm.forEach(s=>{s.x-=s.spd;if(s.x<-20){s.x=W+10;s.y=Math.random()*H;}});}
   if(fr%RINT===0&&spd<MSPD)spd=Math.min(MSPD,spd+RAMP);
   if(shield&&--shT<=0)shield=false;if(mag&&--mgT<=0)mag=false;
   if(slow&&--slT<=0){slow=false;spd=Math.min(MSPD,spd+2);}

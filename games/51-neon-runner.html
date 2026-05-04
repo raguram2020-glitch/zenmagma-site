@@ -19,6 +19,10 @@ body{touch-action:none;user-select:none;-webkit-user-select:none}
 </div>
 <script>
 const BG=new Image(); BG.src='../assets/backgrounds/neon-runner-bg.jpg';
+const MOOD_LABELS=['CYBER CITY','VIRUS ALERT','DEEP SCAN','OVERDRIVE'];
+const MOOD_OVERLAYS=['rgba(0,255,255,0.04)','rgba(255,0,50,0.3)','rgba(0,50,255,0.3)','rgba(255,100,0,0.22)'];
+let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0;
+function triggerMood(n){moodIdx=n%MOOD_LABELS.length;moodFade=0;moodChanging=true;moodText=MOOD_LABELS[moodIdx];moodTextT=120;}
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 let W,H,GY;
 function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
@@ -31,7 +35,7 @@ const rain=Array.from({length:80},()=>({x:Math.random(),y:Math.random(),len:0.02
 let state='start',sc,dist,coins,mult,spd,fr,sclk,best,vy,py,sliding,stmr,dead,inv,invT,lives;
 let obs=[],coll=[],parts=[],pups=[],ftxts=[];
 let shield,mag,slow,shT,mgT,slT,hintT,bgOff=0;
-function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;lives=MAX_LIVES;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');}
+function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;lives=MAX_LIVES;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');moodIdx=0;moodFade=0;moodChanging=false;moodText='';moodTextT=0;}
 const keys={};
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(state==='play'){if(e.code==='ArrowUp'||e.code==='Space')doJump();if(e.code==='ArrowDown'||e.code==='KeyS')doSlide();}if((e.code==='Space'||e.code==='Enter')&&state!=='play')startGame();e.preventDefault();});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -187,6 +191,8 @@ function drawCoin(c){
 }
 function drawBG(){
   cx.drawImage(BG,0,0,W,H);
+  cx.fillStyle=MOOD_OVERLAYS[moodIdx];cx.fillRect(0,0,W,H);
+  if(moodTextT>0){cx.globalAlpha=Math.min(1,moodTextT/20);cx.fillStyle='rgba(10,0,30,0.75)';cx.fillRect(W/2-160,H*0.18-28,320,46);cx.fillStyle='#ff00ff';cx.font='bold 26px monospace';cx.textAlign='center';cx.fillText('⚡ '+moodText,W/2,H*0.18+8);cx.textAlign='left';cx.globalAlpha=1;}
   cx.fillStyle='rgba(10,0,20,0.45)'; cx.fillRect(0,GY,W,H-GY);
   // Neon grid floor
   cx.strokeStyle='rgba(0,255,255,0.12)';cx.lineWidth=1;
@@ -226,6 +232,9 @@ function hit(px2,py2,pw,ph,o){return px2<o.x+o.w&&px2+pw>o.x&&py2<o.y+o.h&&py2+p
 function update(){
   if(state!=='play')return;
   fr++;bgOff+=spd;dist+=spd*0.05;sc=Math.floor(dist*mult);
+  const _dm=Math.floor(dist/100);if(_dm>0&&Math.floor((dist-spd*0.05)/100)<_dm){triggerMood(_dm);}
+  if(moodChanging){moodFade=Math.min(1,moodFade+0.018);if(moodFade>=1)moodChanging=false;}
+  if(moodTextT>0)moodTextT--;
   if(fr%RINT===0&&spd<MSPD)spd=Math.min(MSPD,spd+RAMP);
   if(shield&&--shT<=0)shield=false;if(mag&&--mgT<=0)mag=false;
   if(slow&&--slT<=0){slow=false;spd=Math.min(MSPD,spd+2);}

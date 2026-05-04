@@ -395,18 +395,25 @@ function gameCardHTML(g, mode = 'grid', index = 0) {
 }
 
 function handleCardClick(e, id) {
-  e.preventDefault(); // always open in modal, not navigate
+  e.preventDefault();
   addRecent(id);
-  const data = GS.addPoints(10);
-  buildLeaderboard();
-  // Badge unlock toast
-  const badge = GS.getBadge(data.pts);
-  const prev  = GS.getBadge(data.pts - 10);
-  if (badge.label !== prev.label) {
-    setTimeout(() => showToast(`🏅 Badge unlocked: ${badge.label}!`, 3000), 600);
+  if (window.GS) {
+    const data = GS.addPoints(10);
+    buildLeaderboard?.();
+    const badge = GS.getBadge(data.pts);
+    const prev  = GS.getBadge(data.pts - 10);
+    if (badge.label !== prev.label) {
+      setTimeout(() => showToast(`🏅 Badge unlocked: ${badge.label}!`, 3000), 600);
+    }
   }
-  // Open full-screen modal
-  if (window.openGameModal) openGameModal(id);
+  // Mobile: navigate directly to game page — modal iframe is unreliable on touch devices
+  const isMobile = window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+  if (isMobile || !window.openGameModal) {
+    const g = getGameById(id);
+    if (g) window.location.href = 'game.html?id=' + (g.slug || g.id);
+    return;
+  }
+  openGameModal(id);
 }
 
 /* ══════════════════════════════════════

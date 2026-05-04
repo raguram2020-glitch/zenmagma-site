@@ -20,6 +20,10 @@ body{touch-action:none;user-select:none;-webkit-user-select:none}
 <script>
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 const BG=new Image(); BG.src='../assets/backgrounds/jungle-sprint-bg.jpg';
+const MOOD_LABELS=['JUNGLE HEAT','MONSOON','DARK CANOPY','GOLDEN HOUR'];
+const MOOD_OVERLAYS=['rgba(0,80,0,0.05)','rgba(0,50,100,0.35)','rgba(0,0,0,0.42)','rgba(200,120,0,0.2)'];
+let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0,moodRain=[];
+function triggerMood(n){moodIdx=n%MOOD_LABELS.length;moodFade=0;moodChanging=true;moodText=MOOD_LABELS[moodIdx];moodTextT=120;if(moodIdx===1){moodRain=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,spd:9+Math.random()*5,len:12}));}else{moodRain=[];}}
 let W,H,GY;
 function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
 resize();window.addEventListener('resize',resize);
@@ -29,7 +33,7 @@ const trees=Array.from({length:12},(x,i)=>({x:i/12,layer:i%3,h:0.2+Math.random()
 let state='start',sc,dist,coins,mult,spd,fr,sclk,best,vy,py,sliding,stmr,dead,inv,invT,lives;
 let obs=[],coll=[],parts=[],pups=[],ftxts=[];
 let shield,mag,slow,shT,mgT,slT,hintT,bgOff=0;
-function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;lives=MAX_LIVES;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');}
+function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;lives=MAX_LIVES;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');moodIdx=0;moodFade=0;moodChanging=false;moodText='';moodTextT=0;moodRain=[];}
 const keys={};
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(state==='play'){if(e.code==='ArrowUp'||e.code==='Space')doJump();if(e.code==='ArrowDown'||e.code==='KeyS')doSlide();}if((e.code==='Space'||e.code==='Enter')&&state!=='play')startGame();e.preventDefault();});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -187,6 +191,9 @@ function drawCoin(c){
 }
 function drawBG(){
   cx.drawImage(BG,0,0,W,H);
+  cx.fillStyle=MOOD_OVERLAYS[moodIdx];cx.fillRect(0,0,W,H);
+  if(moodRain.length){cx.strokeStyle='rgba(150,180,255,0.4)';cx.lineWidth=1;moodRain.forEach(r=>{r.y+=r.spd;if(r.y>H){r.y=0;r.x=Math.random()*W;}cx.beginPath();cx.moveTo(r.x,r.y);cx.lineTo(r.x-1,r.y+r.len);cx.stroke();});}
+  if(moodTextT>0){cx.globalAlpha=Math.min(1,moodTextT/20);cx.fillStyle='rgba(0,20,0,0.75)';cx.fillRect(W/2-160,H*0.18-28,320,46);cx.fillStyle='#88ff44';cx.font='bold 26px monospace';cx.textAlign='center';cx.fillText('⚡ '+moodText,W/2,H*0.18+8);cx.textAlign='left';cx.globalAlpha=1;}
   cx.fillStyle='rgba(0,30,0,0.3)'; cx.fillRect(0,GY,W,H-GY);
   // Ground
   cx.fillStyle='#3d1c00';cx.fillRect(0,GY,W,H-GY);
@@ -212,6 +219,9 @@ function hit(px2,py2,pw,ph,o){return px2<o.x+o.w&&px2+pw>o.x&&py2<o.y+o.h&&py2+p
 function update(){
   if(state!=='play')return;
   fr++;bgOff+=spd;dist+=spd*0.05;sc=Math.floor(dist*mult);
+  const _dm=Math.floor(dist/100);if(_dm>0&&Math.floor((dist-spd*0.05)/100)<_dm){triggerMood(_dm);}
+  if(moodChanging){moodFade=Math.min(1,moodFade+0.018);if(moodFade>=1)moodChanging=false;}
+  if(moodTextT>0)moodTextT--;
   if(fr%RINT===0&&spd<MSPD)spd=Math.min(MSPD,spd+RAMP);
   if(shield&&--shT<=0)shield=false;if(mag&&--mgT<=0)mag=false;
   if(slow&&--slT<=0){slow=false;spd=Math.min(MSPD,spd+2);}

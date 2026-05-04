@@ -41,6 +41,10 @@ function showWin(msg){
 
 const BG=new Image(); BG.src='../assets/backgrounds/forest-runner-bg.jpg';
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=420;
+const MOOD_LABELS=['ENCHANTED FOREST','TWILIGHT GROVE','HAUNTED WOODS','GOLDEN CANOPY'];
+const MOOD_OVERLAYS=['rgba(0,80,0,0.05)','rgba(30,0,60,0.35)','rgba(0,0,0,0.45)','rgba(200,150,0,0.2)'];
+let moodIdx=0,moodText='',moodTextT=0;
+function triggerMood(n){moodIdx=n%MOOD_LABELS.length;moodText=MOOD_LABELS[moodIdx];moodTextT=120;}
 let player,platforms,gems,enemies,score,lives,level,camera,frame,running,keys={};
 function mkLevel(){
   platforms=[];gems=[];enemies=[];camera=0;
@@ -81,7 +85,7 @@ function update(){
   gems=gems.filter(g=>{if(!g.collected&&Math.abs(player.x+player.w/2-g.x)<g.r+10&&Math.abs(player.y+player.h/2-g.y)<g.r+10){g.collected=true;score+=10*level;document.getElementById("sc").textContent=score;return false;}return true;});
   enemies.forEach(e=>{e.x+=e.dx;if(e.x<e.patrolMin||e.x>e.patrolMax)e.dx*=-1;if(Math.abs(player.x-e.x)<e.r+14&&Math.abs(player.y+player.h/2-e.y)<e.r+18){lives--;document.getElementById("lf").textContent=lives;player.x=60;player.y=H-100;player.vy=0;if(lives<=0){running=false;showGameOver("Score: "+score);}}  });
   if(player.y>H+50){lives--;player.x=60;player.y=H-100;player.vy=0;document.getElementById("lf").textContent=lives;if(lives<=0){running=false;showGameOver("Score: "+score);}};
-  if(gems.length===0){level++;document.getElementById("lv").textContent=level;score+=level*50;document.getElementById("sc").textContent=score;mkLevel();}
+  if(gems.length===0){level++;document.getElementById("lv").textContent=level;score+=level*50;document.getElementById("sc").textContent=score;triggerMood(level-1);mkLevel();}
 }
 function drawPlayerChar(p) {
   const t=ctx, x=p.x+p.w/2, y=p.y+p.h, bob=Math.sin(Date.now()*0.008)*2;
@@ -138,7 +142,8 @@ function drawEnemy(e) {
 function draw(){
   const cam=Math.round(camera);
   ctx.drawImage(BG,0,0,480,420);
-  ctx.fillStyle='rgba(0,20,10,0.25)'; ctx.fillRect(0,0,480,420);
+  ctx.fillStyle=MOOD_OVERLAYS[moodIdx]; ctx.fillRect(0,0,480,420);
+  if(moodTextT>0){moodTextT--;ctx.globalAlpha=Math.min(1,moodTextT/20);ctx.fillStyle='rgba(0,20,0,0.75)';ctx.fillRect(240-140,420*0.12-22,280,40);ctx.fillStyle='#88ff44';ctx.font='bold 20px monospace';ctx.textAlign='center';ctx.fillText('⚡ '+moodText,240,420*0.12+10);ctx.textAlign='left';ctx.globalAlpha=1;}
   
   ctx.save();ctx.translate(-cam,0);
   platforms.forEach(p=>{ctx.fillStyle="#2ecc71";ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(p.x,p.y,p.w,4);});

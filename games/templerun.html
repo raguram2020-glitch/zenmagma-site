@@ -52,6 +52,18 @@ document.addEventListener('pointerdown',()=>ac(),{once:true});
    BACKGROUND IMAGE
 ══════════════════════════════════════════ */
 const BG=new Image(); BG.src='../assets/backgrounds/templerun-bg.jpg';
+const BG_NIGHT=new Image(); BG_NIGHT.src='../assets/backgrounds/templerun-night.jpg';
+const BG_STORM=new Image(); BG_STORM.src='../assets/backgrounds/templerun-storm.jpg';
+const MOOD_BGS=[BG,BG_NIGHT,BG_STORM];
+const MOOD_LABELS=['DAWN RUN','NIGHT RAID','STORM SURGE'];
+const MOOD_OVERLAYS=['rgba(255,200,100,0.05)','rgba(0,0,60,0.35)','rgba(80,40,0,0.4)'];
+let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0;
+let rainDrops=[];
+function triggerMood(next){
+  moodIdx=next%MOOD_BGS.length;moodFade=0;moodChanging=true;
+  moodText=MOOD_LABELS[moodIdx];moodTextT=120;
+  if(moodIdx===2){rainDrops=Array.from({length:80},()=>({x:Math.random()*2000,y:Math.random()*600,spd:10+Math.random()*6,len:14+Math.random()*10}));}else{rainDrops=[];}
+}
 
 /* ══════════════════════════════════════════
    GAME CONSTANTS
@@ -98,6 +110,7 @@ function initGame(){
   shieldOn=false;magnetOn=false;slowOn=false;
   shieldT=0;magnetT=0;slowT=0;
   bgX=0;bgX2=0;groundX=0;
+  moodIdx=0;moodFade=0;moodChanging=false;moodText='';moodTextT=0;rainDrops=[];
   screen='playing';
 }
 
@@ -232,7 +245,10 @@ function update(){
   if(frame%20===0){ mult=Math.min(8,1+Math.floor(coins/10)); maxMult=Math.max(maxMult,mult); }
 
   const dm=Math.floor(dist/100);
-  if(dm>0&&Math.floor((dist-spd*.04)/100)<dm){ SND.milestone(); spawnFloat(PX(),GY-80,dm*100+'m! ⭐','#ffd700'); }
+  if(dm>0&&Math.floor((dist-spd*.04)/100)<dm){ SND.milestone(); spawnFloat(PX(),GY-80,dm*100+'m! ⭐','#ffd700'); triggerMood(dm); }
+  if(moodChanging){moodFade=Math.min(1,moodFade+0.018);if(moodFade>=1)moodChanging=false;}
+  if(moodTextT>0)moodTextT--;
+  if(rainDrops.length){rainDrops.forEach(r=>{r.y+=r.spd;if(r.y>H){r.y=0;r.x=Math.random()*W;}});}
 
   bgX-=spd*0.18;bgX2-=spd*0.32;groundX-=spd;
   if(bgX<-W) bgX+=W;if(bgX2<-W) bgX2+=W;
@@ -322,9 +338,35 @@ function update(){
    DRAW — MARIO THEME BACKGROUND
 ══════════════════════════════════════════ */
 function drawBg(){
-  /* Canva background image */
-  ctx.drawImage(BG,0,0,W,H);
-  /* semi-transparent dark overlay at bottom for ground readability */
+  /* Base mood background */
+  const curBg=MOOD_BGS[moodIdx];
+  if(curBg.complete&&curBg.naturalWidth) ctx.drawImage(curBg,0,0,W,H);
+  /* Cross-fade to next bg during transition */
+  if(moodChanging&&moodFade<1){
+    const nextBg=MOOD_BGS[moodIdx]; // already switched, fade in
+    ctx.globalAlpha=moodFade;
+    if(nextBg.complete&&nextBg.naturalWidth) ctx.drawImage(nextBg,0,0,W,H);
+    ctx.globalAlpha=1;
+  }
+  /* Mood atmosphere overlay */
+  ctx.fillStyle=MOOD_OVERLAYS[moodIdx]; ctx.fillRect(0,0,W,H);
+  /* Rain effect for storm mood */
+  if(rainDrops.length){
+    ctx.strokeStyle='rgba(180,200,255,0.45)'; ctx.lineWidth=1.2;
+    rainDrops.forEach(r=>{
+      ctx.beginPath(); ctx.moveTo(r.x,r.y); ctx.lineTo(r.x-2,r.y+r.len); ctx.stroke();
+    });
+  }
+  /* ZONE CHANGE notification */
+  if(moodTextT>0){
+    const a=Math.min(1,moodTextT/30)*Math.min(1,(moodTextT)/30+0.3);
+    ctx.globalAlpha=Math.min(1,moodTextT/20);
+    ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(W/2-160,H*0.18-28,320,46);
+    ctx.fillStyle='#ffd700'; ctx.font='bold 26px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('⚡ '+moodText,W/2,H*0.18+8);
+    ctx.textAlign='left'; ctx.globalAlpha=1;
+  }
+  /* ground overlay */
   ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(0,GY,W,H-GY);
 }
 
