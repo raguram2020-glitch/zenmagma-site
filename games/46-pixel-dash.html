@@ -40,27 +40,32 @@ cv.addEventListener('click',e=>{
 });
 
 // ── Touch controls ───────────────────────────────────────────────────────────
-let _ty0=null;
+let _ty0=null,_tx0=null;
 function _onTouchStart(e){
   e.preventDefault();
   const t=e.changedTouches[0];
-  _ty0=t.clientY;
-  if(state==='start'||state==='over'){startGame();return;}
-  if(state==='play') doJump();
+  _ty0=t.clientY;_tx0=t.clientX;
+  if(state==='start'||state==='over'){startGame();}
 }
 function _onTouchEnd(e){
   e.preventDefault();
-  if(state!=='play'||_ty0===null)return;
+  if(_ty0===null)return;
   const dy=e.changedTouches[0].clientY-_ty0;
-  if(dy>40) doSlide();   // swipe down → slide
-  _ty0=null;
+  _ty0=null;_tx0=null;
+  if(state==='start'||state==='over'){return;}
+  if(state==='play'){
+    if(dy>40) doSlide();   // swipe down → slide
+    else doJump();          // tap → jump
+  }
 }
-cv.addEventListener('touchstart',_onTouchStart,{passive:false});
-cv.addEventListener('touchend',_onTouchEnd,{passive:false});
+document.addEventListener('touchstart',_onTouchStart,{passive:false});
+document.addEventListener('touchend',_onTouchEnd,{passive:false});
 
-// On-screen buttons
-document.getElementById('btn-jump').addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();if(state==='play')doJump();else startGame();},{passive:false});
-document.getElementById('btn-slide').addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();if(state==='play')doSlide();else startGame();},{passive:false});
+// On-screen buttons (prevent event bubbling to document handler)
+document.getElementById('btn-jump').addEventListener('touchstart',e=>{e.stopPropagation();e.preventDefault();if(state==='play')doJump();else startGame();},{passive:false});
+document.getElementById('btn-slide').addEventListener('touchstart',e=>{e.stopPropagation();e.preventDefault();if(state==='play')doSlide();else startGame();},{passive:false});
+document.getElementById('btn-jump').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();},{passive:false});
+document.getElementById('btn-slide').addEventListener('touchend',e=>{e.stopPropagation();e.preventDefault();},{passive:false});
 function doJump(){if(py>=GY-2){vy=JV;spawnP(W*0.22,py,'#ffff00',5);}}
 function doSlide(){if(!sliding){sliding=true;stmr=SDUR;}}
 function startGame(){state='play';init();}
