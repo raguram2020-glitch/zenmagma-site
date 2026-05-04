@@ -25,13 +25,13 @@ const cv=document.getElementById('c'),cx=cv.getContext('2d');
 let W,H,GY;
 function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
 resize();window.addEventListener('resize',resize);
-const LSK='px_hs',GRAV=0.55,JV=-13.5,SDUR=38,ISPD=4.5,MSPD=9,RAMP=0.2,RINT=300,SBASE=340,SRAND=120;
+const LSK='px_hs',GRAV=0.55,JV=-13.5,SDUR=38,ISPD=4.5,MSPD=9,RAMP=0.2,RINT=300,SBASE=340,SRAND=120,MAX_LIVES=5;
 const stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random()*0.65,s:Math.floor(Math.random()*3)+1,b:Math.random()>0.7}));
 const mnts=Array.from({length:7},(x,i)=>({x:i/7,w:0.12+Math.random()*0.1,h:0.12+Math.random()*0.1}));
-let state='start',sc,dist,coins,mult,spd,fr,sclk,best,vy,py,sliding,stmr,dead,inv,invT;
+let state='start',sc,dist,coins,mult,spd,fr,sclk,best,vy,py,sliding,stmr,dead,inv,invT,lives;
 let obs=[],coll=[],parts=[],pups=[],ftxts=[];
 let shield,mag,slow,shT,mgT,slT,hintT,bgOff=0;
-function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');}
+function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');lives=MAX_LIVES;}
 const keys={};
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(state==='play'){if(e.code==='ArrowUp'||e.code==='Space')doJump();if(e.code==='ArrowDown'||e.code==='KeyS')doSlide();}if((e.code==='Space'||e.code==='Enter')&&state!=='play')startGame();e.preventDefault();});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -70,7 +70,7 @@ function doJump(){if(py>=GY-2){vy=JV;spawnP(W*0.22,py,'#ffff00',5);}}
 function doSlide(){if(!sliding){sliding=true;stmr=SDUR;}}
 function startGame(){state='play';init();}
 function spawnP(x,y,col,n){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-1)*4,life:30,col,s:Math.floor(Math.random()*4)+2});}
-function spawnObs(){const t=['short','tall','low'][Math.floor(Math.random()*3)];let h,w,oy;if(t==='short'){h=60;w=40;oy=GY-h;}else if(t==='tall'){h=105;w=50;oy=GY-h;}else{h=18;w=120;oy=GY-80;}obs.push({x:W+60,y:oy,w,h,type:t,hint:false});}
+function spawnObs(){const t=['short','tall','low'][Math.floor(Math.random()*3)];let h,w,oy;if(t==='short'){h=40;w=28;oy=GY-h;}else if(t==='tall'){h=70;w=32;oy=GY-h;}else{h=12;w=90;oy=GY-80;}obs.push({x:W+60,y:oy,w,h,type:t,hint:false});}
 function spawnCoin(x){coll.push({x,y:GY-40-Math.random()*80,collected:false,a:0});}
 function spawnPup(x){const t=['shield','magnet','slow'][Math.floor(Math.random()*3)];pups.push({x,y:GY-65,t,collected:false,a:0});}
 function addFT(x,y,txt,col){ftxts.push({x,y,txt,col,life:60,vy:-1.5});}
@@ -140,6 +140,7 @@ function drawHUD(){
   cx.fillStyle='#ff88ff';cx.fillText('MULT: x'+mult.toFixed(1),W*0.75,28);
   if(shield){cx.fillStyle='#00aaff';cx.fillText('SHIELD',W*0.88,28);}
   if(mag){cx.fillStyle='#ff88ff';cx.fillText('MAGNET',W*0.88,28);}
+  for(let i=0;i<MAX_LIVES;i++){cx.fillStyle=i<lives?'#ff4444':'#444';cx.fillRect(W-20-i*22,12,14,14);}
 }
 function drawStart(){
   cx.fillStyle='#1a1a2e';cx.fillRect(0,0,W,H);
@@ -186,7 +187,7 @@ function update(){
     for(let o of obs){
       if(hit(PX-pw/2,phY,pw,ph,o)){
         if(shield){shield=false;inv=true;invT=60;spawnP(PX,py-30,'#00aaff',15);addFT(PX,py-60,'SHIELD!','#00aaff');}
-        else{dead=true;spawnP(PX,py-30,'#ff0000',20);if(sc>best){best=sc;localStorage.setItem(LSK,best);}setTimeout(()=>{state='over';},800);}
+        lives--;spawnP(PX,py-30,'#ff4444',15);if(lives<=0){dead=true;if(sc>best){best=sc;localStorage.setItem(LSK,best);}setTimeout(()=>{state='over';},800);}else{inv=true;invT=120;obs=[];addFT(PX,py-60,'❤ '+lives+' LEFT!','#ff4444');}
         break;
       }
     }

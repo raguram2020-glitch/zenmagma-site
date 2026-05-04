@@ -167,24 +167,24 @@ function spawnWave(){
 
   if(r<0.28){
     /* Short barrier — jump over */
-    obs.push({x:sx,y:GY,w:45,h:62,type:'short',c:'#c0392b',ct:'#e74c3c'});
+    obs.push({x:sx,y:GY,w:30,h:42,type:'short',c:'#c0392b',ct:'#e74c3c'});
   } else if(r<0.46){
     /* Tall barrier — must SLIDE (spawns extra far for reaction time) */
-    obs.push({x:sx+W*0.3,y:GY,w:40,h:82,type:'tall',c:'#27ae60',ct:'#2ecc71'});
+    obs.push({x:sx+W*0.3,y:GY,w:28,h:55,type:'tall',c:'#27ae60',ct:'#2ecc71'});
   } else if(r<0.62){
     /* Low bar — slide under (spawns extra far for reaction time) */
-    obs.push({x:sx+W*0.3,y:GY-H*.14,w:130,h:28,type:'low',c:'#ff6600',ct:'#ffcc00',fy:GY-H*.14});
+    obs.push({x:sx+W*0.3,y:GY-H*.14,w:90,h:18,type:'low',c:'#ff6600',ct:'#ffcc00',fy:GY-H*.14});
   } else if(r<0.76){
     /* Double short */
-    obs.push({x:sx,y:GY,w:40,h:58,type:'short',c:'#c0392b',ct:'#e74c3c'});
-    obs.push({x:sx+115,y:GY,w:40,h:58,type:'short',c:'#c0392b',ct:'#e74c3c'});
+    obs.push({x:sx,y:GY,w:28,h:40,type:'short',c:'#c0392b',ct:'#e74c3c'});
+    obs.push({x:sx+115,y:GY,w:28,h:40,type:'short',c:'#c0392b',ct:'#e74c3c'});
   } else if(r<0.88){
     /* Fire trap */
-    obs.push({x:sx,y:GY,w:42,h:55,type:'fire',c:'#7f1d1d',ct:'#dc2626'});
+    obs.push({x:sx,y:GY,w:28,h:38,type:'fire',c:'#7f1d1d',ct:'#dc2626'});
   } else {
     /* Short + low bar combo */
-    obs.push({x:sx,y:GY,w:40,h:58,type:'short',c:'#c0392b',ct:'#e74c3c'});
-    obs.push({x:sx+150,y:GY-H*.15,w:110,h:24,type:'low',c:'#e67e22',ct:'#f39c12',fy:GY-H*.15});
+    obs.push({x:sx,y:GY,w:28,h:40,type:'short',c:'#c0392b',ct:'#e74c3c'});
+    obs.push({x:sx+150,y:GY-H*.15,w:80,h:16,type:'low',c:'#e67e22',ct:'#f39c12',fy:GY-H*.15});
   }
 
   /* coins */
