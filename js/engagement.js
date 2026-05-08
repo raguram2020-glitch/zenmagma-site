@@ -53,13 +53,13 @@ const Engagement = (() => {
       const raw = localStorage.getItem(KEY);
       const d = raw ? JSON.parse(raw) : {};
       return {
-        totalXP      : d.totalXP       ?? 0,
-        level        : d.level         ?? 1,
-        streak       : d.streak        ?? 0,
-        lastPlayDate : d.lastPlayDate  ?? '',
-        lastRewardDay: d.lastRewardDay ?? -1,
-        recentGames  : d.recentGames   ?? [],
-        badges       : d.badges        ?? [],
+        totalXP      : (d.totalXP       !== undefined && d.totalXP       !== null) ? d.totalXP       : 0,
+        level        : (d.level         !== undefined && d.level         !== null) ? d.level         : 1,
+        streak       : (d.streak        !== undefined && d.streak        !== null) ? d.streak        : 0,
+        lastPlayDate : (d.lastPlayDate  !== undefined && d.lastPlayDate  !== null) ? d.lastPlayDate  : '',
+        lastRewardDay: (d.lastRewardDay !== undefined && d.lastRewardDay !== null) ? d.lastRewardDay : -1,
+        recentGames  : (d.recentGames   !== undefined && d.recentGames   !== null) ? d.recentGames   : [],
+        badges       : (d.badges        !== undefined && d.badges        !== null) ? d.badges        : [],
       };
     } catch { return { totalXP:0, level:1, streak:0, lastPlayDate:'', lastRewardDay:-1, recentGames:[], badges:[] }; }
   }
@@ -93,7 +93,7 @@ const Engagement = (() => {
 
   /* ── LEVEL ── */
   function getLevel(xp) {
-    return Math.floor((xp ?? getXP()) / XP_PER_LEVEL) + 1;
+    return Math.floor(((xp !== undefined && xp !== null) ? xp : getXP()) / XP_PER_LEVEL) + 1;
   }
 
   function getXPPercent(xp) {
@@ -170,7 +170,7 @@ const Engagement = (() => {
 
   /* ── LEADERBOARD ── */
   function getLeaderboard(userXP) {
-    const xp = userXP ?? getXP();
+    const xp = (userXP !== undefined && userXP !== null) ? userXP : getXP();
     const userEntry = { name: 'You', xp, isUser: true };
 
     const combined = [...FAKE_LEADERS, userEntry]

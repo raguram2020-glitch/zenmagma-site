@@ -220,8 +220,9 @@ function filterCat(id, el) {
   document.querySelectorAll('.cat-pill').forEach(b => b.classList.toggle('active', b.dataset.pill === id));
   const games = getByCategory(id);
   const cat   = CATEGORIES.find(c => c.id === id);
+  var _catLabel = cat ? cat.label : '';
   document.getElementById('grid-title').innerHTML =
-    `<span>${cat?.label.split(' ')[0] || '🎮'}</span> ${cat?.label.replace(/^\S+\s*/, '') || 'All Games'}`;
+    '<span>' + (_catLabel.split(' ')[0] || '🎮') + '</span> ' + (_catLabel.replace(/^\S+\s*/, '') || 'All Games');
   document.getElementById('game-count').textContent = `${games.length} games`;
   renderGrid('all-games-grid', games);
   animateCardsIn();
@@ -406,7 +407,7 @@ function handleCardClick(e, id) {
   addRecent(id);
   if (window.GS) {
     const data = GS.addPoints(10);
-    buildLeaderboard?.();
+    if (typeof buildLeaderboard === 'function') buildLeaderboard();
     const badge = GS.getBadge(data.pts);
     const prev  = GS.getBadge(data.pts - 10);
     if (badge.label !== prev.label) {
@@ -502,10 +503,11 @@ function doSearch(q) {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  document.querySelectorAll('.sec-header').forEach(el => {
-    if (el.nextElementSibling?.classList.contains('scroll-row')) {
+  document.querySelectorAll('.sec-header').forEach(function(el) {
+    var ns = el.nextElementSibling;
+    if (ns && ns.classList.contains('scroll-row')) {
       el.style.display = 'none';
-      el.nextElementSibling.style.display = 'none';
+      ns.style.display = 'none';
     }
   });
   document.querySelectorAll('.ad-banner.leaderboard').forEach(el => el.style.display = 'none');
@@ -541,10 +543,10 @@ function clearSearch() {
     const el = document.getElementById(id);
     if (el) el.style.display = '';
   });
-  document.querySelectorAll('.sec-header').forEach(el => {
+  document.querySelectorAll('.sec-header').forEach(function(el) {
     el.style.display = '';
-    if (el.nextElementSibling?.classList.contains('scroll-row'))
-      el.nextElementSibling.style.display = '';
+    var ns = el.nextElementSibling;
+    if (ns && ns.classList.contains('scroll-row')) ns.style.display = '';
   });
   document.querySelectorAll('.ad-banner.leaderboard').forEach(el => el.style.display = '');
   document.querySelectorAll('.mystery-box').forEach(el => el.style.display = '');

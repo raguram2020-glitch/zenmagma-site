@@ -513,12 +513,14 @@ function zmInjectStyles() {
    MOBILE NAV TOGGLE
 ───────────────────────────────────────────────────*/
 function togglePageNav() {
-  document.getElementById('page-nav')?.classList.toggle('open');
+  var _pn = document.getElementById('page-nav');
+  if (_pn) _pn.classList.toggle('open');
 }
 // Close on outside click
-document.addEventListener('click', e => {
+document.addEventListener('click', function(e) {
   if (!e.target.closest('#page-nav') && !e.target.closest('.page-nav-toggle')) {
-    document.getElementById('page-nav')?.classList.remove('open');
+    var _pn2 = document.getElementById('page-nav');
+    if (_pn2) _pn2.classList.remove('open');
   }
 });
 

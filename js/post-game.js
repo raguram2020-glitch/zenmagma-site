@@ -10,10 +10,11 @@
 ───────────────────────────────────────────────────*/
 function showPostGameModal(gameData) {
   // Remove any existing modal
-  document.getElementById('pgm-overlay')?.remove();
+  var _existing = document.getElementById('pgm-overlay');
+  if (_existing) _existing.remove();
 
   // Award XP
-  const xpEarned = gameData.xpEarned ?? 25;
+  const xpEarned = (gameData.xpEarned !== undefined && gameData.xpEarned !== null) ? gameData.xpEarned : 25;
   const result   = Engagement.addXP(xpEarned);
   Engagement.updateStreak();
 
@@ -26,7 +27,7 @@ function showPostGameModal(gameData) {
   const pct     = Engagement.getXPPercent(userData.totalXP);
   const toLvl   = Engagement.getXPToNextLevel(userData.totalXP);
   const badge   = Engagement.getBadge(userData.totalXP);
-  const streak  = userData.streak ?? 0;
+  const streak  = (userData.streak !== undefined && userData.streak !== null) ? userData.streak : 0;
 
   // Next game suggestion
   const nextGame = Engagement.getNextGame(gameData.slug, gameData.category);
@@ -116,7 +117,8 @@ function showPostGameModal(gameData) {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       modal.classList.add('pgm-visible');
-      document.getElementById('pgm-card')?.classList.add('pgm-card-in');
+      var _pgmCard = document.getElementById('pgm-card');
+      if (_pgmCard) _pgmCard.classList.add('pgm-card-in');
     });
   });
 
@@ -169,7 +171,7 @@ function onGameComplete(overrideXP) {
   if (typeof getGameById === 'undefined' || !id) return;
   const game = getGameById(id);
   if (!game) return;
-  showPostGameModal({ ...game, xpEarned: overrideXP ?? 25 });
+  showPostGameModal({ id: game.id, slug: game.slug, title: game.title, emoji: game.emoji, color: game.color, category: game.category, xpEarned: (overrideXP !== undefined && overrideXP !== null) ? overrideXP : 25 });
 }
 
 window.showPostGameModal  = showPostGameModal;

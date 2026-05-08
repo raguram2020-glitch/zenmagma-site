@@ -541,7 +541,7 @@ const GameModal = (() => {
     }
 
     // Show modal
-    modal()?.classList.add('gm-open');
+    var _m = modal(); if (_m) _m.classList.add('gm-open');
     document.body.style.overflow = 'hidden';
 
     // XP flash
@@ -550,7 +550,7 @@ const GameModal = (() => {
     // Track
     addRecent(gameId);
     if (window.GS) GS.addPoints(10);
-    buildLeaderboard?.();
+    if (typeof buildLeaderboard === 'function') buildLeaderboard();
   }
 
   function _onIframeLoad() {
@@ -598,13 +598,13 @@ const GameModal = (() => {
     const el = document.createElement('div');
     el.className = 'gm-xp-flash';
     el.textContent = `⚡ +${pts} XP`;
-    document.getElementById('gm-frame-wrap')?.appendChild(el);
+    var _fw = document.getElementById('gm-frame-wrap'); if (_fw) _fw.appendChild(el);
     el.addEventListener('animationend', () => el.remove());
   }
 
   /* ── Close ── */
   function close() {
-    modal()?.classList.remove('gm-open');
+    var _mc = modal(); if (_mc) _mc.classList.remove('gm-open');
     document.body.style.overflow = '';
     clearTimeout(_loadTimer);
     // Delay src clear so exit animation plays
@@ -626,7 +626,7 @@ const GameModal = (() => {
       localStorage.removeItem(key);
     } else {
       localStorage.setItem(key, '1');
-      showToast?.('❤️ Liked!', 1800);
+      if (typeof showToast === 'function') showToast('❤️ Liked!', 1800);
     }
     const btn = document.getElementById('gm-like-btn');
     if (btn) btn.classList.toggle('liked', !liked);
@@ -640,7 +640,7 @@ const GameModal = (() => {
       navigator.share({ title: _currentGame.title, url }).catch(()=>{});
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
-      showToast?.('🔗 Link copied!', 2000);
+      if (typeof showToast === 'function') showToast('🔗 Link copied!', 2000);
     }
   }
 
@@ -648,15 +648,15 @@ const GameModal = (() => {
   function fullscreen() {
     const wrap = document.getElementById('gm-frame-wrap');
     if (!document.fullscreenElement) {
-      wrap?.requestFullscreen?.() || wrap?.webkitRequestFullscreen?.();
+      if (wrap) { if (wrap.requestFullscreen) wrap.requestFullscreen(); else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen(); }
     } else {
-      document.exitFullscreen?.();
+      if (document.exitFullscreen) document.exitFullscreen();
     }
   }
 
   /* ── Keyboard ── */
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && modal()?.classList.contains('gm-open')) close();
+    var _mk = modal(); if (e.key === 'Escape' && _mk && _mk.classList.contains('gm-open')) close();
   });
 
   return { open, close, toggleLike, share, fullscreen };

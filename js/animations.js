@@ -57,8 +57,8 @@ const CardTilt = (() => {
     const observer = new MutationObserver(muts => {
       muts.forEach(m => m.addedNodes.forEach(n => {
         if (n.nodeType !== 1) return;
-        if (n.classList?.contains('game-card')) attach(n);
-        n.querySelectorAll?.('.game-card').forEach(attach);
+        if (n.classList && n.classList.contains('game-card')) attach(n);
+        if (n.querySelectorAll) n.querySelectorAll('.game-card').forEach(attach);
       }));
     });
     observer.observe(document.body, { childList: true, subtree: true });
@@ -114,8 +114,8 @@ function showXpPopup(points, x, y) {
   popup.innerHTML = `⚡ +${points} XP`;
 
   // Position near click or center-top of viewport
-  const px = x ?? window.innerWidth  / 2;
-  const py = y ?? 120;
+  var px = (x !== undefined && x !== null) ? x : window.innerWidth / 2;
+  var py = (y !== undefined && y !== null) ? y : 120;
   popup.style.left = px + 'px';
   popup.style.top  = py + 'px';
 
@@ -141,9 +141,9 @@ const DailyTimer = (() => {
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0);
     const diff = midnight - now;
-    const h  = String(Math.floor(diff / 3_600_000)).padStart(2, '0');
-    const m  = String(Math.floor((diff % 3_600_000) / 60_000)).padStart(2, '0');
-    const s  = String(Math.floor((diff % 60_000) / 1_000)).padStart(2, '0');
+    var h  = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    var m  = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    var s  = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
     return `${h}:${m}:${s}`;
   }
 
