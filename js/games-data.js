@@ -167,6 +167,7 @@ function getNew()              { return GAMES.filter(g => g.isNew); }
 function getByCategory(cat)    { return cat === 'all' ? GAMES : GAMES.filter(g => g.category === cat || g.tags.includes(cat)); }
 function getRelated(game, n=6) { return GAMES.filter(g => g.id !== game.id && (g.category === game.category || g.tags.some(t => game.tags.includes(t)))).slice(0,n); }
 function formatPlays(n)        { return n >= 1000 ? (n/1000).toFixed(1)+'k' : n; }
+function fakePlayerCount(id)   { let h=0; for(const c of(id||'x'))h=((h<<5)-h)+c.charCodeAt(0); return (Math.abs(h)%900+100).toLocaleString(); }
 
 /* ── Recently played ── */
 const RECENT_KEY = 'zm_recent';
