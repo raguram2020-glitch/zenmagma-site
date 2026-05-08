@@ -672,7 +672,7 @@
 
         function undoMove() {
             if (game.history.length === 0) {
-                alert('No moves to undo!');
+                console.log('No moves to undo');
                 return;
             }
 
@@ -719,9 +719,9 @@
             }
 
             if (bestDirection) {
-                alert(`💡 Hint: Try moving ${bestDirection.toUpperCase()}!`);
+                document.title='💡 Move '+bestDirection.toUpperCase();setTimeout(()=>document.title='2048',2000);
             } else {
-                alert('No valid moves available.');
+                console.log('No valid moves');
             }
         }
 
