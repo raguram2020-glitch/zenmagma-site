@@ -25,6 +25,15 @@
 const cv=document.getElementById('c');
 const ctx=cv.getContext('2d');
 
+/* ── roundRect polyfill ── */
+function rRect(x,y,w,h,r){
+  const R=Math.min(r,w/2,h/2);
+  ctx.moveTo(x+R,y);ctx.lineTo(x+w-R,y);ctx.quadraticCurveTo(x+w,y,x+w,y+R);
+  ctx.lineTo(x+w,y+h-R);ctx.quadraticCurveTo(x+w,y+h,x+w-R,y+h);
+  ctx.lineTo(x+R,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-R);
+  ctx.lineTo(x,y+R);ctx.quadraticCurveTo(x,y,x+R,y);ctx.closePath();
+}
+
 /* ── Resize ── */
 let W,H,GY;
 function resize(){
@@ -504,7 +513,7 @@ function drawStart(){
   // Panel
   const pw=Math.min(W*.85,460),ph=H*.55,px=(W-pw)/2,py=(H-ph)/2;
   ctx.fillStyle='rgba(10,20,40,.82)';
-  ctx.beginPath();ctx.roundRect(px,py,pw,ph,22);ctx.fill();
+  ctx.beginPath();rRect(px,py,pw,ph,22);ctx.fill();
   ctx.strokeStyle='rgba(255,215,64,.4)';ctx.lineWidth=2;ctx.stroke();
 
   // Title
@@ -539,7 +548,7 @@ function drawGameOver(){
   const pg=ctx.createLinearGradient(bx,by,bx,by+bh);
   pg.addColorStop(0,'rgba(18,8,40,.95)');pg.addColorStop(1,'rgba(8,20,50,.95)');
   ctx.fillStyle=pg;
-  ctx.beginPath();ctx.roundRect(bx,by,bw,bh,22);ctx.fill();
+  ctx.beginPath();rRect(bx,by,bw,bh,22);ctx.fill();
   ctx.strokeStyle='rgba(255,100,180,.5)';ctx.lineWidth=2.5;ctx.stroke();
 
   const cx=W/2;
@@ -581,7 +590,7 @@ function drawGameOver(){
   const br=ctx.createLinearGradient(btnX,0,btnX+btnW,0);
   br.addColorStop(0,'#667eea');br.addColorStop(1,'#a040ff');
   ctx.fillStyle=br;
-  ctx.beginPath();ctx.roundRect(btnX,btnY-btnH*.7,btnW,btnH,12);ctx.fill();
+  ctx.beginPath();rRect(btnX,btnY-btnH*.7,btnW,btnH,12);ctx.fill();
   ctx.font=`bold ${fs*.52}px "Segoe UI",Arial`;
   ctx.fillStyle='#fff';ctx.shadowBlur=0;
   ctx.fillText('▶ PLAY AGAIN',cx,btnY);
