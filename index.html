@@ -89,6 +89,12 @@
 }
 </script>
 
+<!-- Non-blocking Google Fonts (replaces the @import in style.css) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap"></noscript>
+
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/animations.css">
 </head>
@@ -471,13 +477,17 @@
   init(); draw();
 })();
 
-/* ── LOADER hide after min 1.2s ── */
+/* ── LOADER hide — with hard 3s fallback for mobile ── */
 const _ls=Date.now();
-window.addEventListener('load',()=>{
+function _hideLoader(){
   const loader=document.getElementById('zm-loader');
+  if(!loader||loader.classList.contains('hidden'))return;
   const rem=Math.max(0,1200-(Date.now()-_ls));
   setTimeout(()=>loader.classList.add('hidden'),rem);
-});
+}
+window.addEventListener('load',_hideLoader);
+// Hard fallback: always hide after 3s regardless of resource load status
+setTimeout(_hideLoader, 3000);
 
 /* ── XP POPUP on card click ── */
 document.addEventListener('click', e => {

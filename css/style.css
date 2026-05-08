@@ -3,7 +3,7 @@
    v2.0 — Space/Arcade Theme
 ═══════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap');
+/* Google Fonts loaded non-blocking via <link> in HTML head */
 
 /* ── RESET & DESIGN TOKENS ── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
