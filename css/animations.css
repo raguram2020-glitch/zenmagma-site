@@ -370,3 +370,103 @@
     transition-duration: .01ms !important;
   }
 }
+
+/* ── PREMIUM CARD HOVER GLOW PULSE ── */
+@keyframes cardGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--card-color,#7c3aed) 40%, transparent), 0 8px 32px rgba(0,0,0,.5); }
+  50%       { box-shadow: 0 0 0 1px color-mix(in srgb, var(--card-color,#7c3aed) 70%, transparent), 0 0 28px color-mix(in srgb, var(--card-color,#7c3aed) 25%, transparent), 0 12px 40px rgba(0,0,0,.65); }
+}
+.game-card:focus-visible { animation: cardGlowPulse 2s ease-in-out infinite; outline: none; }
+
+/* ── HERO TITLE SHIMMER ── */
+@keyframes titleShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.hero-title {
+  background: linear-gradient(90deg, #fff 20%, #a855f7 40%, #fff 60%, #ff6b35 80%, #fff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleShimmer 6s linear infinite;
+}
+
+/* ── CARD BADGE ANIMATION ── */
+@keyframes badgePop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.badge { animation: badgePop .35s cubic-bezier(.34,1.56,.64,1) both; }
+.badge.new  { animation-delay: .05s; }
+.badge.hot  { animation-delay: .1s; }
+
+/* ── SCROLL ROW FADE EDGES ── */
+.trending-section { position: relative; }
+.trending-section::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 60px;
+  background: linear-gradient(to left, var(--c-bg), transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── SECTION APPEAR ── */
+@keyframes sectionFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── GAME CARD FLOAT ON FEATURED ── */
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+/* ── DAILY CHALLENGE PULSE ── */
+@keyframes dcPulse {
+  0%, 100% { border-color: rgba(255,107,53,.3); }
+  50%       { border-color: rgba(255,107,53,.7); box-shadow: 0 4px 40px rgba(255,107,53,.2); }
+}
+#daily-challenge { animation: dcPulse 3s ease-in-out infinite; }
+
+/* ── MYSTERY BOX SHIMMER ── */
+@keyframes mbShimmer {
+  0%   { opacity: .06; }
+  50%  { opacity: .14; }
+  100% { opacity: .06; }
+}
+.mystery-box::after { animation: mbShimmer 2.5s ease-in-out infinite; }
+
+/* ── POKI CARD LIFT SHADOW ── */
+@keyframes pokiLift {
+  to { box-shadow: 0 20px 60px rgba(0,0,0,.8), 0 0 0 2px color-mix(in srgb, var(--card-color,#7c3aed) 60%, transparent); }
+}
+
+/* ── HEADER XP BAR FILL ── */
+@keyframes xpBarFill {
+  from { width: 0; }
+}
+.hdr-xp-fill { animation: xpBarFill 1.2s cubic-bezier(.23,1,.32,1) both; }
+
+/* ── GLOW RING ── */
+@keyframes glowRing {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-accent) 40%, transparent); }
+  50%       { box-shadow: 0 0 0 8px color-mix(in srgb, var(--c-accent) 0%, transparent); }
+}
+
+/* ── CARD RATING STARS ── */
+@keyframes starsPop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ── LIVE BADGE BLINK ── */
+@keyframes liveBlink {
+  0%, 90%, 100% { opacity: 1; }
+  45%            { opacity: .4; }
+}
+.badge.new { animation: liveBlink 2.5s ease-in-out infinite, badgePop .35s .05s cubic-bezier(.34,1.56,.64,1) both; }

@@ -1354,3 +1354,156 @@ footer {
   .hero-desc { display:none; }
   #gamification-bar { display:none; }
 }
+
+/* ══════════════════════════════════════
+   PREMIUM ENHANCEMENTS — appended
+══════════════════════════════════════ */
+
+/* 1. Game Card Color Identity System */
+.game-card { --card-color: #7c3aed; }
+
+.game-card::after {
+  height: 2px;
+  background: var(--card-color);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.game-card:hover::after { opacity: 1; }
+
+.game-card:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--card-color) 60%, transparent),
+    0 0 24px color-mix(in srgb, var(--card-color) 30%, transparent),
+    0 16px 48px rgba(0,0,0,.65);
+}
+
+.card-play-btn {
+  background: linear-gradient(135deg, var(--card-color, #7c3aed), color-mix(in srgb, var(--card-color) 70%, #fff 30%));
+}
+
+.game-card .card-info::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 40px;
+  background: linear-gradient(to top, color-mix(in srgb, var(--card-color) 8%, transparent), transparent);
+  border-radius: 0 0 var(--radius) var(--radius);
+  pointer-events: none;
+}
+
+/* 2. Card Shine Animation */
+.game-card .card-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.12) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0s;
+  pointer-events: none;
+}
+.game-card:hover .card-thumb::after {
+  transform: translateX(200%);
+  transition: transform .65s ease;
+}
+
+/* 3. Featured Card Ring */
+.game-card.featured-card {
+  box-shadow: 0 0 0 1px rgba(255,215,64,.2), var(--shadow-card);
+}
+.game-card.featured-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 1px);
+  background: linear-gradient(135deg, rgba(255,215,64,.25), rgba(168,85,247,.2), rgba(255,107,53,.2));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.game-card.featured-card:hover::before { opacity: 1; }
+
+/* 4. Category Pill Color System */
+.cat-pill { --pill-color: #7c3aed; }
+.cat-pill.active {
+  background: linear-gradient(135deg, var(--pill-color), color-mix(in srgb, var(--pill-color) 70%, #fff));
+  border-color: var(--pill-color);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--pill-color) 40%, transparent);
+}
+
+/* 5. Upgraded Hero */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 75% 50%, rgba(168,85,247,.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-bg {
+  animation: heroBgDrift 12s ease-in-out infinite alternate;
+}
+@keyframes heroBgDrift {
+  from { transform: scale(1.02) translateX(0); }
+  to   { transform: scale(1.08) translateX(-1%); }
+}
+
+/* 6. Better Scroll Row Cards */
+.scroll-row .game-card { width: 180px; flex-shrink: 0; }
+.scroll-row .game-card .card-thumb { aspect-ratio: 4/3; }
+
+/* 7. Live Dot Pulse upgrade */
+.card-players .dot {
+  animation: liveDotPulse 2s ease-in-out infinite;
+}
+@keyframes liveDotPulse {
+  0%, 100% { box-shadow: 0 0 4px var(--c-green); transform: scale(1); }
+  50% { box-shadow: 0 0 10px var(--c-green), 0 0 20px rgba(0,230,118,.4); transform: scale(1.3); }
+}
+
+/* 8. Section header glow bar upgrade */
+.sec-title {
+  position: relative;
+  padding-bottom: 10px;
+}
+.sec-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 32px; height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--c-fire), var(--c-accent));
+  box-shadow: 0 0 10px var(--c-fire);
+}
+
+/* 9. Premium card info section */
+.card-info {
+  position: relative;
+  padding: 12px 14px 14px;
+  background: linear-gradient(to bottom, var(--c-card), color-mix(in srgb, var(--card-color) 5%, var(--c-card)));
+}
+
+/* 10. Animated gradient background on body */
+@keyframes bgShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 11. Game modal premium loading spinner */
+.gm-spinner {
+  background: conic-gradient(from 0deg, transparent 0%, #a855f7 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
+  border: none;
+}
+
+/* 12. Hot card class */
+.game-card.hot-card .card-thumb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(255,107,53,.15) 100%);
+  z-index: 1;
+  pointer-events: none;
+}

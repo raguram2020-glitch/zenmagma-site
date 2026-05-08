@@ -186,6 +186,7 @@ function buildSidebar() {
   if (!list) return;
   list.innerHTML = CATEGORIES.map(cat => `
     <button class="cat-item${cat.id === 'all' ? ' active' : ''}"
+            style="--pill-color:${cat.color}"
             onclick="filterCat('${cat.id}', this)"
             data-id="${cat.id}">
       <span class="cat-dot" style="background:${cat.color}"></span>
@@ -202,6 +203,7 @@ function buildCatPills() {
   if (!row) return;
   row.innerHTML = CATEGORIES.map(cat => `
     <button class="cat-pill${cat.id === 'all' ? ' active' : ''}"
+            style="--pill-color:${cat.color}"
             onclick="filterCat('${cat.id}', this)"
             data-pill="${cat.id}">
       ${cat.label}
@@ -328,12 +330,15 @@ function thumbHTML(g) {
   if (g.thumb) {
     return `<img src="${g.thumb}" alt="${g.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`;
   }
+  // Rich gradient fallback with emoji, title, and subtle pattern
   return `<div style="
     width:100%;height:100%;
-    background:linear-gradient(135deg,${g.color}dd,${g.color}55);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
-    <span style="font-size:48px;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))">${g.emoji}</span>
-    <span style="font-size:10px;font-weight:800;color:#fff;letter-spacing:1px;text-transform:uppercase;opacity:.85;text-align:center;padding:0 8px">${g.title}</span>
+    background:radial-gradient(ellipse at 30% 40%, ${g.color}ee 0%, ${g.color}88 40%, ${g.color}44 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 40px)"></div>
+    <span style="font-size:52px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));z-index:1">${g.emoji}</span>
+    <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:1.5px;text-transform:uppercase;opacity:.9;text-align:center;padding:0 12px;text-shadow:0 1px 4px rgba(0,0,0,.8);z-index:1">${g.title}</span>
   </div>`;
 }
 
@@ -356,11 +361,13 @@ function gameCardHTML(g, mode = 'grid', index = 0) {
   const catLabel = cat ? cat.label.replace(/^\S+\s*/, '') : g.category || '';
 
   const delay = Math.min(index * 40, 400);
+  const featuredClass = g.featured ? ' featured-card' : '';
+  const hotClass = g.trending ? ' hot-card' : '';
 
   return `
-    <a class="game-card${g.thumb ? ' poki-card' : ''}" href="game.html?id=${g.slug}"
+    <a class="game-card${g.thumb ? ' poki-card' : ''}${featuredClass}${hotClass}" href="game.html?id=${g.slug}"
        onclick="handleCardClick(event,'${g.id}')"
-       style="animation-delay:${delay}ms"
+       style="--card-color:${g.color};animation-delay:${delay}ms"
        title="${g.title} — ${g.desc ? g.desc.slice(0,80) : ''}">
       <div class="card-thumb${g.videoPreview ? ' has-preview' : ''}" style="background:${g.color}33">
         ${thumbHTML(g)}
@@ -432,6 +439,21 @@ function animateCardsIn() {
       }, i * 35);
     });
   }, 20);
+  setTimeout(initCardTilt, 500);
+}
+
+function initCardTilt() {
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width  - .5;
+      const y = (e.clientY - r.top)  / r.height - .5;
+      card.style.transform = `perspective(600px) rotateY(${x * 8}deg) rotateX(${-y * 6}deg) translateY(-4px) scale(1.02)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
 }
 
 /* ══════════════════════════════════════
