@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ZenMagma Quizzes – Free Online Quizzes, Worksheets & Brain Teasers for Kids</title>
+<meta name="description" content="1000+ free quizzes for kids — Maths, Science, GK, English, Logic and more. Download worksheets. Daily quiz challenge. No sign-up needed.">
+<meta name="theme-color" content="#ec4899">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0d14;--surface:#16161f;--card:#1e1e2e;
+  --border:rgba(255,255,255,0.08);--text:#e2e8f0;--muted:#94a3b8;
+  --pink:#ec4899;--purple:#8b5cf6;--accent:#ec4899;
+  --green:#10b981;--blue:#3b82f6;--orange:#f97316;--yellow:#f59e0b;
+  --sidebar:240px; --header:60px; --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--pink);border-radius:4px}
+
+/* ── HEADER ── */
+header{
+  position:sticky;top:0;z-index:100;height:var(--header);
+  background:rgba(13,13,20,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:16px;
+}
+.logo{font-family:'Fredoka One',cursive;font-size:22px;
+  background:linear-gradient(135deg,#ec4899,#8b5cf6,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  display:flex;align-items:center;gap:8px;white-space:nowrap}
+.search-bar{flex:1;max-width:460px;position:relative}
+.search-bar input{
+  width:100%;padding:9px 16px 9px 40px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:25px;color:var(--text);font-size:14px;font-family:inherit;outline:none;
+  transition:0.2s}
+.search-bar input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(236,72,153,0.15)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.pill{padding:7px 16px;border-radius:25px;border:none;font-family:inherit;font-weight:800;font-size:13px;transition:0.2s;cursor:pointer}
+.pill.primary{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;box-shadow:0 4px 14px rgba(236,72,153,0.4)}
+.pill.outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.pill.outline:hover{border-color:var(--pink);color:var(--pink)}
+
+/* ── LAYOUT ── */
+#layout{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:calc(100vh - var(--header))}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  background:var(--surface);border-right:1px solid var(--border);
+  position:sticky;top:var(--header);height:calc(100vh - var(--header));
+  overflow-y:auto;padding:16px 0;
+}
+.sb-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 16px;margin-bottom:6px;margin-top:12px}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:10px 16px;
+  border-radius:0 25px 25px 0;margin-right:10px;
+  font-size:14px;font-weight:700;cursor:pointer;transition:0.2s;
+  color:var(--text);border:none;background:transparent;width:100%;text-align:left;
+}
+.sb-item:hover{background:rgba(255,255,255,0.06)}
+.sb-item.active{background:rgba(236,72,153,0.15);color:var(--pink)}
+.sb-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pink)}
+.sb-item{position:relative}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sb-count{margin-left:auto;font-size:11px;background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:10px;color:var(--muted)}
+.sidebar-ad{margin:16px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(236,72,153,0.12),rgba(139,92,246,0.12));border:1px dashed rgba(236,72,153,0.3);padding:16px;text-align:center;font-size:11px;color:var(--muted);min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+
+/* ── MAIN ── */
+#main{padding:24px 28px;overflow:hidden}
+
+/* ── HERO BANNER ── */
+.hero-banner{
+  border-radius:20px;overflow:hidden;padding:36px 40px;margin-bottom:28px;
+  background:linear-gradient(135deg,#1a0533,#3b1060,#1a0a3d);
+  border:1px solid rgba(236,72,153,0.2);
+  display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  position:relative;
+}
+.hero-banner::before{
+  content:'📚';position:absolute;right:40px;top:50%;transform:translateY(-50%);
+  font-size:120px;opacity:0.08;pointer-events:none;
+}
+.hero-text h1{font-family:'Fredoka One',cursive;font-size:clamp(24px,4vw,38px);margin-bottom:8px}
+.hero-text h1 span{background:linear-gradient(135deg,#ec4899,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-text p{color:rgba(255,255,255,0.65);font-size:14px;line-height:1.6;max-width:460px}
+.hero-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.btn-hero{
+  padding:12px 24px;border-radius:14px;border:none;font-family:'Fredoka One',cursive;
+  font-size:16px;color:#fff;cursor:pointer;transition:0.2s;
+}
+.btn-hero.main{background:linear-gradient(135deg,#ec4899,#8b5cf6);box-shadow:0 4px 18px rgba(236,72,153,0.4)}
+.btn-hero.main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(236,72,153,0.5)}
+.btn-hero.sec{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15)}
+
+/* ── AD BANNER ── */
+.ad-banner{
+  border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(139,92,246,0.07));
+  border:1px dashed rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:12px;margin-bottom:24px;position:relative;
+}
+.ad-banner::before{content:'Advertisement';position:absolute;top:6px;left:12px;font-size:9px;text-transform:uppercase;letter-spacing:1px;opacity:0.4}
+.ad-banner.lb{height:90px}
+
+/* ── DAILY QUIZ ── */
+.daily-card{
+  border-radius:20px;border:1px solid rgba(245,158,11,0.3);
+  background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.12));
+  padding:24px;margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.daily-badge{
+  width:72px;height:72px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#f59e0b,#f97316);
+  display:flex;align-items:center;justify-content:center;font-size:34px;
+  box-shadow:0 6px 24px rgba(245,158,11,0.4);
+}
+.daily-info h3{font-family:'Fredoka One',cursive;font-size:20px;margin-bottom:4px}
+.daily-info p{font-size:13px;color:var(--muted);margin-bottom:12px}
+.daily-meta{display:flex;gap:10px;flex-wrap:wrap}
+.daily-tag{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)}
+.daily-start{padding:10px 22px;border-radius:25px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-family:'Fredoka One',cursive;font-size:15px;border:none;box-shadow:0 4px 16px rgba(245,158,11,0.4);transition:0.2s}
+.daily-start:hover{transform:translateY(-2px)}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-title{font-family:'Fredoka One',cursive;font-size:22px;display:flex;align-items:center;gap:8px}
+.see-all{font-size:13px;font-weight:700;color:var(--pink);padding:6px 14px;border-radius:20px;border:1px solid rgba(236,72,153,0.3);transition:0.2s}
+.see-all:hover{background:rgba(236,72,153,0.1)}
+
+/* ── CAT PILLS ── */
+.cat-pills{display:flex;gap:8px;overflow-x:auto;margin-bottom:20px;padding-bottom:4px;scrollbar-width:none}
+.cat-pills::-webkit-scrollbar{display:none}
+.cpill{
+  padding:7px 16px;border-radius:25px;border:1px solid var(--border);
+  background:var(--card);font-size:13px;font-weight:700;white-space:nowrap;
+  cursor:pointer;transition:0.2s;color:var(--text);
+}
+.cpill:hover{border-color:var(--pink);color:var(--pink)}
+.cpill.active{background:var(--pink);border-color:var(--pink);color:#fff}
+
+/* ── QUIZ GRID ── */
+.quiz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:28px}
+
+/* ── QUIZ CARD ── */
+.quiz-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;
+  display:block;
+}
+.quiz-card:hover{transform:translateY(-5px);box-shadow:0 8px 30px rgba(236,72,153,0.25);border-color:rgba(236,72,153,0.3)}
+.qcard-top{padding:22px;position:relative}
+.qcard-emoji{font-size:40px;margin-bottom:12px;display:block}
+.qcard-title{font-family:'Fredoka One',cursive;font-size:17px;margin-bottom:6px}
+.qcard-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.qcard-tags{display:flex;gap:5px;flex-wrap:wrap}
+.qtag{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:800;background:rgba(255,255,255,0.08);color:var(--muted)}
+.qcard-bar{height:3px}
+.qcard-bottom{padding:12px 22px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}
+.qcard-meta{font-size:12px;color:var(--muted);display:flex;gap:12px}
+.qcard-meta span{display:flex;align-items:center;gap:4px}
+.qcard-diff{font-size:11px;font-weight:800;padding:2px 10px;border-radius:12px}
+.diff-easy{background:rgba(16,185,129,0.15);color:#10b981}
+.diff-med{background:rgba(245,158,11,0.15);color:#f59e0b}
+.diff-hard{background:rgba(239,68,68,0.15);color:#ef4444}
+
+/* ── WORKSHEET SECTION ── */
+.worksheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+.ws-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;cursor:pointer;transition:0.2s;display:flex;flex-direction:column;gap:10px;
+}
+.ws-card:hover{transform:translateY(-4px);border-color:rgba(59,130,246,0.4)}
+.ws-icon{font-size:32px}
+.ws-title{font-weight:800;font-size:14px}
+.ws-meta{font-size:12px;color:var(--muted)}
+.ws-dl{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:25px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:12px;font-weight:800;width:fit-content;transition:0.2s}
+.ws-dl:hover{transform:scale(1.04)}
+
+/* ── FOOTER ── */
+footer{background:var(--surface);border-top:1px solid var(--border);padding:32px 28px}
+.foot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:20px;margin-bottom:24px}
+.foot-col h4{font-weight:800;margin-bottom:10px;font-size:14px}
+.foot-col a{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;transition:0.2s}
+.foot-col a:hover{color:var(--pink)}
+.foot-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted);padding-top:18px;border-top:1px solid var(--border)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #sidebar{display:none}
+  #layout{grid-template-columns:1fr}
+  #main{padding:16px}
+  .quiz-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  .hero-banner{padding:24px}
+}
+@media(max-width:480px){
+  .quiz-grid{grid-template-columns:1fr}
+  .worksheet-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <a href="index.html" class="logo">🌋 <span>ZenMagma</span></a>
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Search quizzes..." autocomplete="off">
+  </div>
+  <div class="hdr-right">
+    <button class="pill outline" onclick="window.location.href='../index.html'">🎮 Games</button>
+    <button class="pill primary">Sign In</button>
+  </div>
+</header>
+
+<!-- ── LAYOUT ── -->
+<div id="layout">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sb-label">Categories</div>
+    <div id="sb-cats"></div>
+    <div class="sb-label">Quick Links</div>
+    <button class="sb-item" onclick="showSection('worksheets')"><span class="sb-dot" style="background:#3b82f6"></span>📄 Worksheets<span class="sb-count">200+</span></button>
+    <button class="sb-item" onclick="showSection('daily')"><span class="sb-dot" style="background:#f59e0b"></span>⚡ Daily Quiz<span class="sb-count">NEW</span></button>
+
+    <div class="sidebar-ad">
+      <div style="font-size:28px;opacity:0.3">📢</div>
+      <div>Advertisement</div>
+      <div style="font-size:10px;opacity:0.4">300×250</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main">
+
+    <!-- Top Ad -->
+    <div class="ad-banner lb" style="margin-bottom:20px">📢 Advertisement — 728×90 Leaderboard</div>
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-text">
+        <h1>Test Your Brain! <span>🧠</span></h1>
+        <p>1000+ free quizzes across Maths, Science, GK, English, Logic and more. Challenge yourself daily and track your progress!</p>
+        <div class="hero-actions">
+          <button class="btn-hero main" onclick="startRandomQuiz()">▶ Start Random Quiz</button>
+          <button class="btn-hero sec">📄 Download Worksheets</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Quiz -->
+    <div class="daily-card">
+      <div class="daily-badge">⚡</div>
+      <div class="daily-info" style="flex:1">
+        <h3>Today's Daily Challenge</h3>
+        <p id="daily-desc">Loading today's challenge...</p>
+        <div class="daily-meta" id="daily-meta"></div>
+      </div>
+      <button class="daily-start" onclick="startDailyQuiz()">Start Challenge →</button>
+    </div>
+
+    <!-- Category Pills -->
+    <div class="cat-pills" id="cat-pills"></div>
+
+    <!-- Ad (mid) -->
+    <div class="ad-banner lb">📢 Advertisement — 728×90</div>
+
+    <!-- Quiz Grid -->
+    <div class="sec-hdr">
+      <h2 class="sec-title" id="grid-title"><span>📚</span> All Quizzes</h2>
+      <span id="quiz-count" style="color:var(--muted);font-size:13px"></span>
+    </div>
+    <div class="quiz-grid" id="quiz-grid"></div>
+
+    <!-- Worksheets -->
+    <div id="ws-section">
+      <div class="sec-hdr">
+        <h2 class="sec-title"><span>📄</span> Free Worksheets</h2>
+        <a href="#" class="see-all">View All</a>
+      </div>
+      <div class="worksheet-grid" id="ws-grid"></div>
+    </div>
+
+    <!-- Bottom Ad -->
+    <div class="ad-banner" style="height:250px;margin-bottom:0">📢 Advertisement — 300×250</div>
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-grid">
+    <div class="foot-col">
+      <div class="logo" style="font-size:18px;margin-bottom:10px">🌋 ZenMagma</div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.6">Free quizzes, worksheets and brain teasers for kids. Learn while having fun!</p>
+    </div>
+    <div class="foot-col">
+      <h4>Subjects</h4>
+      <a href="#">Mathematics</a><a href="#">Science</a>
+      <a href="#">English</a><a href="#">GK</a><a href="#">Logic</a>
+    </div>
+    <div class="foot-col">
+      <h4>Resources</h4>
+      <a href="#">Free Worksheets</a><a href="#">Daily Quiz</a>
+      <a href="#">Practice Tests</a><a href="#">Brain Teasers</a>
+    </div>
+    <div class="foot-col">
+      <h4>Links</h4>
+      <a href="../index.html">🎮 Games</a>
+      <a href="#">About</a><a href="#">Contact</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2025 <a href="https://zenmagma.com" style="color:var(--accent);">ZenMagma.com</a>. All rights reserved.</span>
+    <span>Made with ❤️ for learners everywhere</span>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════
+   QUIZZONE APP
+══════════════════════════════ */
+
+const CATS = [
+  { id:'all',     label:'🎯 All',           color:'#ec4899', count:120 },
+  { id:'maths',   label:'🔢 Maths',          color:'#3b82f6', count:42 },
+  { id:'science', label:'🔬 Science',         color:'#10b981', count:35 },
+  { id:'gk',      label:'🌍 General Knowledge',color:'#f97316', count:48 },
+  { id:'english', label:'📖 English',          color:'#8b5cf6', count:28 },
+  { id:'logic',   label:'🧠 Logic',            color:'#ec4899', count:22 },
+  { id:'kids',    label:'🌈 Kids',             color:'#f59e0b', count:30 },
+  { id:'history', label:'🏛️ History',          color:'#6366f1', count:18 },
+];
+
+const QUIZZES = [
+  { id:'q1',  title:'Times Tables Challenge',    cat:'maths',   emoji:'✖️', diff:'Easy',   qs:20, time:5,  desc:'Master your multiplication tables from 1 to 12!',     tags:['numbers','multiply','grade3'], color:'#3b82f6', plays:24000 },
+  { id:'q2',  title:'Human Body Systems',        cat:'science', emoji:'🫀', diff:'Medium', qs:25, time:8,  desc:'How well do you know the human body? Find out!',       tags:['biology','health','grade5'],  color:'#10b981', plays:18500 },
+  { id:'q3',  title:'World Capitals Quiz',       cat:'gk',      emoji:'🌍', diff:'Medium', qs:30, time:10, desc:'Can you name the capitals of 30 countries?',           tags:['geography','countries'],      color:'#f97316', plays:31200 },
+  { id:'q4',  title:'Synonyms & Antonyms',       cat:'english', emoji:'📖', diff:'Easy',   qs:20, time:6,  desc:'Test your vocabulary with synonyms and antonyms!',     tags:['vocabulary','words'],         color:'#8b5cf6', plays:15600 },
+  { id:'q5',  title:'Brain Teasers Vol.1',       cat:'logic',   emoji:'🧩', diff:'Hard',   qs:15, time:12, desc:'Tricky riddles and logical puzzles for sharp minds!',  tags:['riddles','logic','thinking'], color:'#ec4899', plays:22400 },
+  { id:'q6',  title:'Solar System Adventure',    cat:'science', emoji:'🪐', diff:'Easy',   qs:20, time:7,  desc:'Explore planets, moons, and stars in our solar system!',tags:['space','planets','grade4'],  color:'#6366f1', plays:28900 },
+  { id:'q7',  title:'Indian History Heroes',     cat:'history', emoji:'🏛️', diff:'Medium', qs:25, time:10, desc:'Great leaders and events that shaped Indian history.',  tags:['india','freedom','history'],  color:'#f59e0b', plays:13400 },
+  { id:'q8',  title:'Fun Maths for Kids',        cat:'kids',    emoji:'🎈', diff:'Easy',   qs:15, time:5,  desc:'Simple and fun maths puzzles for young learners!',     tags:['addition','kids','grade1'],   color:'#10b981', plays:45200 },
+  { id:'q9',  title:'Animal Kingdom',            cat:'science', emoji:'🦁', diff:'Easy',   qs:20, time:6,  desc:'Mammals, reptiles, birds and more — how much do you know?',tags:['animals','biology'],       color:'#f97316', plays:38100 },
+  { id:'q10', title:'Fraction Fundamentals',     cat:'maths',   emoji:'½',  diff:'Medium', qs:20, time:8,  desc:'Master fractions, decimals, and percentages!',         tags:['fractions','grade5'],         color:'#3b82f6', plays:19700 },
+  { id:'q11', title:'Spellings Challenge',       cat:'english', emoji:'✏️', diff:'Medium', qs:30, time:10, desc:'Spell 30 commonly misspelled English words correctly!', tags:['spelling','words','grade4'],  color:'#8b5cf6', plays:16800 },
+  { id:'q12', title:'Science Experiments Quiz',  cat:'science', emoji:'🧪', diff:'Hard',   qs:20, time:10, desc:'From Newton to Einstein — science concepts explained!', tags:['chemistry','physics'],        color:'#10b981', plays:12300 },
+];
+
+const WORKSHEETS = [
+  { title:'Maths Grade 3 Pack',    emoji:'🔢', subject:'Maths',   pages:12, grade:'Grade 3', free:true,  color:'#3b82f6' },
+  { title:'English Vocabulary',    emoji:'📖', subject:'English', pages:8,  grade:'Grade 4', free:true,  color:'#8b5cf6' },
+  { title:'Science Diagrams',      emoji:'🔬', subject:'Science', pages:10, grade:'Grade 5', free:true,  color:'#10b981' },
+  { title:'GK World Atlas',        emoji:'🌍', subject:'GK',      pages:15, grade:'All',     free:false, color:'#f97316' },
+  { title:'Logic Puzzles Book',    emoji:'🧠', subject:'Logic',   pages:20, grade:'Grade 6', free:false, color:'#ec4899' },
+  { title:'Times Tables Chart',    emoji:'✖️', subject:'Maths',   pages:4,  grade:'Grade 2', free:true,  color:'#6366f1' },
+];
+
+const DAILY = [
+  { desc:'20-question Speed Maths challenge — fractions, decimals & more!', tags:['Maths','20 Questions','8 Minutes','Medium'], cat:'maths' },
+  { desc:'Test your General Knowledge with today\'s world events and facts!', tags:['GK','25 Questions','10 Minutes','Easy'], cat:'gk' },
+  { desc:'Logic puzzles and brain teasers to start your day sharp!', tags:['Logic','15 Questions','12 Minutes','Hard'], cat:'logic' },
+];
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  buildSidebar();
+  buildCatPills();
+  buildDailyQuiz();
+  renderQuizzes(QUIZZES);
+  renderWorksheets();
+  initSearch();
+});
+
+function buildSidebar() {
+  document.getElementById('sb-cats').innerHTML = CATS.map(c => `
+    <button class="sb-item${c.id==='all'?' active':''}" onclick="filterCat('${c.id}',this)" data-id="${c.id}">
+      <span class="sb-dot" style="background:${c.color}"></span>
+      ${c.label}<span class="sb-count">${c.count}</span>
+    </button>
+  `).join('');
+}
+
+function buildCatPills() {
+  document.getElementById('cat-pills').innerHTML = CATS.map(c => `
+    <button class="cpill${c.id==='all'?' active':''}" onclick="filterCat('${c.id}',this)" data-pill="${c.id}">
+      ${c.label}
+    </button>
+  `).join('');
+}
+
+function buildDailyQuiz() {
+  const day = new Date().getDay();
+  const d = DAILY[day % DAILY.length];
+  document.getElementById('daily-desc').textContent = d.desc;
+  document.getElementById('daily-meta').innerHTML = d.tags.map(t=>`<span class="daily-tag">${t}</span>`).join('');
+}
+
+function filterCat(id, el) {
+  document.querySelectorAll('.sb-item[data-id]').forEach(b=>b.classList.toggle('active',b.dataset.id===id));
+  document.querySelectorAll('.cpill[data-pill]').forEach(b=>b.classList.toggle('active',b.dataset.pill===id));
+  const filtered = id==='all' ? QUIZZES : QUIZZES.filter(q=>q.cat===id||q.tags.includes(id));
+  const cat = CATS.find(c=>c.id===id);
+  document.getElementById('grid-title').innerHTML = `<span>${cat?.label.split(' ')[0]||'📚'}</span> ${cat?.label.replace(/^\S+\s*/,'')||'All Quizzes'}`;
+  document.getElementById('quiz-count').textContent = `${filtered.length} quizzes`;
+  renderQuizzes(filtered);
+}
+
+function renderQuizzes(list) {
+  document.getElementById('quiz-count').textContent = `${list.length} quizzes`;
+  document.getElementById('quiz-grid').innerHTML = list.map(q => `
+    <div class="quiz-card" onclick="openQuiz('${q.id}')">
+      <div class="qcard-top">
+        <span class="qcard-emoji">${q.emoji}</span>
+        <div class="qcard-title">${q.title}</div>
+        <div class="qcard-desc">${q.desc}</div>
+        <div class="qcard-tags">${q.tags.map(t=>`<span class="qtag">${t}</span>`).join('')}</div>
+      </div>
+      <div class="qcard-bar" style="background:${q.color}"></div>
+      <div class="qcard-bottom">
+        <div class="qcard-meta">
+          <span>❓ ${q.qs} Qs</span>
+          <span>⏱ ${q.time} min</span>
+          <span>🎮 ${(q.plays/1000).toFixed(1)}k</span>
+        </div>
+        <span class="qcard-diff diff-${q.diff.toLowerCase()}">${q.diff}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderWorksheets() {
+  document.getElementById('ws-grid').innerHTML = WORKSHEETS.map(w => `
+    <div class="ws-card">
+      <div class="ws-icon">${w.emoji}</div>
+      <div class="ws-title">${w.title}</div>
+      <div class="ws-meta">${w.grade} · ${w.pages} pages · ${w.free?'<span style="color:#10b981;font-weight:800">FREE</span>':'<span style="color:#f59e0b;font-weight:800">Premium</span>'}</div>
+      <button class="ws-dl" onclick="downloadWS('${w.title}',${w.free})">
+        ${w.free?'⬇️ Download Free':'🔓 Get Premium'}
+      </button>
+    </div>
+  `).join('');
+}
+
+function initSearch() {
+  const inp = document.getElementById('search-input');
+  let timer;
+  inp.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const q = inp.value.trim().toLowerCase();
+      if (!q) { renderQuizzes(QUIZZES); return; }
+      const r = QUIZZES.filter(q2=>q2.title.toLowerCase().includes(q)||q2.tags.some(t=>t.includes(q))||q2.cat.includes(q));
+      document.getElementById('grid-title').innerHTML = `<span>🔍</span> Results for "${q}"`;
+      document.getElementById('quiz-count').textContent = `${r.length} found`;
+      renderQuizzes(r);
+    }, 250);
+  });
+}
+
+function openQuiz(id) {
+  const q = QUIZZES.find(x=>x.id===id);
+  if (!q) return;
+  // In production, navigate to quiz page: window.location.href=`quiz.html?id=${id}`;
+  alert(`🎯 Starting: ${q.title}\n\n${q.qs} questions · ${q.time} minutes · ${q.diff}\n\nQuiz page coming soon! Connect to your MathHelper app quiz engine.`);
+}
+
+function startRandomQuiz() {
+  const q = QUIZZES[Math.floor(Math.random()*QUIZZES.length)];
+  openQuiz(q.id);
+}
+
+function startDailyQuiz() {
+  const day = new Date().getDay();
+  const d = DAILY[day % DAILY.length];
+  const q = QUIZZES.find(x=>x.cat===d.cat)||QUIZZES[0];
+  openQuiz(q.id);
+}
+
+function downloadWS(title, free) {
+  if (free) alert(`⬇️ Downloading: ${title}\n\nIn production, this will download a PDF worksheet from your server.`);
+  else alert(`🔓 This is a premium worksheet.\n\nUpgrade to premium to unlock all ${WORKSHEETS.filter(w=>!w.free).length} premium worksheets!`);
+}
+
+function showSection(id) {
+  if (id==='daily') document.querySelector('.daily-card')?.scrollIntoView({behavior:'smooth'});
+  if (id==='worksheets') document.getElementById('ws-section')?.scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
