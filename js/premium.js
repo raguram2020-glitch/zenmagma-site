@@ -127,25 +127,6 @@ document.querySelectorAll('.cat-pill').forEach(pill => {
   });
 });
 
-/* ── LIVE PLAYER COUNT FLICKER ── */
-function flickerPlayerCounts() {
-  document.querySelectorAll('.card-players').forEach(el => {
-    const base = parseInt(el.dataset.base || '0');
-    if (!base) {
-      const match = el.textContent.match(/\d+/);
-      if (match) el.dataset.base = match[0];
-      return;
-    }
-    const delta = Math.floor(Math.random() * 6) - 2;
-    const newVal = Math.max(50, base + delta);
-    const numEl = el.childNodes[el.childNodes.length - 1];
-    if (numEl && numEl.nodeType === 3) {
-      numEl.textContent = ` ${newVal.toLocaleString()} online`;
-    }
-    el.dataset.base = newVal;
-  });
-}
-setInterval(flickerPlayerCounts, 4000);
 
 /* ── HEADER SCROLL SHADOW ── */
 const header = document.getElementById('header');

@@ -563,8 +563,6 @@ function cardHTML(g, i) {
     g.trending  ? '<span class="badge hot">🔥 Hot</span>' : '',
   ].filter(Boolean).join('');
 
-  const playerCount = fakeOnline(g.id);
-
   return `
     <a class="game-card will-reveal"
        href="../game.html?id=${g.slug}"
@@ -574,7 +572,6 @@ function cardHTML(g, i) {
         ${thumb}
         <div class="card-overlay"><div class="card-play-label">▶ Play Now</div></div>
         <div class="card-badges">${badges}</div>
-        <div class="card-players"><span class="dot"></span>${playerCount} online</div>
       </div>
       <div class="card-info">
         <div class="card-title">${g.title}</div>
@@ -583,18 +580,13 @@ function cardHTML(g, i) {
           <span class="card-rating">⭐ ${g.rating}</span>
         </div>
         <div class="card-plays-row">
-          <span class="live-dot"></span>${formatPlays(g.plays)} plays
+          ${formatPlays(g.plays)} plays
         </div>
       </div>
     </a>`;
 }
 
 /* ── Helpers ── */
-function fakeOnline(id) {
-  let h = 0;
-  for (const c of (id || 'x')) h = ((h << 5) - h) + c.charCodeAt(0);
-  return (Math.abs(h) % 900 + 100).toLocaleString();
-}
 </script>
 
 </body>

@@ -343,13 +343,6 @@ function thumbHTML(g) {
   </div>`;
 }
 
-/* Simulated player counts per game */
-function fakePlayerCount(id) {
-  let h = 0;
-  for (const c of (id || 'x')) h = ((h << 5) - h) + c.charCodeAt(0);
-  return (Math.abs(h) % 900 + 100).toLocaleString();
-}
-
 function gameCardHTML(g, mode = 'grid', index = 0) {
   const badges = [
     g.isNew      ? '<span class="badge new">✨ New</span>'    : '',
@@ -382,10 +375,6 @@ function gameCardHTML(g, mode = 'grid', index = 0) {
         </div>
         ${badges ? `<div class="card-badges">${badges}</div>` : ''}
         ${g.isExternal ? `<div class="card-ext-badge">GD</div>` : ''}
-        <div class="card-players">
-          <span class="dot"></span>
-          ${fakePlayerCount(g.id)} online
-        </div>
       </div>
       <div class="card-info">
         <div class="card-title">${g.title}</div>
@@ -394,7 +383,6 @@ function gameCardHTML(g, mode = 'grid', index = 0) {
           <span class="card-rating">⭐ ${g.rating}</span>
         </div>
         <div class="card-plays-row">
-          <span class="live-dot"></span>
           ${formatPlays(g.plays)} plays
         </div>
       </div>

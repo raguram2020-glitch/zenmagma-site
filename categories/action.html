@@ -204,10 +204,6 @@ function catCardHTML(g, i) {
         ${thumb}
         <div class="card-overlay"><div class="card-play-label">▶ Play Now</div></div>
         <div class="card-badges">${ext}${isNew}${hot}</div>
-        <div class="card-players">
-          <span class="dot"></span>
-          ${fakePlayerCount(g.id)} online
-        </div>
       </div>
       <div class="card-info">
         <div class="card-title">${g.title}</div>
@@ -216,18 +212,12 @@ function catCardHTML(g, i) {
           <span class="card-rating">⭐ ${g.rating}</span>
         </div>
         <div class="card-plays-row">
-          <span class="live-dot"></span>
           ${formatPlays(g.plays)} plays
         </div>
       </div>
     </a>`;
 }
 
-function fakePlayerCount(id) {
-  let h = 0;
-  for (const c of (id||'x')) h = ((h<<5)-h)+c.charCodeAt(0);
-  return (Math.abs(h)%900+100).toLocaleString();
-}
 </script>
 </body>
 </html>

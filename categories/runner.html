@@ -163,7 +163,6 @@ function renderCatGrid() {
             ${g.isNew?'<span class="badge new">✨ New</span>':''}
             ${g.trending?'<span class="badge hot">🔥 Hot</span>':''}
           </div>
-          <div class="card-players"><span class="dot"></span>${fakePlayerCount(g.id)} online</div>
         </div>
         <div class="card-info">
           <div class="card-title">${g.title}</div>
@@ -171,15 +170,10 @@ function renderCatGrid() {
             <span class="card-cat-badge">Runner</span>
             <span class="card-rating">⭐ ${g.rating}</span>
           </div>
-          <div class="card-plays-row"><span class="live-dot"></span>${formatPlays(g.plays)} plays</div>
+          <div class="card-plays-row">${formatPlays(g.plays)} plays</div>
         </div>
       </a>`;
   }).join('');
-}
-function fakePlayerCount(id) {
-  let h = 0;
-  for (const c of (id||'x')) h = ((h<<5)-h)+c.charCodeAt(0);
-  return (Math.abs(h)%900+100).toLocaleString();
 }
 </script>
 </body>
