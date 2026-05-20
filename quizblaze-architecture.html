@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>QuizBlaze — Production Realtime Architecture</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+:root{
+  --void:#080611;--space:#0D0B1E;--deep:#13102A;--surface:#1A1635;--raised:#221D42;
+  --border:rgba(124,58,237,0.2);--borderHi:rgba(168,85,247,0.4);
+  --purple:#7C3AED;--purpleLt:#A855F7;--purpleGlow:rgba(124,58,237,0.3);
+  --pink:#EC4899;--cyan:#06B6D4;--green:#10B981;--amber:#F59E0B;--red:#EF4444;
+  --blue:#3B82F6;--teal:#14B8A6;--orange:#F97316;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+  --grad-hero:linear-gradient(135deg,#7C3AED,#EC4899,#06B6D4);
+  --grad-primary:linear-gradient(135deg,#7C3AED,#A855F7);
+  --spring:cubic-bezier(0.34,1.56,0.64,1);
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--void);color:#F0E6FF;line-height:1.6;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ─── LAYOUT ─── */
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+.section{padding:64px 0;border-bottom:1px solid var(--border)}
+.section:last-child{border:none}
+
+/* ─── NAV ─── */
+.top-bar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,6,17,0.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.2rem;text-decoration:none;color:#F0E6FF}
+.logo-gem{width:34px;height:34px;border-radius:10px;background:var(--grad-hero);display:flex;align-items:center;justify-content:center;font-size:.9rem;box-shadow:0 4px 16px var(--purpleGlow)}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-link{
+  padding:6px 14px;border-radius:50px;font-size:.78rem;font-weight:700;
+  color:rgba(167,139,250,0.7);text-decoration:none;cursor:pointer;
+  transition:all .15s;border:1px solid transparent;
+}
+.nav-link:hover,.nav-link.active{color:#C4B5FD;background:rgba(124,58,237,0.15);border-color:var(--border)}
+
+/* ─── HERO ─── */
+.hero{
+  padding:80px 0 60px;text-align:center;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(124,58,237,0.15),transparent 65%);
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.35);
+  border-radius:50px;padding:6px 18px;font-size:.78rem;font-weight:800;color:#C4B5FD;
+  margin-bottom:20px;letter-spacing:.05em;text-transform:uppercase;
+}
+.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1;letter-spacing:-2px;margin-bottom:16px}
+.hero p{font-size:1.1rem;color:rgba(167,139,250,0.7);max-width:600px;margin:0 auto 32px}
+.hero-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.hbadge{
+  padding:8px 18px;border-radius:50px;font-size:.8rem;font-weight:700;
+  border:1px solid;display:flex;align-items:center;gap:6px;
+}
+
+/* ─── TYPOGRAPHY ─── */
+.section-label{
+  font-size:.7rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;
+  color:rgba(167,139,250,0.5);margin-bottom:8px;
+}
+h2{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:900;letter-spacing:-1px;margin-bottom:8px}
+h3{font-size:1.2rem;font-weight:800;margin-bottom:8px}
+h4{font-size:.95rem;font-weight:700;margin-bottom:6px}
+.gradient-text{background:var(--grad-hero);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.dim{color:rgba(167,139,250,0.55)}
+.mono{font-family:var(--mono)}
+
+/* ─── CARDS ─── */
+.card{
+  background:linear-gradient(145deg,rgba(34,29,66,0.9),rgba(26,22,53,0.7));
+  border:1px solid var(--border);border-radius:16px;padding:20px;
+  backdrop-filter:blur(12px);
+}
+.card-glow{box-shadow:0 0 0 1px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.04)}
+.card-highlight{border-color:var(--borderHi);box-shadow:0 8px 32px rgba(124,58,237,0.2)}
+
+/* ─── GRID LAYOUTS ─── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+@media(max-width:900px){.grid-3{grid-template-columns:1fr 1fr}.grid-4{grid-template-columns:1fr 1fr}}
+
+/* ─── CODE BLOCKS ─── */
+.code-block{
+  background:rgba(8,6,17,0.9);border:1px solid rgba(124,58,237,0.2);
+  border-radius:12px;overflow:hidden;margin:12px 0;
+}
+.code-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:rgba(26,22,53,0.8);border-bottom:1px solid var(--border);
+}
+.code-lang{font-size:.72rem;font-weight:700;color:#C4B5FD;letter-spacing:.08em;text-transform:uppercase}
+.code-dots{display:flex;gap:5px}
+.code-dots span{width:10px;height:10px;border-radius:50%}
+pre{
+  padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;
+  line-height:1.7;color:#E2D9F3;
+}
+.ck{color:#C084FC} /* keyword */
+.cs{color:#34D399} /* string */
+.cc{color:#6B7280} /* comment */
+.cn{color:#FCD34D} /* number */
+.cf{color:#60A5FA} /* function */
+.co{color:#F472B6} /* operator */
+.ct{color:#A5F3FC} /* type */
+
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch-diagram{
+  width:100%;background:rgba(8,6,17,0.7);border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;position:relative;
+}
+.arch-diagram svg{width:100%;height:auto;display:block}
+
+/* ─── EVENT TABLE ─── */
+.event-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.event-table th{
+  padding:10px 14px;text-align:left;font-size:.7rem;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,0.5);
+  border-bottom:2px solid var(--border);background:rgba(26,22,53,0.5);
+}
+.event-table td{padding:10px 14px;border-bottom:1px solid rgba(124,58,237,0.1);vertical-align:top}
+.event-table tr:hover td{background:rgba(124,58,237,0.05)}
+.event-name{font-family:var(--mono);font-weight:700;font-size:.82rem}
+.event-dir{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700;
+}
+.dir-cs{background:rgba(6,182,212,0.15);color:#67E8F9;border:1px solid rgba(6,182,212,0.3)}
+.dir-sc{background:rgba(168,85,247,0.15);color:#D8B4FE;border:1px solid rgba(168,85,247,0.3)}
+.dir-bc{background:rgba(16,185,129,0.15);color:#6EE7B7;border:1px solid rgba(16,185,129,0.3)}
+
+/* ─── FLOW STEPS ─── */
+.flow{display:flex;flex-direction:column;gap:0}
+.flow-step{
+  display:flex;gap:16px;align-items:flex-start;position:relative;
+  padding-bottom:24px;
+}
+.flow-step:last-child{padding-bottom:0}
+.flow-step::before{
+  content:'';position:absolute;left:17px;top:36px;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--purple),transparent);
+}
+.flow-step:last-child::before{display:none}
+.flow-num{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  background:var(--grad-primary);display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:.85rem;box-shadow:0 4px 16px var(--purpleGlow);
+}
+.flow-content{flex:1}
+
+/* ─── BADGES / TAGS ─── */
+.tag{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+  border-radius:4px;font-size:.72rem;font-weight:700;
+}
+.tag-purple{background:rgba(124,58,237,0.2);color:#C4B5FD;border:1px solid rgba(124,58,237,0.3)}
+.tag-cyan  {background:rgba(6,182,212,0.2); color:#A5F3FC;border:1px solid rgba(6,182,212,0.3)}
+.tag-green {background:rgba(16,185,129,0.2);color:#6EE7B7;border:1px solid rgba(16,185,129,0.3)}
+.tag-amber {background:rgba(245,158,11,0.2);color:#FDE68A;border:1px solid rgba(245,158,11,0.3)}
+.tag-red   {background:rgba(239,68,68,0.2); color:#FCA5A5;border:1px solid rgba(239,68,68,0.3)}
+.tag-blue  {background:rgba(59,130,246,0.2);color:#BAE6FD;border:1px solid rgba(59,130,246,0.3)}
+
+/* ─── STAT CHIPS ─── */
+.stat-chip-row{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0}
+.stat-chip{
+  flex:1;min-width:120px;background:var(--raised);border:1px solid var(--border);
+  border-radius:12px;padding:16px;text-align:center;
+}
+.stat-chip .v{font-size:1.8rem;font-weight:900;line-height:1}
+.stat-chip .k{font-size:.72rem;color:rgba(167,139,250,0.5);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+
+/* ─── ALERT BOXES ─── */
+.alert{
+  display:flex;gap:12px;border-radius:12px;padding:16px;margin:16px 0;
+  border:1px solid;
+}
+.alert-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.alert-warn{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3);color:#FDE68A}
+.alert-info{background:rgba(6,182,212,0.08); border-color:rgba(6,182,212,0.3); color:#A5F3FC}
+.alert-good{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3);color:#6EE7B7}
+.alert-danger{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.3);color:#FCA5A5}
+
+/* ─── COMPARISON TABLE ─── */
+.comp-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.comp-table th{padding:12px 14px;text-align:left;font-weight:800;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid var(--border);background:rgba(26,22,53,0.5);color:rgba(167,139,250,0.6)}
+.comp-table td{padding:11px 14px;border-bottom:1px solid rgba(124,58,237,0.08)}
+.comp-table tr:hover td{background:rgba(124,58,237,0.04)}
+.check{color:#34D399;font-weight:900} .cross{color:#F87171;font-weight:900}
+
+/* ─── TIER CARD ─── */
+.tier-card{
+  border-radius:16px;padding:20px;border:1px solid;position:relative;overflow:hidden;
+}
+.tier-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;opacity:.15}
+.tier-free {background:rgba(26,22,53,0.7);border-color:rgba(124,58,237,0.3)}
+.tier-free::before{background:var(--purple)}
+.tier-scale{background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.4)}
+.tier-scale::before{background:var(--cyan)}
+.tier-max  {background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.4)}
+.tier-max::before{background:var(--amber)}
+
+/* ─── SCROLLING TOC ─── */
+.toc{
+  position:fixed;right:24px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:6px;z-index:90;
+}
+.toc-dot{
+  width:8px;height:8px;border-radius:50%;background:rgba(124,58,237,0.3);
+  cursor:pointer;transition:all .2s;
+  position:relative;
+}
+.toc-dot:hover,.toc-dot.active{background:var(--purpleLt);transform:scale(1.4)}
+.toc-dot::after{
+  content:attr(data-label);position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  background:var(--raised);border:1px solid var(--border);border-radius:6px;
+  padding:4px 10px;font-size:.7rem;font-weight:700;color:#C4B5FD;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.toc-dot:hover::after{opacity:1}
+@media(max-width:1200px){.toc{display:none}}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fade-in{animation:fadeSlideUp .5s ease both}
+.mono-sm{font-family:var(--mono);font-size:.82rem}
+</style>
+</head>
+<body>
+
+<!-- TOC DOTS -->
+<div class="toc" id="toc">
+  <div class="toc-dot" data-label="Overview"   data-target="s-overview"   onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="Architecture" data-target="s-arch"    onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="WebSockets"  data-target="s-ws"       onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="Room System" data-target="s-rooms"    onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="State Sync"  data-target="s-sync"     onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="Anti-Cheat"  data-target="s-anticheat" onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="Scaling"     data-target="s-scale"    onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="Failover"    data-target="s-failover" onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="Schema"      data-target="s-schema"   onclick="scrollTo_(this)"></div>
+  <div class="toc-dot" data-label="Latency"     data-target="s-latency"  onclick="scrollTo_(this)"></div>
+</div>
+
+<!-- NAV BAR -->
+<header class="top-bar">
+  <a class="logo" href="quizblaze-v2.html">
+    <div class="logo-gem">⚡</div>
+    QuizBlaze <span style="color:rgba(167,139,250,0.4);font-weight:400;margin-left:4px">Architecture</span>
+  </a>
+  <nav class="nav-links" id="navLinks">
+    <a class="nav-link" onclick="scrollToId('s-arch')">Architecture</a>
+    <a class="nav-link" onclick="scrollToId('s-ws')">WebSockets</a>
+    <a class="nav-link" onclick="scrollToId('s-rooms')">Rooms</a>
+    <a class="nav-link" onclick="scrollToId('s-anticheat')">Anti-Cheat</a>
+    <a class="nav-link" onclick="scrollToId('s-scale')">Scaling</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">Production Architecture Blueprint</div>
+    <h1><span class="gradient-text">100K+ Concurrent</span><br>Multiplayer Quiz Platform</h1>
+    <p>Complete realtime architecture for a Kahoot-scale quiz platform — WebSockets, Redis pub/sub, distributed game state, anti-cheat, and horizontal scaling.</p>
+    <div class="hero-badges">
+      <div class="hbadge" style="border-color:rgba(124,58,237,0.4);color:#C4B5FD;background:rgba(124,58,237,0.1)">⚡ Node.js + Socket.io</div>
+      <div class="hbadge" style="border-color:rgba(239,68,68,0.4);color:#FCA5A5;background:rgba(239,68,68,0.08)">🔴 Redis Cluster</div>
+      <div class="hbadge" style="border-color:rgba(59,130,246,0.4);color:#BAE6FD;background:rgba(59,130,246,0.08)">🐘 PostgreSQL</div>
+      <div class="hbadge" style="border-color:rgba(16,185,129,0.4);color:#6EE7B7;background:rgba(16,185,129,0.08)">📡 100K+ Players</div>
+      <div class="hbadge" style="border-color:rgba(245,158,11,0.4);color:#FDE68A;background:rgba(245,158,11,0.08)">⏱ &lt;50ms P99</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: OVERVIEW METRICS
+═══════════════════════════════════════ -->
+<section class="section" id="s-overview">
+  <div class="container">
+    <div class="section-label">System Targets</div>
+    <h2>Scale <span class="gradient-text">Requirements</span></h2>
+    <div class="stat-chip-row">
+      <div class="stat-chip"><div class="v" style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent">100K+</div><div class="k">Concurrent Players</div></div>
+      <div class="stat-chip"><div class="v" style="color:#67E8F9">&lt;50ms</div><div class="k">P99 Latency</div></div>
+      <div class="stat-chip"><div class="v" style="color:#6EE7B7">±10ms</div><div class="k">Timer Sync Drift</div></div>
+      <div class="stat-chip"><div class="v" style="color:#FDE68A">10K</div><div class="k">Rooms Simultaneous</div></div>
+      <div class="stat-chip"><div class="v" style="color:#F472B6">99.9%</div><div class="k">Uptime SLA</div></div>
+      <div class="stat-chip"><div class="v" style="color:#FCA5A5">&lt;5s</div><div class="k">Reconnect Time</div></div>
+    </div>
+
+    <div class="grid-3" style="margin-top:24px">
+      <div class="card card-glow">
+        <div class="tag tag-cyan" style="margin-bottom:12px">Transport</div>
+        <h3>WebSocket First</h3>
+        <p class="dim fs-sm">Socket.io with automatic fallback to long-polling. Binary message packing via <span class="mono-sm" style="color:#C4B5FD">msgpack</span> for 40% smaller payloads. HTTP/3 for initial handshake.</p>
+      </div>
+      <div class="card card-glow">
+        <div class="tag tag-red" style="margin-bottom:12px">State Store</div>
+        <h3>Redis-First State</h3>
+        <p class="dim fs-sm">All hot game state lives in Redis Cluster with TTL. PostgreSQL for durable history. Redis Streams for event sourcing. No single point of failure.</p>
+      </div>
+      <div class="card card-glow">
+        <div class="tag tag-green" style="margin-bottom:12px">Scaling</div>
+        <h3>Horizontal Pod Scaling</h3>
+        <p class="dim fs-sm">Stateless Node.js pods behind HAProxy. Redis Adapter for Socket.io cross-pod pub/sub. K8s HPA triggers at 60% CPU. Zero-downtime rolling deploys.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: ARCHITECTURE DIAGRAM
+═══════════════════════════════════════ -->
+<section class="section" id="s-arch">
+  <div class="container">
+    <div class="section-label">System Design</div>
+    <h2>Full <span class="gradient-text">Architecture Diagram</span></h2>
+    <p class="dim" style="margin-bottom:24px">End-to-end request flow from client to database layer with all intermediate services.</p>
+
+    <!-- SVG ARCHITECTURE DIAGRAM -->
+    <div class="arch-diagram">
+      <svg viewBox="0 0 1060 760" xmlns="http://www.w3.org/2000/svg" style="font-family:'Inter',sans-serif">
+        <defs>
+          <linearGradient id="gPurple" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#A855F7"/></linearGradient>
+          <linearGradient id="gCyan"   x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#06B6D4"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient>
+          <linearGradient id="gGreen"  x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#06B6D4"/></linearGradient>
+          <linearGradient id="gRed"    x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#EF4444"/><stop offset="100%" stop-color="#DC2626"/></linearGradient>
+          <linearGradient id="gAmber"  x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F59E0B"/><stop offset="100%" stop-color="#FBBF24"/></linearGradient>
+          <linearGradient id="gHero"   x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7C3AED"/><stop offset="50%" stop-color="#EC4899"/><stop offset="100%" stop-color="#06B6D4"/></linearGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(167,139,250,0.6)"/>
+          </marker>
+          <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(16,185,129,0.8)"/>
+          </marker>
+          <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(239,68,68,0.8)"/>
+          </marker>
+        </defs>
+
+        <!-- Background -->
+        <rect width="1060" height="760" fill="#080611"/>
+        <rect width="1060" height="760" fill="url(#bgGrad)" opacity=".3"/>
+
+        <!-- ── LAYER LABELS ── -->
+        <text x="20" y="74"  fill="rgba(167,139,250,0.3)" font-size="10" font-weight="700" letter-spacing="2" text-anchor="start" text-transform="uppercase">CLIENT LAYER</text>
+        <text x="20" y="210" fill="rgba(167,139,250,0.3)" font-size="10" font-weight="700" letter-spacing="2">EDGE / CDN LAYER</text>
+        <text x="20" y="340" fill="rgba(167,139,250,0.3)" font-size="10" font-weight="700" letter-spacing="2">GATEWAY LAYER</text>
+        <text x="20" y="460" fill="rgba(167,139,250,0.3)" font-size="10" font-weight="700" letter-spacing="2">APPLICATION LAYER</text>
+        <text x="20" y="600" fill="rgba(167,139,250,0.3)" font-size="10" font-weight="700" letter-spacing="2">DATA LAYER</text>
+        <text x="20" y="720" fill="rgba(167,139,250,0.3)" font-size="10" font-weight="700" letter-spacing="2">MONITORING</text>
+
+        <!-- Horizontal separators -->
+        <line x1="0" y1="85"  x2="1060" y2="85"  stroke="rgba(124,58,237,0.12)" stroke-width="1"/>
+        <line x1="0" y1="220" x2="1060" y2="220" stroke="rgba(124,58,237,0.12)" stroke-width="1"/>
+        <line x1="0" y1="350" x2="1060" y2="350" stroke="rgba(124,58,237,0.12)" stroke-width="1"/>
+        <line x1="0" y1="470" x2="1060" y2="470" stroke="rgba(124,58,237,0.12)" stroke-width="1"/>
+        <line x1="0" y1="610" x2="1060" y2="610" stroke="rgba(124,58,237,0.12)" stroke-width="1"/>
+        <line x1="0" y1="730" x2="1060" y2="730" stroke="rgba(124,58,237,0.12)" stroke-width="1"/>
+
+        <!-- ════ CLIENT LAYER ════ -->
+        <!-- Web Client -->
+        <rect x="60"  y="96" width="120" height="52" rx="10" fill="rgba(124,58,237,0.15)" stroke="rgba(124,58,237,0.5)" stroke-width="1.5"/>
+        <text x="120" y="118" fill="#C4B5FD" font-size="11" font-weight="700" text-anchor="middle">🌐 Web Client</text>
+        <text x="120" y="136" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">React / Next.js</text>
+
+        <!-- Mobile Client -->
+        <rect x="220" y="96" width="120" height="52" rx="10" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.4)" stroke-width="1.5"/>
+        <text x="280" y="118" fill="#A5F3FC" font-size="11" font-weight="700" text-anchor="middle">📱 Mobile App</text>
+        <text x="280" y="136" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">React Native / PWA</text>
+
+        <!-- Host Client -->
+        <rect x="380" y="96" width="120" height="52" rx="10" fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.4)" stroke-width="1.5"/>
+        <text x="440" y="118" fill="#6EE7B7" font-size="11" font-weight="700" text-anchor="middle">🎮 Host Client</text>
+        <text x="440" y="136" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Dashboard / Controls</text>
+
+        <!-- ════ EDGE LAYER ════ -->
+        <!-- CDN -->
+        <rect x="60"  y="232" width="180" height="54" rx="10" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.4)" stroke-width="1.5"/>
+        <text x="150" y="253" fill="#FDE68A" font-size="11" font-weight="700" text-anchor="middle">☁️ CDN (CloudFront)</text>
+        <text x="150" y="270" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Static assets · Edge cache</text>
+
+        <!-- DDoS/WAF -->
+        <rect x="280" y="232" width="160" height="54" rx="10" fill="rgba(239,68,68,0.1)" stroke="rgba(239,68,68,0.35)" stroke-width="1.5"/>
+        <text x="360" y="253" fill="#FCA5A5" font-size="11" font-weight="700" text-anchor="middle">🛡️ WAF / DDoS</text>
+        <text x="360" y="270" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Cloudflare · Rate limit</text>
+
+        <!-- DNS -->
+        <rect x="480" y="232" width="140" height="54" rx="10" fill="rgba(124,58,237,0.1)" stroke="rgba(124,58,237,0.35)" stroke-width="1.5"/>
+        <text x="550" y="253" fill="#C4B5FD" font-size="11" font-weight="700" text-anchor="middle">🌍 DNS / GeoDNS</text>
+        <text x="550" y="270" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Route53 · Latency routing</text>
+
+        <!-- ════ GATEWAY LAYER ════ -->
+        <!-- Load Balancer -->
+        <rect x="130" y="362" width="220" height="54" rx="10" fill="rgba(124,58,237,0.15)" stroke="url(#gPurple)" stroke-width="2"/>
+        <text x="240" y="384" fill="white" font-size="11" font-weight="800" text-anchor="middle">⚖️ Load Balancer</text>
+        <text x="240" y="401" fill="rgba(167,139,250,0.6)" font-size="9" text-anchor="middle">HAProxy · sticky sessions · WS-aware</text>
+
+        <!-- API Gateway -->
+        <rect x="400" y="362" width="200" height="54" rx="10" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.4)" stroke-width="1.5"/>
+        <text x="500" y="384" fill="#A5F3FC" font-size="11" font-weight="700" text-anchor="middle">🔀 API Gateway</text>
+        <text x="500" y="401" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Rate limit · Auth · Route</text>
+
+        <!-- ════ APP LAYER ════ -->
+        <!-- WS Pod 1 -->
+        <rect x="50"  y="482" width="130" height="72" rx="10" fill="rgba(124,58,237,0.18)" stroke="rgba(124,58,237,0.5)" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="115" y="505" fill="white" font-size="11" font-weight="800" text-anchor="middle">⚡ WS Pod 1</text>
+        <text x="115" y="521" fill="rgba(167,139,250,0.6)" font-size="9" text-anchor="middle">Socket.io · Node.js</text>
+        <text x="115" y="537" fill="rgba(16,185,129,0.8)" font-size="9" text-anchor="middle">~3K connections</text>
+
+        <!-- WS Pod 2 -->
+        <rect x="200" y="482" width="130" height="72" rx="10" fill="rgba(124,58,237,0.18)" stroke="rgba(124,58,237,0.5)" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="265" y="505" fill="white" font-size="11" font-weight="800" text-anchor="middle">⚡ WS Pod 2</text>
+        <text x="265" y="521" fill="rgba(167,139,250,0.6)" font-size="9" text-anchor="middle">Socket.io · Node.js</text>
+        <text x="265" y="537" fill="rgba(16,185,129,0.8)" font-size="9" text-anchor="middle">~3K connections</text>
+
+        <!-- WS Pod N -->
+        <rect x="350" y="482" width="130" height="72" rx="10" fill="rgba(124,58,237,0.12)" stroke="rgba(124,58,237,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="415" y="505" fill="rgba(167,139,250,0.7)" font-size="11" font-weight="800" text-anchor="middle">⚡ WS Pod N</text>
+        <text x="415" y="521" fill="rgba(167,139,250,0.4)" font-size="9" text-anchor="middle">Auto-scale 2→30+</text>
+        <text x="415" y="537" fill="rgba(245,158,11,0.8)" font-size="9" text-anchor="middle">HPA triggered</text>
+
+        <!-- Game Engine Service -->
+        <rect x="520" y="482" width="150" height="72" rx="10" fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.4)" stroke-width="1.5"/>
+        <text x="595" y="502" fill="#6EE7B7" font-size="11" font-weight="700" text-anchor="middle">🎮 Game Engine</text>
+        <text x="595" y="518" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Room state machine</text>
+        <text x="595" y="534" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Timer · Scoring · Logic</text>
+
+        <!-- Auth Service -->
+        <rect x="700" y="482" width="130" height="72" rx="10" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.35)" stroke-width="1.5"/>
+        <text x="765" y="505" fill="#FDE68A" font-size="11" font-weight="700" text-anchor="middle">🔐 Auth Service</text>
+        <text x="765" y="521" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">JWT · OAuth2</text>
+        <text x="765" y="537" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Session tokens</text>
+
+        <!-- Analytics -->
+        <rect x="860" y="482" width="140" height="72" rx="10" fill="rgba(239,68,68,0.1)" stroke="rgba(239,68,68,0.3)" stroke-width="1.5"/>
+        <text x="930" y="505" fill="#FCA5A5" font-size="11" font-weight="700" text-anchor="middle">📊 Analytics</text>
+        <text x="930" y="521" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Kafka · ClickHouse</text>
+        <text x="930" y="537" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Real-time metrics</text>
+
+        <!-- ════ DATA LAYER ════ -->
+        <!-- Redis Cluster -->
+        <rect x="60"  y="622" width="180" height="64" rx="10" fill="rgba(239,68,68,0.12)" stroke="rgba(239,68,68,0.5)" stroke-width="2" filter="url(#glow)"/>
+        <text x="150" y="645" fill="#FCA5A5" font-size="12" font-weight="800" text-anchor="middle">🔴 Redis Cluster</text>
+        <text x="150" y="661" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Pub/Sub · Game state · Leaderboard</text>
+        <text x="150" y="677" fill="rgba(239,68,68,0.6)" font-size="9" text-anchor="middle">3 primaries · 3 replicas</text>
+
+        <!-- PostgreSQL -->
+        <rect x="280" y="622" width="180" height="64" rx="10" fill="rgba(59,130,246,0.1)" stroke="rgba(59,130,246,0.45)" stroke-width="2"/>
+        <text x="370" y="645" fill="#BAE6FD" font-size="12" font-weight="800" text-anchor="middle">🐘 PostgreSQL</text>
+        <text x="370" y="661" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Users · Quizzes · History</text>
+        <text x="370" y="677" fill="rgba(59,130,246,0.6)" font-size="9" text-anchor="middle">Primary + 2 read replicas</text>
+
+        <!-- Redis Streams -->
+        <rect x="500" y="622" width="170" height="64" rx="10" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.4)" stroke-width="1.5"/>
+        <text x="585" y="645" fill="#FDE68A" font-size="12" font-weight="800" text-anchor="middle">📡 Redis Streams</text>
+        <text x="585" y="661" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">Event sourcing · Audit log</text>
+        <text x="585" y="677" fill="rgba(245,158,11,0.5)" font-size="9" text-anchor="middle">Game event replay</text>
+
+        <!-- ClickHouse -->
+        <rect x="710" y="622" width="150" height="64" rx="10" fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.35)" stroke-width="1.5"/>
+        <text x="785" y="645" fill="#6EE7B7" font-size="12" font-weight="800" text-anchor="middle">⚡ ClickHouse</text>
+        <text x="785" y="661" fill="rgba(167,139,250,0.55)" font-size="9" text-anchor="middle">OLAP analytics</text>
+        <text x="785" y="677" fill="rgba(16,185,129,0.5)" font-size="9" text-anchor="middle">Leaderboard history</text>
+
+        <!-- ════ MONITORING ════ -->
+        <rect x="60"  y="742" width="130" height="40" rx="8" fill="rgba(124,58,237,0.1)" stroke="rgba(124,58,237,0.3)" stroke-width="1"/>
+        <text x="125" y="765" fill="#C4B5FD" font-size="10" font-weight="700" text-anchor="middle">📈 Prometheus + Grafana</text>
+
+        <rect x="210" y="742" width="130" height="40" rx="8" fill="rgba(124,58,237,0.1)" stroke="rgba(124,58,237,0.3)" stroke-width="1"/>
+        <text x="275" y="765" fill="#C4B5FD" font-size="10" font-weight="700" text-anchor="middle">🔍 Jaeger Tracing</text>
+
+        <rect x="360" y="742" width="130" height="40" rx="8" fill="rgba(124,58,237,0.1)" stroke="rgba(124,58,237,0.3)" stroke-width="1"/>
+        <text x="425" y="765" fill="#C4B5FD" font-size="10" font-weight="700" text-anchor="middle">📝 ELK Stack (Logs)</text>
+
+        <rect x="510" y="742" width="130" height="40" rx="8" fill="rgba(124,58,237,0.1)" stroke="rgba(124,58,237,0.3)" stroke-width="1"/>
+        <text x="575" y="765" fill="#C4B5FD" font-size="10" font-weight="700" text-anchor="middle">🚨 PagerDuty Alerts</text>
+
+        <!-- ════ ARROWS ════ -->
+        <!-- Clients to Edge -->
+        <line x1="120" y1="148" x2="145" y2="230" stroke="rgba(167,139,250,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="280" y1="148" x2="340" y2="230" stroke="rgba(167,139,250,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="440" y1="148" x2="500" y2="230" stroke="rgba(167,139,250,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- Edge to Gateway -->
+        <line x1="200" y1="286" x2="220" y2="360" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="360" y1="286" x2="460" y2="360" stroke="rgba(239,68,68,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="540" y1="286" x2="500" y2="360" stroke="rgba(124,58,237,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- LB to WS Pods -->
+        <line x1="200" y1="416" x2="115" y2="480" stroke="rgba(124,58,237,0.6)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="240" y1="416" x2="265" y2="480" stroke="rgba(124,58,237,0.6)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="280" y1="416" x2="380" y2="480" stroke="rgba(124,58,237,0.4)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+        <!-- API GW to services -->
+        <line x1="520" y1="416" x2="595" y2="480" stroke="rgba(6,182,212,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="560" y1="416" x2="765" y2="480" stroke="rgba(245,158,11,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="580" y1="416" x2="930" y2="480" stroke="rgba(239,68,68,0.3)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+        <!-- WS Pods ↔ Redis -->
+        <line x1="115" y1="554" x2="145" y2="620" stroke="rgba(239,68,68,0.6)" stroke-width="2" marker-end="url(#arrowRed)"/>
+        <line x1="265" y1="554" x2="200" y2="620" stroke="rgba(239,68,68,0.6)" stroke-width="2" marker-end="url(#arrowRed)"/>
+
+        <!-- Game Engine → Redis & PG -->
+        <line x1="595" y1="554" x2="540" y2="620" stroke="rgba(16,185,129,0.6)" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+        <line x1="560" y1="554" x2="370" y2="620" stroke="rgba(59,130,246,0.5)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+        <!-- Auth → PG -->
+        <line x1="765" y1="554" x2="430" y2="620" stroke="rgba(59,130,246,0.4)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+        <!-- Analytics → ClickHouse -->
+        <line x1="930" y1="554" x2="820" y2="620" stroke="rgba(16,185,129,0.4)" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+        <!-- Redis pub/sub label -->
+        <rect x="68" y="565" width="80" height="20" rx="4" fill="rgba(239,68,68,0.2)"/>
+        <text x="108" y="578" fill="#FCA5A5" font-size="9" font-weight="700" text-anchor="middle">Pub/Sub ↕</text>
+
+        <!-- Cross-pod Redis Adapter label -->
+        <line x1="180" y1="518" x2="200" y2="518" stroke="rgba(245,158,11,0.6)" stroke-width="2" stroke-dasharray="3,2"/>
+        <rect x="190" y="505" width="100" height="18" rx="4" fill="rgba(245,158,11,0.15)"/>
+        <text x="240" y="517" fill="#FDE68A" font-size="8" font-weight="700" text-anchor="middle">@socket.io/redis-adapter</text>
+
+        <!-- K8s badge -->
+        <rect x="680" y="90" width="160" height="36" rx="8" fill="rgba(59,130,246,0.1)" stroke="rgba(59,130,246,0.3)" stroke-width="1"/>
+        <text x="760" y="108" fill="#BAE6FD" font-size="10" font-weight="700" text-anchor="middle">☸️ Kubernetes Cluster</text>
+        <text x="760" y="120" fill="rgba(167,139,250,0.4)" font-size="8.5" text-anchor="middle">HPA · Node pools · Namespaces</text>
+
+        <rect x="860" y="90" width="150" height="36" rx="8" fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.3)" stroke-width="1"/>
+        <text x="935" y="108" fill="#6EE7B7" font-size="10" font-weight="700" text-anchor="middle">🌐 Multi-Region</text>
+        <text x="935" y="120" fill="rgba(167,139,250,0.4)" font-size="8.5" text-anchor="middle">US-East · EU-West · AP</text>
+      </svg>
+    </div>
+
+    <!-- Architecture notes -->
+    <div class="grid-2" style="margin-top:20px">
+      <div class="alert alert-info">
+        <div class="alert-icon">📡</div>
+        <div><strong>WebSocket Affinity:</strong> HAProxy uses sticky sessions so a player's WebSocket connection always routes to the same pod. The Redis adapter syncs events across all pods — a player on Pod 1 receives broadcasts from a host on Pod 3.</div>
+      </div>
+      <div class="alert alert-good">
+        <div class="alert-icon">⚖️</div>
+        <div><strong>Stateless Pods:</strong> No game state is stored in pod memory. All state is in Redis. This means any pod can crash and players reconnect to a different pod with zero data loss — Redis holds the truth.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: WEBSOCKET EVENT MAP
+═══════════════════════════════════════ -->
+<section class="section" id="s-ws">
+  <div class="container">
+    <div class="section-label">Event System</div>
+    <h2>WebSocket <span class="gradient-text">Event Map</span></h2>
+    <p class="dim" style="margin-bottom:20px">Complete bidirectional event contract between client and server. All events use msgpack binary encoding.</p>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="tag tag-cyan">→ Client→Server</div>
+      <div class="tag tag-purple">← Server→Client</div>
+      <div class="tag tag-green">⟳ Broadcast to Room</div>
+    </div>
+
+    <!-- Connection Events -->
+    <h3 style="margin:20px 0 10px">🔌 Connection &amp; Session</h3>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+      <table class="event-table">
+        <thead><tr><th>Event</th><th>Direction</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">connection</span></td>
+            <td><span class="event-dir dir-cs">C→S</span></td>
+            <td class="mono-sm dim">{token, clientVersion, region}</td>
+            <td>Initial WS handshake. Server validates JWT, sets up socket metadata.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#D8B4FE">session:ack</span></td>
+            <td><span class="event-dir dir-sc">S→C</span></td>
+            <td class="mono-sm dim">{socketId, serverTime, pingInterval}</td>
+            <td>Server confirms session. Client syncs clock using serverTime offset.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">reconnect:attempt</span></td>
+            <td><span class="event-dir dir-cs">C→S</span></td>
+            <td class="mono-sm dim">{gameCode, playerId, sessionToken}</td>
+            <td>Player reconnects mid-game. Server restores state from Redis.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#D8B4FE">reconnect:state</span></td>
+            <td><span class="event-dir dir-sc">S→C</span></td>
+            <td class="mono-sm dim">{gameState, currentQ, timeRemaining, score}</td>
+            <td>Full game state snapshot sent to reconnecting player.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">ping</span></td>
+            <td><span class="event-dir dir-cs">C→S</span></td>
+            <td class="mono-sm dim">{t: Date.now()}</td>
+            <td>Heartbeat every 5s. Used for RTT measurement and connection health.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#D8B4FE">pong</span></td>
+            <td><span class="event-dir dir-sc">S→C</span></td>
+            <td class="mono-sm dim">{t, serverTime}</td>
+            <td>Echo with server timestamp. Client calculates clock offset = (serverTime - t) / 2.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Lobby Events -->
+    <h3 style="margin:24px 0 10px">🏟️ Lobby &amp; Room</h3>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+      <table class="event-table">
+        <thead><tr><th>Event</th><th>Direction</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">room:create</span></td>
+            <td><span class="event-dir dir-cs">C→S</span></td>
+            <td class="mono-sm dim">{quizId, settings: {timePerQ, maxPlayers}}</td>
+            <td>Host creates a game room. Server generates a 6-char PIN, initializes Redis state.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#D8B4FE">room:created</span></td>
+            <td><span class="event-dir dir-sc">S→C</span></td>
+            <td class="mono-sm dim">{gameCode, roomId, shareUrl}</td>
+            <td>Room creation confirmed. Host displays PIN to players.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">room:join</span></td>
+            <td><span class="event-dir dir-cs">C→S</span></td>
+            <td class="mono-sm dim">{gameCode, playerName, avatarId}</td>
+            <td>Player joins via PIN. Server validates code, adds to Redis set, emits join broadcast.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#D8B4FE">room:join:ack</span></td>
+            <td><span class="event-dir dir-sc">S→C</span></td>
+            <td class="mono-sm dim">{playerId, gameCode, players[], quizMeta}</td>
+            <td>Sent only to joining player with full lobby snapshot.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">room:player:joined</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{player: {id, name, avatar}, totalCount}</td>
+            <td>Broadcast to all room members when a new player joins lobby.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">room:player:left</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{playerId, reason: 'disconnect'|'kick'}</td>
+            <td>Broadcast when player disconnects. Host can see live roster.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">room:kick</span></td>
+            <td><span class="event-dir dir-cs">C→S (host)</span></td>
+            <td class="mono-sm dim">{targetPlayerId}</td>
+            <td>Host-only. Removes player from room. Validates host role server-side.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Game Events -->
+    <h3 style="margin:24px 0 10px">🎮 Gameplay</h3>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+      <table class="event-table">
+        <thead><tr><th>Event</th><th>Direction</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">game:start</span></td>
+            <td><span class="event-dir dir-cs">C→S (host)</span></td>
+            <td class="mono-sm dim">{gameCode}</td>
+            <td>Host triggers game start. Server locks room (no new joins), begins countdown.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">game:countdown</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{startsAt: epochMs, count: 3}</td>
+            <td>Countdown broadcast with absolute server timestamp. Clients sync to serverTime.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">game:question:show</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{qIndex, question, answers[], endsAt: epochMs}</td>
+            <td>Question payload. <strong>Correct answer NOT included</strong>. endsAt is absolute server time.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#67E8F9">game:answer:submit</span></td>
+            <td><span class="event-dir dir-cs">C→S</span></td>
+            <td class="mono-sm dim">{gameCode, qIndex, answerIdx, clientTime, answerHash}</td>
+            <td>Player submits answer. Server validates timing, qIndex match, and HMAC hash.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#D8B4FE">game:answer:ack</span></td>
+            <td><span class="event-dir dir-sc">S→C</span></td>
+            <td class="mono-sm dim">{received: true, serverTime}</td>
+            <td>Immediate acknowledgment. Does NOT reveal correct answer yet.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">game:answer:progress</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{answeredCount, totalCount, distribution: [n,n,n,n]}</td>
+            <td>Throttled to 1/s. Shows how many answered without revealing which option.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">game:question:reveal</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{correctIndex, pointsMap: {playerId: pts}, explanationText}</td>
+            <td>Reveal broadcast after timer expires or all players answer. Includes earned points.</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">game:leaderboard</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{rankings: [{id,name,score,delta,streak}], yourRank}</td>
+            <td>Sorted leaderboard snapshot after each question. Redis ZREVRANGE O(log N).</td>
+          </tr>
+          <tr>
+            <td><span class="event-name" style="color:#6EE7B7">game:end</span></td>
+            <td><span class="event-dir dir-bc">⟳ Broadcast</span></td>
+            <td class="mono-sm dim">{finalRankings[], xpGained:{}, badges:{}, gameId}</td>
+            <td>Final results. Server persists to PostgreSQL, clears Redis room after TTL.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Host Events -->
+    <h3 style="margin:24px 0 10px">🎛️ Host Controls</h3>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+      <table class="event-table">
+        <thead><tr><th>Event</th><th>Direction</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="event-name" style="color:#67E8F9">host:pause</span></td><td><span class="event-dir dir-cs">C→S (host)</span></td><td class="mono-sm dim">{gameCode}</td><td>Pause timer. Server stores remaining time in Redis. Broadcast pause state.</td></tr>
+          <tr><td><span class="event-name" style="color:#67E8F9">host:resume</span></td><td><span class="event-dir dir-cs">C→S (host)</span></td><td class="mono-sm dim">{gameCode}</td><td>Resume with new endsAt = now + remainingMs. Clients re-sync timer.</td></tr>
+          <tr><td><span class="event-name" style="color:#67E8F9">host:skip:question</span></td><td><span class="event-dir dir-cs">C→S (host)</span></td><td class="mono-sm dim">{gameCode, reason}</td><td>Skip to reveal phase immediately. Server scores based on current answers.</td></tr>
+          <tr><td><span class="event-name" style="color:#67E8F9">host:extend:time</span></td><td><span class="event-dir dir-cs">C→S (host)</span></td><td class="mono-sm dim">{gameCode, addSeconds: 10}</td><td>Add time to current question. Server updates endsAt, broadcasts new value.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: ROOM SYSTEM
+═══════════════════════════════════════ -->
+<section class="section" id="s-rooms">
+  <div class="container">
+    <div class="section-label">Room Architecture</div>
+    <h2>Scalable <span class="gradient-text">Room System</span></h2>
+
+    <div class="grid-2" style="margin-bottom:24px">
+      <div>
+        <h3 style="margin-bottom:12px">Room State Machine</h3>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-content">
+              <h4>CREATED <span class="tag tag-purple" style="margin-left:8px">LOBBY</span></h4>
+              <p class="dim fs-sm">Room initialised in Redis. PIN generated. Players joining get HSET added. Socket.io room created.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-content">
+              <h4>STARTING <span class="tag tag-amber" style="margin-left:8px">LOCKED</span></h4>
+              <p class="dim fs-sm">Host fires game:start. Room locked — no new joins. 3-2-1 countdown broadcast with absolute epoch timestamps.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-content">
+              <h4>ACTIVE <span class="tag tag-cyan" style="margin-left:8px">PLAYING</span></h4>
+              <p class="dim fs-sm">Question loop running. Answers streamed to Redis. Timer tracked server-side. Anti-cheat validating each submission.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">4</div>
+            <div class="flow-content">
+              <h4>REVEALING <span class="tag tag-green" style="margin-left:8px">REVEAL</span></h4>
+              <p class="dim fs-sm">Timer expired or all answered. Correct answer broadcast, scores calculated, leaderboard updated in Redis ZSET.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">5</div>
+            <div class="flow-content">
+              <h4>ENDED <span class="tag tag-red" style="margin-left:8px">COMPLETE</span></h4>
+              <p class="dim fs-sm">Final results persisted to PostgreSQL. Redis TTL set to 300s for reconnect window, then purged. XP awarded.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:12px">Redis Room Schema</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Redis Keys</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc"># Room metadata (Hash)</span>
+<span class="ck">HSET</span> <span class="cs">room:{gameCode}</span>
+  hostId       <span class="cs">"uid_abc123"</span>
+  quizId       <span class="cs">"quiz_789"</span>
+  state        <span class="cs">"ACTIVE"</span>          <span class="cc"># LOBBY|STARTING|ACTIVE|REVEAL|ENDED</span>
+  currentQ     <span class="cn">3</span>
+  totalQ       <span class="cn">10</span>
+  questionEndsAt <span class="cn">1703123456789</span>   <span class="cc"># epoch ms</span>
+  pausedAt     <span class="cs">""</span>
+  podId        <span class="cs">"pod-7f3k"</span>        <span class="cc"># owning pod</span>
+<span class="ck">EXPIRE</span> room:{gameCode} <span class="cn">7200</span>
+
+<span class="cc"># Players in room (Set)</span>
+<span class="ck">SADD</span> <span class="cs">room:{gameCode}:players</span> uid_p1 uid_p2 ...
+
+<span class="cc"># Per-player metadata (Hash)</span>
+<span class="ck">HSET</span> <span class="cs">room:{gameCode}:player:{uid}</span>
+  name         <span class="cs">"Blaze99"</span>
+  avatar       <span class="cs">"🦊"</span>
+  score        <span class="cn">4250</span>
+  streak       <span class="cn">3</span>
+  connected    <span class="cn">1</span>
+  socketId     <span class="cs">"sck_xyz"</span>
+
+<span class="cc"># Live leaderboard (Sorted Set — O(log N) updates)</span>
+<span class="ck">ZADD</span> <span class="cs">room:{gameCode}:lb</span> <span class="cn">4250</span> uid_p1
+<span class="ck">ZADD</span> <span class="cs">room:{gameCode}:lb</span> <span class="cn">3800</span> uid_p2
+
+<span class="cc"># Answers for current question (Hash)</span>
+<span class="ck">HSET</span> <span class="cs">room:{gameCode}:q:{idx}:answers</span>
+  uid_p1  <span class="cs">"2:1703123442100"</span>   <span class="cc"># answerIdx:submittedAt</span>
+  uid_p2  <span class="cs">"0:1703123443200"</span>
+
+<span class="cc"># Answer distribution (for progress bar)</span>
+<span class="ck">INCR</span> <span class="cs">room:{gameCode}:q:{idx}:dist:2</span>  <span class="cc"># answer index 2</span>
+
+<span class="cc"># Anti-cheat: seen hashes (prevent replay)</span>
+<span class="ck">SETEX</span> <span class="cs">ac:{gameCode}:{uid}:{qIdx}</span> <span class="cn">30</span> <span class="cs">"hash_xyz"</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚡</div>
+      <div><strong>Cross-Pod Broadcasting:</strong> When a player on Pod-1 submits an answer, it triggers a leaderboard update. The <span class="mono-sm">@socket.io/redis-adapter</span> publishes to Redis channel <span class="mono-sm">socket.io#room:{gameCode}</span>. All other pods subscribed to that channel forward the broadcast to their connected sockets. This means pod assignment doesn't matter — every player gets every event.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: STATE SYNCHRONISATION
+═══════════════════════════════════════ -->
+<section class="section" id="s-sync">
+  <div class="container">
+    <div class="section-label">Synchronisation</div>
+    <h2>Timer &amp; State <span class="gradient-text">Sync Logic</span></h2>
+
+    <div class="grid-2" style="margin-bottom:24px">
+      <div>
+        <h3 style="margin-bottom:12px">Clock Synchronisation (NTP-style)</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Client TypeScript</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc">// Client-side clock sync using ping/pong</span>
+<span class="ck">class</span> <span class="ct">ClockSync</span> {
+  <span class="ck">private</span> offset = <span class="cn">0</span>;    <span class="cc">// ms delta to server</span>
+  <span class="ck">private</span> rtt    = <span class="cn">0</span>;    <span class="cc">// round-trip time</span>
+
+  <span class="cf">sync</span>(socket: <span class="ct">Socket</span>) {
+    <span class="ck">const</span> t0 = <span class="ct">Date</span>.<span class="cf">now</span>();
+    socket.<span class="cf">emit</span>(<span class="cs">'ping'</span>, { t: t0 });
+
+    socket.<span class="cf">once</span>(<span class="cs">'pong'</span>, ({ t, serverTime }) => {
+      <span class="ck">const</span> t3 = <span class="ct">Date</span>.<span class="cf">now</span>();
+      <span class="ck">this</span>.rtt    = t3 - t0;
+      <span class="ck">this</span>.offset = serverTime - (t0 + t3) / <span class="cn">2</span>;
+    });
+  }
+
+  <span class="cc">// Convert server timestamp → local display time</span>
+  <span class="cf">serverToLocal</span>(serverMs: <span class="ct">number</span>): <span class="ct">number</span> {
+    <span class="ck">return</span> serverMs - <span class="ck">this</span>.offset;
+  }
+
+  <span class="cc">// Get remaining ms until server deadline</span>
+  <span class="cf">msUntil</span>(endsAt: <span class="ct">number</span>): <span class="ct">number</span> {
+    <span class="ck">const</span> serverNow = <span class="ct">Date</span>.<span class="cf">now</span>() + <span class="ck">this</span>.offset;
+    <span class="ck">return</span> <span class="ct">Math</span>.<span class="cf">max</span>(<span class="cn">0</span>, endsAt - serverNow);
+  }
+}
+
+<span class="cc">// Usage — question timer driven by server epoch</span>
+socket.<span class="cf">on</span>(<span class="cs">'game:question:show'</span>, ({ endsAt }) => {
+  <span class="ck">const</span> remaining = clock.<span class="cf">msUntil</span>(endsAt);
+  <span class="cc">// All clients see identical countdown regardless of join latency</span>
+  timerBar.<span class="cf">start</span>(remaining);
+});</pre>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:12px">Server Timer Authority</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Node.js Server</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc">// Server is single source of truth for time</span>
+<span class="ck">async function</span> <span class="cf">startQuestion</span>(
+  gameCode: <span class="ct">string</span>, qIdx: <span class="ct">number</span>
+) {
+  <span class="ck">const</span> room  = <span class="ck">await</span> redis.<span class="cf">hgetall</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>`</span>);
+  <span class="ck">const</span> quiz  = <span class="ck">await</span> <span class="cf">getQuiz</span>(room.quizId);
+  <span class="ck">const</span> q     = quiz.questions[qIdx];
+  <span class="ck">const</span> endsAt = <span class="ct">Date</span>.<span class="cf">now</span>() + q.timeMs;   <span class="cc">// absolute epoch</span>
+
+  <span class="cc">// Store deadline in Redis for reconnect recovery</span>
+  <span class="ck">await</span> redis.<span class="cf">hset</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>`</span>, {
+    state: <span class="cs">'ACTIVE'</span>,
+    currentQ: qIdx,
+    questionEndsAt: endsAt
+  });
+
+  <span class="cc">// Broadcast WITHOUT answer — clients can't cheat</span>
+  io.to(gameCode).<span class="cf">emit</span>(<span class="cs">'game:question:show'</span>, {
+    qIndex: qIdx,
+    question: q.text,
+    answers: q.options,    <span class="cc">// shuffled, no correct flag</span>
+    endsAt,                <span class="cc">// epoch ms — clients sync to this</span>
+    totalQuestions: quiz.questions.length
+  });
+
+  <span class="cc">// Server-side timer — authoritative end</span>
+  <span class="ck">await</span> <span class="cf">scheduleReveal</span>(gameCode, qIdx, q.timeMs);
+}
+
+<span class="cc">// Use Bull queue for reliable timer (survives pod crash)</span>
+<span class="ck">async function</span> <span class="cf">scheduleReveal</span>(
+  gameCode: <span class="ct">string</span>, qIdx: <span class="ct">number</span>, delayMs: <span class="ct">number</span>
+) {
+  <span class="ck">await</span> revealQueue.<span class="cf">add</span>(
+    { gameCode, qIdx },
+    { delay: delayMs, attempts: <span class="cn">3</span> }
+  );
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Answer Processing Pipeline</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc">// Answer submission handler — full validation pipeline</span>
+socket.<span class="cf">on</span>(<span class="cs">'game:answer:submit'</span>, <span class="ck">async</span> ({ gameCode, qIndex, answerIdx, clientTime, answerHash }) => {
+  <span class="ck">const</span> playerId = socket.data.playerId;  <span class="cc">// set from JWT on connect</span>
+
+  <span class="cc">// 1. Validate room state</span>
+  <span class="ck">const</span> room = <span class="ck">await</span> redis.<span class="cf">hgetall</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>`</span>);
+  <span class="ck">if</span> (room.state !== <span class="cs">'ACTIVE'</span> || +room.currentQ !== qIndex) <span class="ck">return</span>;
+
+  <span class="cc">// 2. Anti-cheat: check not already answered this question</span>
+  <span class="ck">const</span> alreadyAnswered = <span class="ck">await</span> redis.<span class="cf">hexists</span>(
+    <span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:q:<span class="ck">${</span>qIndex<span class="ck">}</span>:answers`</span>, playerId
+  );
+  <span class="ck">if</span> (alreadyAnswered) <span class="ck">return</span>;
+
+  <span class="cc">// 3. Validate server-side deadline (client can't fake timing)</span>
+  <span class="ck">const</span> serverNow = <span class="ct">Date</span>.<span class="cf">now</span>();
+  <span class="ck">if</span> (serverNow > +room.questionEndsAt + <span class="cn">500</span>) <span class="ck">return</span>; <span class="cc">// 500ms grace</span>
+
+  <span class="cc">// 4. Validate HMAC hash (anti-replay / packet tampering)</span>
+  <span class="ck">const</span> expected = <span class="cf">hmac</span>(<span class="cs">`<span class="ck">${</span>gameCode<span class="ck">}</span>:<span class="ck">${</span>playerId<span class="ck">}</span>:<span class="ck">${</span>qIndex<span class="ck">}</span>:<span class="ck">${</span>answerIdx<span class="ck">}</span>`</span>);
+  <span class="ck">if</span> (answerHash !== expected) <span class="ck">return</span>;
+
+  <span class="cc">// 5. Atomic store — HSETNX prevents race conditions</span>
+  <span class="ck">const</span> stored = <span class="ck">await</span> redis.<span class="cf">hsetnx</span>(
+    <span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:q:<span class="ck">${</span>qIndex<span class="ck">}</span>:answers`</span>,
+    playerId,
+    <span class="cs">`<span class="ck">${</span>answerIdx<span class="ck">}</span>:<span class="ck">${</span>serverNow<span class="ck">}</span>`</span>  <span class="cc">// store server time, not client time</span>
+  );
+  <span class="ck">if</span> (!stored) <span class="ck">return</span>;  <span class="cc">// race condition — already set</span>
+
+  <span class="cc">// 6. Increment distribution counter for progress bar</span>
+  <span class="ck">await</span> <span class="ct">Promise</span>.<span class="cf">all</span>([
+    redis.<span class="cf">incr</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:q:<span class="ck">${</span>qIndex<span class="ck">}</span>:dist:<span class="ck">${</span>answerIdx<span class="ck">}</span>`</span>),
+    redis.<span class="cf">incr</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:q:<span class="ck">${</span>qIndex<span class="ck">}</span>:totalAnswered`</span>),
+  ]);
+
+  <span class="cc">// 7. Ack immediately (before reveal)</span>
+  socket.<span class="cf">emit</span>(<span class="cs">'game:answer:ack'</span>, { received: <span class="ck">true</span>, serverTime });
+
+  <span class="cc">// 8. Check if all players answered → early reveal</span>
+  <span class="ck">const</span> [answered, total] = <span class="ck">await</span> <span class="ct">Promise</span>.<span class="cf">all</span>([
+    redis.<span class="cf">get</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:q:<span class="ck">${</span>qIndex<span class="ck">}</span>:totalAnswered`</span>),
+    redis.<span class="cf">scard</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:players`</span>),
+  ]);
+  <span class="ck">if</span> (+answered >= total) <span class="cf">triggerEarlyReveal</span>(gameCode, qIndex);
+});</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: ANTI-CHEAT
+═══════════════════════════════════════ -->
+<section class="section" id="s-anticheat">
+  <div class="container">
+    <div class="section-label">Security</div>
+    <h2>Anti-Cheat <span class="gradient-text">Strategy</span></h2>
+
+    <div class="grid-3" style="margin-bottom:24px">
+      <div class="card card-glow card-highlight" style="border-color:rgba(239,68,68,0.4)">
+        <div class="tag tag-red" style="margin-bottom:12px">Layer 1</div>
+        <h3>Server-Side Scoring</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Correct answers are <strong style="color:#FCA5A5">never sent to the client</strong> before reveal. Score calculation only happens server-side. Client-reported scores are ignored entirely.</p>
+        <div class="tag tag-red" style="font-size:.7rem">Critical</div>
+      </div>
+      <div class="card card-glow" style="border-color:rgba(245,158,11,0.3)">
+        <div class="tag tag-amber" style="margin-bottom:12px">Layer 2</div>
+        <h3>HMAC Answer Hashing</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Each answer submission includes an HMAC-SHA256 signature of <span class="mono-sm" style="color:#FDE68A">gameCode:playerId:qIdx:answerIdx</span> using a session secret. Prevents packet replay attacks.</p>
+        <div class="tag tag-amber" style="font-size:.7rem">High Value</div>
+      </div>
+      <div class="card card-glow" style="border-color:rgba(124,58,237,0.3)">
+        <div class="tag tag-purple" style="margin-bottom:12px">Layer 3</div>
+        <h3>Server Timestamp Authority</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Server records submission time using its own clock. Client-sent timestamps are ignored for scoring. 500ms grace period for network jitter. No client can fake speed.</p>
+        <div class="tag tag-purple" style="font-size:.7rem">Timer Integrity</div>
+      </div>
+      <div class="card card-glow" style="border-color:rgba(6,182,212,0.3)">
+        <div class="tag tag-cyan" style="margin-bottom:12px">Layer 4</div>
+        <h3>One-Answer Atomic Lock</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Redis <span class="mono-sm" style="color:#A5F3FC">HSETNX</span> ensures exactly-once semantics. First write wins atomically. Subsequent submissions are silently dropped — no double-answering possible.</p>
+        <div class="tag tag-cyan" style="font-size:.7rem">Race-Proof</div>
+      </div>
+      <div class="card card-glow" style="border-color:rgba(16,185,129,0.3)">
+        <div class="tag tag-green" style="margin-bottom:12px">Layer 5</div>
+        <h3>Rate Limiting per Player</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Redis sliding window rate limiter: max 2 answer events per question per player. Bot detection via submission pattern analysis. Auto-kick after 5 violations.</p>
+        <div class="tag tag-green" style="font-size:.7rem">Bot Defense</div>
+      </div>
+      <div class="card card-glow" style="border-color:rgba(168,85,247,0.3)">
+        <div class="tag tag-purple" style="margin-bottom:12px">Layer 6</div>
+        <h3>Question Index Validation</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Server verifies submitted <span class="mono-sm" style="color:#C4B5FD">qIndex</span> matches current question. Players can't pre-answer future questions or re-answer past ones.</p>
+        <div class="tag tag-purple" style="font-size:.7rem">State Validation</div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:12px">Score Calculation — Server Side Only</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Node.js — Scoring Engine</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="ck">interface</span> <span class="ct">ScoringConfig</span> {
+  basePoints:      <span class="ct">number</span>;  <span class="cc">// 1000</span>
+  maxTimeBonus:    <span class="ct">number</span>;  <span class="cc">// 500 — for answering instantly</span>
+  streakMultiplier:<span class="ct">number</span>;  <span class="cc">// 1.5x for 3+ streak</span>
+  wrongPenalty:    <span class="ct">number</span>;  <span class="cc">// 0 (no negative) or -50 for hard mode</span>
+}
+
+<span class="ck">async function</span> <span class="cf">calculateScore</span>(
+  gameCode: <span class="ct">string</span>, playerId: <span class="ct">string</span>,
+  qIdx: <span class="ct">number</span>,   correctIdx: <span class="ct">number</span>,
+  config: <span class="ct">ScoringConfig</span>
+): <span class="ct">Promise</span>&lt;<span class="ct">number</span>&gt; {
+
+  <span class="cc">// Retrieve player's answer (stored with server timestamp)</span>
+  <span class="ck">const</span> raw = <span class="ck">await</span> redis.<span class="cf">hget</span>(
+    <span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:q:<span class="ck">${</span>qIdx<span class="ck">}</span>:answers`</span>, playerId
+  );
+  <span class="ck">if</span> (!raw) <span class="ck">return</span> <span class="cn">0</span>;  <span class="cc">// didn't answer</span>
+
+  <span class="ck">const</span> [answerIdx, submittedAt] = raw.<span class="cf">split</span>(<span class="cs">':'</span>);
+  <span class="ck">if</span> (+answerIdx !== correctIdx) <span class="ck">return</span> config.wrongPenalty;
+
+  <span class="cc">// Time bonus: full points for instant, zero at deadline</span>
+  <span class="ck">const</span> room      = <span class="ck">await</span> redis.<span class="cf">hgetall</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>`</span>);
+  <span class="ck">const</span> qDuration = <span class="ck">await</span> <span class="cf">getQuestionDuration</span>(room.quizId, qIdx);
+  <span class="ck">const</span> elapsed   = +submittedAt - (+room.questionEndsAt - qDuration);
+  <span class="ck">const</span> timeFrac  = <span class="ct">Math</span>.<span class="cf">max</span>(<span class="cn">0</span>, <span class="cn">1</span> - elapsed / qDuration);
+  <span class="ck">const</span> timeBonus = <span class="ct">Math</span>.<span class="cf">floor</span>(config.maxTimeBonus * timeFrac);
+
+  <span class="cc">// Streak bonus from player metadata</span>
+  <span class="ck">const</span> streak = <span class="ck">await</span> redis.<span class="cf">hget</span>(
+    <span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:player:<span class="ck">${</span>playerId<span class="ck">}</span>`</span>, <span class="cs">'streak'</span>
+  );
+  <span class="ck">const</span> mult = +streak >= <span class="cn">3</span> ? config.streakMultiplier : <span class="cn">1</span>;
+
+  <span class="ck">return</span> <span class="ct">Math</span>.<span class="cf">floor</span>((config.basePoints + timeBonus) * mult);
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: SCALING
+═══════════════════════════════════════ -->
+<section class="section" id="s-scale">
+  <div class="container">
+    <div class="section-label">Horizontal Scaling</div>
+    <h2>100K Player <span class="gradient-text">Scaling Strategy</span></h2>
+
+    <div class="stat-chip-row">
+      <div class="stat-chip"><div class="v" style="color:#67E8F9">~3K</div><div class="k">Connections / Pod</div></div>
+      <div class="stat-chip"><div class="v" style="color:#C4B5FD">34</div><div class="k">Pods for 100K</div></div>
+      <div class="stat-chip"><div class="v" style="color:#FDE68A">6</div><div class="k">Redis Cluster Nodes</div></div>
+      <div class="stat-chip"><div class="v" style="color:#6EE7B7">3</div><div class="k">PostgreSQL Nodes</div></div>
+      <div class="stat-chip"><div class="v" style="color:#F472B6">16</div><div class="k">Redis Shards</div></div>
+    </div>
+
+    <div class="grid-2" style="margin-top:24px;margin-bottom:24px">
+      <div>
+        <h3 style="margin-bottom:12px">Kubernetes HPA Config</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">YAML — HPA</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="ck">apiVersion</span>: autoscaling/v2
+<span class="ck">kind</span>: HorizontalPodAutoscaler
+<span class="ck">metadata</span>:
+  <span class="ck">name</span>: quizblaze-ws
+<span class="ck">spec</span>:
+  <span class="ck">scaleTargetRef</span>:
+    <span class="ck">apiVersion</span>: apps/v1
+    <span class="ck">kind</span>: Deployment
+    <span class="ck">name</span>: quizblaze-ws
+  <span class="ck">minReplicas</span>: <span class="cn">3</span>
+  <span class="ck">maxReplicas</span>: <span class="cn">50</span>
+  <span class="ck">metrics</span>:
+  - <span class="ck">type</span>: Resource
+    <span class="ck">resource</span>:
+      <span class="ck">name</span>: cpu
+      <span class="ck">target</span>:
+        <span class="ck">type</span>: Utilization
+        <span class="ck">averageUtilization</span>: <span class="cn">60</span>
+  - <span class="ck">type</span>: Pods
+    <span class="ck">pods</span>:
+      <span class="ck">metric</span>:
+        <span class="ck">name</span>: ws_connections_per_pod
+      <span class="ck">target</span>:
+        <span class="ck">type</span>: AverageValue
+        <span class="ck">averageValue</span>: <span class="cs">"2800"</span>    <span class="cc"># scale before 3K</span>
+  <span class="ck">behavior</span>:
+    <span class="ck">scaleUp</span>:
+      <span class="ck">stabilizationWindowSeconds</span>: <span class="cn">30</span>
+      <span class="ck">policies</span>:
+      - <span class="ck">type</span>: Pods
+        <span class="ck">value</span>: <span class="cn">5</span>             <span class="cc"># add 5 pods at once</span>
+        <span class="ck">periodSeconds</span>: <span class="cn">60</span>
+    <span class="ck">scaleDown</span>:
+      <span class="ck">stabilizationWindowSeconds</span>: <span class="cn">300</span>  <span class="cc"># slow drain</span></pre>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:12px">Socket.io Redis Adapter</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Node.js — Multi-Pod Setup</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="ck">import</span> { <span class="ct">createAdapter</span> } <span class="ck">from</span> <span class="cs">'@socket.io/redis-adapter'</span>;
+<span class="ck">import</span> { <span class="ct">createClient</span> }  <span class="ck">from</span> <span class="cs">'redis'</span>;
+
+<span class="cc">// Two Redis clients — one pub, one sub</span>
+<span class="ck">const</span> pubClient = <span class="cf">createClient</span>({ url: process.env.REDIS_URL });
+<span class="ck">const</span> subClient = pubClient.<span class="cf">duplicate</span>();
+
+<span class="ck">await</span> <span class="ct">Promise</span>.<span class="cf">all</span>([
+  pubClient.<span class="cf">connect</span>(),
+  subClient.<span class="cf">connect</span>()
+]);
+
+io.<span class="cf">adapter</span>(<span class="cf">createAdapter</span>(pubClient, subClient));
+
+<span class="cc">// Now io.to(roomId).emit() works across ALL pods</span>
+<span class="cc">// Pod-1 can broadcast to players on Pod-7, Pod-23, etc.</span>
+
+<span class="cc">// Graceful shutdown — drain connections first</span>
+process.<span class="cf">on</span>(<span class="cs">'SIGTERM'</span>, <span class="ck">async</span> () => {
+  <span class="cc">// Stop accepting new connections</span>
+  io.<span class="cf">close</span>();
+
+  <span class="cc">// Wait for in-flight events to complete</span>
+  <span class="ck">await</span> <span class="cf">sleep</span>(<span class="cn">5000</span>);
+
+  <span class="cc">// Clients auto-reconnect to another pod</span>
+  process.<span class="cf">exit</span>(<span class="cn">0</span>);
+});</pre>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:16px">Capacity Planning</h3>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+      <table class="comp-table">
+        <thead>
+          <tr><th>Scale Tier</th><th>Concurrent Players</th><th>WS Pods</th><th>Redis</th><th>PostgreSQL</th><th>Estimated Cost/mo</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-green">Starter</span></td>
+            <td>1K</td><td>2 pods (2vCPU/4GB)</td><td>Single node 4GB</td><td>Single db.t3.medium</td>
+            <td style="color:#6EE7B7">~$180</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-cyan">Growth</span></td>
+            <td>10K</td><td>5 pods (4vCPU/8GB)</td><td>Cluster 3×6GB</td><td>Primary + 1 read replica</td>
+            <td style="color:#A5F3FC">~$850</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-purple">Scale</span></td>
+            <td>100K</td><td>34 pods (4vCPU/8GB)</td><td>Cluster 6×16GB</td><td>Primary + 2 replicas + RDS Proxy</td>
+            <td style="color:#C4B5FD">~$6,400</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-amber">Kahoot-level</span></td>
+            <td>10M+</td><td>Multi-region, 500+ pods</td><td>Enterprise cluster + ElastiCache</td><td>Aurora Global + Citus sharding</td>
+            <td style="color:#FDE68A">~$80K+</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:24px;margin-bottom:12px">Redis Cluster Sharding Strategy</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Redis Cluster Key Design</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc">// Hash tags force related keys to same shard</span>
+<span class="cc">// All keys for a room route to same Redis node via {gameCode}</span>
+room:<span class="cs">{ABC123}</span>
+room:<span class="cs">{ABC123}</span>:players
+room:<span class="cs">{ABC123}</span>:lb
+room:<span class="cs">{ABC123}</span>:q:3:answers
+room:<span class="cs">{ABC123}</span>:player:uid_xyz
+
+<span class="cc">// This means all room operations are local — no cross-shard transactions</span>
+<span class="cc">// ZADD, HSET, HSETNX, INCR all execute on same shard = fast + atomic</span>
+
+<span class="cc">// Leaderboard sorted set — O(log N) insertion, O(N) range query</span>
+<span class="ck">ZADD</span> room:<span class="cs">{ABC123}</span>:lb <span class="co">NX</span> <span class="cn">0</span> playerId        <span class="cc">// init score 0</span>
+<span class="ck">ZINCRBY</span> room:<span class="cs">{ABC123}</span>:lb <span class="cn">850</span> playerId      <span class="cc">// add points atomically</span>
+<span class="ck">ZREVRANGE</span> room:<span class="cs">{ABC123}</span>:lb <span class="cn">0</span> <span class="cn">49</span> WITHSCORES <span class="cc">// top 50 in O(N)</span>
+
+<span class="cc">// Throttled leaderboard broadcast — push every 2s, not on every answer</span>
+<span class="ck">const</span> lbKey = <span class="cs">`lb_throttle:<span class="ck">${</span>gameCode<span class="ck">}</span>`</span>;
+<span class="ck">const</span> shouldSend = <span class="ck">await</span> redis.<span class="cf">set</span>(lbKey, <span class="cn">1</span>, <span class="cs">'NX'</span>, <span class="cs">'EX'</span>, <span class="cn">2</span>);
+<span class="ck">if</span> (shouldSend) <span class="cf">broadcastLeaderboard</span>(gameCode);</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: FAILOVER
+═══════════════════════════════════════ -->
+<section class="section" id="s-failover">
+  <div class="container">
+    <div class="section-label">Resilience</div>
+    <h2>Failover &amp; <span class="gradient-text">Reconnect Strategy</span></h2>
+
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card card-glow">
+        <h3 style="margin-bottom:12px">🔄 Client Reconnect Flow</h3>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-num" style="background:linear-gradient(135deg,#EF4444,#DC2626)">!</div>
+            <div class="flow-content">
+              <h4>Disconnect Detected</h4>
+              <p class="dim fs-sm">Socket.io detects disconnect via heartbeat timeout (30s). Server marks player as <span class="mono-sm" style="color:#FCA5A5">connected: 0</span> in Redis. Game continues — no pause.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num" style="background:linear-gradient(135deg,#F59E0B,#D97706)">⟳</div>
+            <div class="flow-content">
+              <h4>Exponential Backoff Retry</h4>
+              <p class="dim fs-sm">Client retries: 1s → 2s → 4s → 8s → 16s (max). Socket.io handles this automatically. New connection can land on any pod.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num" style="background:linear-gradient(135deg,#06B6D4,#3B82F6)">🔑</div>
+            <div class="flow-content">
+              <h4>Session Token Handshake</h4>
+              <p class="dim fs-sm">Client sends <span class="mono-sm" style="color:#A5F3FC">reconnect:attempt</span> with JWT + gameCode + playerId. Any pod can validate since state is in Redis.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num" style="background:linear-gradient(135deg,#10B981,#06B6D4)">✓</div>
+            <div class="flow-content">
+              <h4>State Snapshot Restore</h4>
+              <p class="dim fs-sm">Server fetches full room state from Redis: current question, time remaining, player's score, leaderboard. Sends as <span class="mono-sm" style="color:#6EE7B7">reconnect:state</span> snapshot.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:12px">Pod Failure Recovery</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Node.js — Reconnect Handler</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc">// Server: handle reconnection from any pod</span>
+socket.<span class="cf">on</span>(<span class="cs">'reconnect:attempt'</span>, <span class="ck">async</span> (data) => {
+  <span class="ck">const</span> { gameCode, playerId, sessionToken } = data;
+
+  <span class="cc">// Validate session token (Redis blacklist check)</span>
+  <span class="ck">const</span> valid = <span class="ck">await</span> <span class="cf">validateSession</span>(sessionToken);
+  <span class="ck">if</span> (!valid) { socket.<span class="cf">emit</span>(<span class="cs">'error:session'</span>); <span class="ck">return</span>; }
+
+  <span class="cc">// Fetch current game state from Redis</span>
+  <span class="ck">const</span> [room, player, lb] = <span class="ck">await</span> <span class="ct">Promise</span>.<span class="cf">all</span>([
+    redis.<span class="cf">hgetall</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>`</span>),
+    redis.<span class="cf">hgetall</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:player:<span class="ck">${</span>playerId<span class="ck">}</span>`</span>),
+    redis.<span class="cf">zrevrange</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:lb`</span>, <span class="cn">0</span>, <span class="cn">49</span>, <span class="cs">'WITHSCORES'</span>),
+  ]);
+
+  <span class="ck">if</span> (!room || room.state === <span class="cs">'ENDED'</span>) {
+    socket.<span class="cf">emit</span>(<span class="cs">'error:game_ended'</span>); <span class="ck">return</span>;
+  }
+
+  <span class="cc">// Rejoin Socket.io room (new pod, same logical room)</span>
+  <span class="ck">await</span> socket.<span class="cf">join</span>(gameCode);
+
+  <span class="cc">// Update player connection status</span>
+  <span class="ck">await</span> redis.<span class="cf">hset</span>(<span class="cs">`room:<span class="ck">${</span>gameCode<span class="ck">}</span>:player:<span class="ck">${</span>playerId<span class="ck">}</span>`</span>, {
+    connected: <span class="cn">1</span>, socketId: socket.id
+  });
+
+  <span class="cc">// Build state snapshot for client</span>
+  <span class="ck">const</span> timeRemaining = +room.questionEndsAt - <span class="ct">Date</span>.<span class="cf">now</span>();
+
+  socket.<span class="cf">emit</span>(<span class="cs">'reconnect:state'</span>, {
+    gameState:     room.state,
+    currentQ:      +room.currentQ,
+    questionEndsAt:+room.questionEndsAt,  <span class="cc">// client re-syncs timer</span>
+    myScore:       +player.score,
+    myStreak:      +player.streak,
+    leaderboard:   <span class="cf">parseLeaderboard</span>(lb),
+    serverTime:    <span class="ct">Date</span>.<span class="cf">now</span>(),         <span class="cc">// for clock sync</span>
+  });
+});</pre>
+        </div>
+
+        <div class="alert alert-good" style="margin-top:16px">
+          <div class="alert-icon">✅</div>
+          <div><strong>Bull Queue for Timers:</strong> Game timers run as Bull jobs in Redis, not in pod memory. If the pod processing the timer crashes, Bull retries on another pod automatically. Zero timer loss.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:12px">Failure Scenarios &amp; Mitigations</h3>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+      <table class="comp-table">
+        <thead><tr><th>Failure</th><th>Impact</th><th>Detection</th><th>Mitigation</th><th>RTO</th></tr></thead>
+        <tbody>
+          <tr><td>WS Pod crashes</td><td>~3K players disconnect</td><td>K8s liveness probe (5s)</td><td>Clients auto-reconnect to other pods. State in Redis. New pod spins in 30s.</td><td class="check">~5s reconnect</td></tr>
+          <tr><td>Redis primary fails</td><td>All operations stall</td><td>Redis Sentinel</td><td>Sentinel promotes replica in &lt;30s. Clients see brief error, retry succeeds.</td><td class="check">~30s</td></tr>
+          <tr><td>PostgreSQL failure</td><td>Auth + persistence fails</td><td>Healthcheck + RDS Multi-AZ</td><td>RDS Multi-AZ automatic failover. Read replicas absorb reads.</td><td class="check">~60s</td></tr>
+          <tr><td>Load balancer down</td><td>All traffic fails</td><td>Cloud provider monitor</td><td>HAProxy in active-passive pair. DNS failover to secondary.</td><td class="check">~60s</td></tr>
+          <tr><td>Network partition</td><td>Split-brain risk</td><td>Redis Cluster voting</td><td>Redis requires quorum (3/5) for writes. Partitioned nodes enter read-only mode.</td><td class="check">Auto</td></tr>
+          <tr><td>Memory leak in pod</td><td>Degraded performance</td><td>Prometheus OOM alert</td><td>K8s restarts pod (memory limit: 8GB). Graceful drain first via SIGTERM handler.</td><td class="check">~60s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: DATABASE SCHEMA
+═══════════════════════════════════════ -->
+<section class="section" id="s-schema">
+  <div class="container">
+    <div class="section-label">Data Layer</div>
+    <h2>PostgreSQL <span class="gradient-text">Schema</span></h2>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">SQL — Core Tables</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc">-- Users</span>
+<span class="ck">CREATE TABLE</span> <span class="ct">users</span> (
+  id            <span class="ct">UUID</span>         <span class="ck">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  username      <span class="ct">VARCHAR</span>(<span class="cn">32</span>)  <span class="ck">UNIQUE NOT NULL</span>,
+  email         <span class="ct">VARCHAR</span>(<span class="cn">255</span>) <span class="ck">UNIQUE NOT NULL</span>,
+  password_hash <span class="ct">TEXT</span>         <span class="ck">NOT NULL</span>,
+  avatar_id     <span class="ct">SMALLINT</span>     <span class="ck">DEFAULT</span> <span class="cn">0</span>,
+  xp            <span class="ct">INT</span>          <span class="ck">DEFAULT</span> <span class="cn">0</span>,
+  level         <span class="ct">SMALLINT</span>     <span class="ck">DEFAULT</span> <span class="cn">1</span>,
+  streak        <span class="ct">SMALLINT</span>     <span class="ck">DEFAULT</span> <span class="cn">0</span>,
+  streak_last_at <span class="ct">TIMESTAMPTZ</span>,
+  badges        <span class="ct">JSONB</span>        <span class="ck">DEFAULT</span> <span class="cs">'[]'</span>,
+  settings      <span class="ct">JSONB</span>        <span class="ck">DEFAULT</span> <span class="cs">'{}'</span>,
+  created_at    <span class="ct">TIMESTAMPTZ</span>  <span class="ck">DEFAULT NOW</span>(),
+  last_seen_at  <span class="ct">TIMESTAMPTZ</span>  <span class="ck">DEFAULT NOW</span>()
+);
+<span class="ck">CREATE INDEX</span> idx_users_xp <span class="ck">ON</span> users (xp <span class="ck">DESC</span>);
+
+<span class="cc">-- Quizzes</span>
+<span class="ck">CREATE TABLE</span> <span class="ct">quizzes</span> (
+  id          <span class="ct">UUID</span>        <span class="ck">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  creator_id  <span class="ct">UUID</span>        <span class="ck">REFERENCES</span> users(id) <span class="ck">ON DELETE CASCADE</span>,
+  title       <span class="ct">VARCHAR</span>(<span class="cn">120</span>) <span class="ck">NOT NULL</span>,
+  description <span class="ct">TEXT</span>,
+  category    <span class="ct">VARCHAR</span>(<span class="cn">40</span>),
+  difficulty  <span class="ct">SMALLINT</span>    <span class="ck">CHECK</span> (difficulty <span class="ck">BETWEEN</span> <span class="cn">1</span> <span class="ck">AND</span> <span class="cn">3</span>),
+  is_public   <span class="ct">BOOLEAN</span>     <span class="ck">DEFAULT TRUE</span>,
+  play_count  <span class="ct">INT</span>         <span class="ck">DEFAULT</span> <span class="cn">0</span>,
+  avg_score   <span class="ct">NUMERIC</span>(<span class="cn">5</span>,<span class="cn">2</span>),
+  created_at  <span class="ct">TIMESTAMPTZ</span> <span class="ck">DEFAULT NOW</span>()
+);
+
+<span class="cc">-- Questions (stored as JSONB array on quiz for fast reads)</span>
+<span class="ck">CREATE TABLE</span> <span class="ct">questions</span> (
+  id          <span class="ct">UUID</span>        <span class="ck">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  quiz_id     <span class="ct">UUID</span>        <span class="ck">REFERENCES</span> quizzes(id) <span class="ck">ON DELETE CASCADE</span>,
+  position    <span class="ct">SMALLINT</span>    <span class="ck">NOT NULL</span>,
+  question    <span class="ct">TEXT</span>        <span class="ck">NOT NULL</span>,
+  options     <span class="ct">JSONB</span>       <span class="ck">NOT NULL</span>,  <span class="cc">-- ["opt0","opt1","opt2","opt3"]</span>
+  correct_idx <span class="ct">SMALLINT</span>    <span class="ck">NOT NULL</span>,  <span class="cc">-- NEVER exposed via API pre-reveal</span>
+  explanation <span class="ct">TEXT</span>,
+  time_ms     <span class="ct">INT</span>         <span class="ck">DEFAULT</span> <span class="cn">20000</span>,
+  points      <span class="ct">SMALLINT</span>    <span class="ck">DEFAULT</span> <span class="cn">1000</span>
+);
+
+<span class="cc">-- Game sessions (persistent record)</span>
+<span class="ck">CREATE TABLE</span> <span class="ct">game_sessions</span> (
+  id           <span class="ct">UUID</span>        <span class="ck">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  game_code    <span class="ct">CHAR</span>(<span class="cn">6</span>)     <span class="ck">NOT NULL</span>,
+  quiz_id      <span class="ct">UUID</span>        <span class="ck">REFERENCES</span> quizzes(id),
+  host_id      <span class="ct">UUID</span>        <span class="ck">REFERENCES</span> users(id),
+  player_count <span class="ct">SMALLINT</span>,
+  final_state  <span class="ct">JSONB</span>,       <span class="cc">-- full leaderboard snapshot</span>
+  started_at   <span class="ct">TIMESTAMPTZ</span>,
+  ended_at     <span class="ct">TIMESTAMPTZ</span>,
+  duration_ms  <span class="ct">INT</span>
+);
+<span class="ck">CREATE INDEX</span> idx_sessions_quiz <span class="ck">ON</span> game_sessions(quiz_id, started_at <span class="ck">DESC</span>);
+
+<span class="cc">-- Player game results</span>
+<span class="ck">CREATE TABLE</span> <span class="ct">player_results</span> (
+  id           <span class="ct">UUID</span>        <span class="ck">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  session_id   <span class="ct">UUID</span>        <span class="ck">REFERENCES</span> game_sessions(id) <span class="ck">ON DELETE CASCADE</span>,
+  player_id    <span class="ct">UUID</span>        <span class="ck">REFERENCES</span> users(id),
+  rank         <span class="ct">SMALLINT</span>,
+  score        <span class="ct">INT</span>,
+  correct_count <span class="ct">SMALLINT</span>,
+  best_streak  <span class="ct">SMALLINT</span>,
+  xp_earned    <span class="ct">INT</span>,
+  answers      <span class="ct">JSONB</span>,       <span class="cc">-- [{qIdx, answerIdx, correct, pts, ms}]</span>
+  created_at   <span class="ct">TIMESTAMPTZ</span> <span class="ck">DEFAULT NOW</span>()
+);
+<span class="ck">CREATE INDEX</span> idx_results_player <span class="ck">ON</span> player_results(player_id, created_at <span class="ck">DESC</span>);
+<span class="ck">CREATE INDEX</span> idx_results_session <span class="ck">ON</span> player_results(session_id, rank);</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SECTION: LATENCY OPTIMISATION
+═══════════════════════════════════════ -->
+<section class="section" id="s-latency">
+  <div class="container">
+    <div class="section-label">Performance</div>
+    <h2>Latency <span class="gradient-text">Optimisation</span></h2>
+
+    <div class="grid-3" style="margin-bottom:24px">
+      <div class="card card-glow">
+        <div style="font-size:1.5rem;margin-bottom:10px">📦</div>
+        <h3>Binary Message Packing</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Replace JSON with <span class="mono-sm" style="color:#C4B5FD">msgpack</span> binary serialization. Answer events drop from ~180 bytes to ~40 bytes. Leaderboard broadcasts shrink 60%. Critical at 100K concurrent senders.</p>
+        <div class="tag tag-green">~60% payload reduction</div>
+      </div>
+      <div class="card card-glow">
+        <div style="font-size:1.5rem;margin-bottom:10px">🗜️</div>
+        <h3>Selective Broadcasting</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Leaderboard updates throttled to 1 per 2s using Redis NX lock. Answer progress (distribution bars) throttled separately. Full snapshot only on question reveal. Reduces Redis pub/sub pressure 10×.</p>
+        <div class="tag tag-cyan">10× fewer broadcasts</div>
+      </div>
+      <div class="card card-glow">
+        <div style="font-size:1.5rem;margin-bottom:10px">⚡</div>
+        <h3>Redis Pipeline Batching</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Answer processing pipelines 4 Redis commands (HSETNX, INCR, INCR, HGET) into a single round-trip. Scoring pipelines 6 commands. Reduces Redis RTT overhead by 80% at peak load.</p>
+        <div class="tag tag-amber">5× Redis throughput</div>
+      </div>
+      <div class="card card-glow">
+        <div style="font-size:1.5rem;margin-bottom:10px">🌍</div>
+        <h3>GeoDNS + Edge Nodes</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Route53 latency-based routing directs players to nearest region: US-East, EU-West, AP-Southeast. Average RTT drops from 180ms to 35ms for EU players. Edge terminates TLS.</p>
+        <div class="tag tag-purple">~145ms saved (EU)</div>
+      </div>
+      <div class="card card-glow">
+        <div style="font-size:1.5rem;margin-bottom:10px">🔌</div>
+        <h3>HTTP/3 + WebTransport</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Initial connection uses HTTP/3 QUIC for 0-RTT reconnects after network change (WiFi → cellular). WebTransport as long-term WS replacement — no HoL blocking, multiplexed streams.</p>
+        <div class="tag tag-green">0-RTT reconnect</div>
+      </div>
+      <div class="card card-glow">
+        <div style="font-size:1.5rem;margin-bottom:10px">💾</div>
+        <h3>Quiz Preloading</h3>
+        <p class="dim fs-sm" style="margin-bottom:10px">Full quiz loaded from PostgreSQL into Redis on room creation. During gameplay, every question read hits Redis only (~0.3ms). No DB queries during active gameplay. Questions invalidated after game ends.</p>
+        <div class="tag tag-red">Zero DB reads mid-game</div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:12px">CDN Strategy for Static Assets</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">CloudFront + S3 Config</span><div class="code-dots"><span style="background:#EF4444"></span><span style="background:#F59E0B"></span><span style="background:#10B981"></span></div></div>
+<pre><span class="cc">// next.config.js — CDN asset configuration</span>
+<span class="ck">const</span> nextConfig = {
+  assetPrefix: process.env.CDN_URL,  <span class="cc">// https://cdn.quizblaze.com</span>
+  images: {
+    domains: [<span class="cs">'cdn.quizblaze.com'</span>],
+    formats: [<span class="cs">'image/avif'</span>, <span class="cs">'image/webp'</span>],
+  },
+
+  <span class="cc">// Aggressive caching — JS/CSS chunks are content-hashed</span>
+  async <span class="cf">headers</span>() {
+    <span class="ck">return</span> [{
+      source: <span class="cs">'/_next/static/:path*'</span>,
+      headers: [{
+        key: <span class="cs">'Cache-Control'</span>,
+        value: <span class="cs">'public, max-age=31536000, immutable'</span>  <span class="cc">// 1 year</span>
+      }]
+    }];
+  }
+};
+
+<span class="cc">// CloudFront cache behavior for game assets</span>
+<span class="cc"># TTL: 1yr for hashed assets, 0 for API routes, 5min for HTML</span>
+<span class="cc"># Compress: gzip + brotli enabled</span>
+<span class="cc"># HTTP/3: enabled on all distributions</span>
+<span class="cc"># Origin shield: us-east-1 (reduces origin hits 90%)</span>
+<span class="cc"># Price class: PriceClass_All (all edge locations)</span>
+
+<span class="cc">// WS connections bypass CDN — direct to LB via separate subdomain</span>
+<span class="cc">// wss://ws.quizblaze.com → HAProxy → WS pods</span>
+<span class="cc">// https://quizblaze.com  → CloudFront → Next.js → API</span></pre>
+    </div>
+
+    <div class="alert alert-danger" style="margin-top:16px">
+      <div class="alert-icon">⚠️</div>
+      <div><strong>Critical:</strong> Never route WebSocket traffic through CloudFront — it doesn't support persistent connections. Use a separate subdomain (e.g. <span class="mono-sm">wss://ws.quizblaze.com</span>) pointing directly to HAProxy. SSL termination happens at the load balancer, not the CDN.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     FOOTER / SUMMARY
+═══════════════════════════════════════ -->
+<footer style="background:var(--space);border-top:1px solid var(--border);padding:40px 0">
+  <div class="container">
+    <div class="grid-3" style="margin-bottom:32px">
+      <div class="tier-card tier-free">
+        <div class="label" style="margin-bottom:8px">Day 1</div>
+        <h3>MVP Stack</h3>
+        <ul style="list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:6px">
+          <li class="dim fs-sm"><span class="check">✓</span> Single Node.js pod</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Redis single instance</li>
+          <li class="dim fs-sm"><span class="check">✓</span> PostgreSQL (managed)</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Socket.io rooms</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Basic anti-cheat</li>
+          <li class="dim fs-sm"><span class="cross">✗</span> Multi-pod</li>
+          <li class="dim fs-sm"><span class="cross">✗</span> Redis cluster</li>
+        </ul>
+      </div>
+      <div class="tier-card tier-scale">
+        <div class="label" style="margin-bottom:8px">Month 3</div>
+        <h3>Scale Stack</h3>
+        <ul style="list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:6px">
+          <li class="dim fs-sm"><span class="check">✓</span> 5-pod Kubernetes</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Redis Cluster 3 nodes</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Redis Adapter cross-pod</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Bull queue timers</li>
+          <li class="dim fs-sm"><span class="check">✓</span> HPA autoscaling</li>
+          <li class="dim fs-sm"><span class="check">✓</span> CDN + GeoDNS</li>
+          <li class="dim fs-sm"><span class="cross">✗</span> Multi-region</li>
+        </ul>
+      </div>
+      <div class="tier-card tier-max">
+        <div class="label" style="margin-bottom:8px">Kahoot-level</div>
+        <h3>Production Scale</h3>
+        <ul style="list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:6px">
+          <li class="dim fs-sm"><span class="check">✓</span> 3-region deployment</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Redis Cluster 6+ nodes</li>
+          <li class="dim fs-sm"><span class="check">✓</span> Aurora Global DB</li>
+          <li class="dim fs-sm"><span class="check">✓</span> WebTransport</li>
+          <li class="dim fs-sm"><span class="check">✓</span> ClickHouse analytics</li>
+          <li class="dim fs-sm"><span class="check">✓</span> 100K+ concurrent</li>
+          <li class="dim fs-sm"><span class="check">✓</span> &lt;50ms P99 globally</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <div class="logo" style="justify-content:center;margin-bottom:12px">
+        <div class="logo-gem">⚡</div>
+        QuizBlaze Architecture
+      </div>
+      <p class="dim" style="font-size:.85rem">Production-grade realtime multiplayer architecture · Node.js · Socket.io · Redis · PostgreSQL</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap">
+        <a href="quizblaze-v2.html" style="text-decoration:none"><span class="tag tag-purple">🎮 Play QuizBlaze V2</span></a>
+        <a href="quizblaze.html" style="text-decoration:none"><span class="tag tag-cyan">⚡ QuizBlaze V1</span></a>
+        <a href="index.html" style="text-decoration:none"><span class="tag tag-green">🏠 ZenMagma Home</span></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function scrollToId(id){
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function scrollTo_(dot){
+  const id=dot.getAttribute('data-target');
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth'});
+}
+// TOC active state
+const sections=['s-overview','s-arch','s-ws','s-rooms','s-sync','s-anticheat','s-scale','s-failover','s-schema','s-latency'];
+const io2=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const idx=sections.indexOf(e.target.id);
+      document.querySelectorAll('.toc-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+    }
+  });
+},{threshold:.3});
+sections.forEach(id=>{const el=document.getElementById(id);if(el)io2.observe(el)});
+</script>
+</body>
+</html>

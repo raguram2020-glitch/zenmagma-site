@@ -306,6 +306,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('bc-cat').textContent = cat?.label || game.category;
   document.getElementById('bc-title').textContent = game.title;
 
+  // Frame — expand for immersive full-screen games like QuizBlaze
+  const frameWrap = document.getElementById('game-frame-wrap');
+  if (game.id === 'quizblaze') {
+    frameWrap.style.height = 'min(92vh, 900px)';
+    frameWrap.style.minHeight = '600px';
+    frameWrap.style.borderRadius = '16px';
+  }
+
   // Frame — set src then inject responsive CSS on load
   const iframe = document.getElementById('game-iframe');
   iframe.src = game.src;

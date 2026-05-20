@@ -151,7 +151,7 @@
   </div>
 
   <div class="header-actions">
-    <a class="btn-pill outline" href="quiz/">📚 Quizzes</a>
+    <a class="btn-pill outline" href="game.html?id=quizblaze">🧠 QuizBlaze</a>
     <button class="btn-pill primary" onclick="showToast('🚀 Sign-in coming soon!')">Sign In</button>
   </div>
 </header>
@@ -286,6 +286,84 @@
     </div>
     <div class="scroll-row" id="trending-row"></div>
 
+    <!-- ── QUIZBLAZE SPOTLIGHT ── -->
+    <div id="quizblaze-spotlight" onclick="window.location.href='game.html?id=quizblaze'" style="
+      background: linear-gradient(135deg, #1a0533 0%, #2d0a5e 40%, #0f1a3d 100%);
+      border: 1px solid rgba(168,85,247,0.35);
+      border-radius: 20px;
+      padding: 0;
+      margin: 28px 0;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      min-height: 140px;
+      box-shadow: 0 8px 40px rgba(168,85,247,0.25);
+      transition: transform 0.2s, box-shadow 0.2s;
+    " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 60px rgba(168,85,247,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 40px rgba(168,85,247,0.25)'">
+
+      <!-- animated background pulses -->
+      <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
+        <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.18) 0%,transparent 70%);top:-80px;right:60px;animation:qbPulse 3s ease-in-out infinite"></div>
+        <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%);bottom:-40px;right:200px;animation:qbPulse 4s ease-in-out infinite 1s"></div>
+      </div>
+      <style>
+        @keyframes qbPulse { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.15)} }
+        @keyframes qbFloat { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(3deg)} }
+        @keyframes qbBadge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+      </style>
+
+      <!-- left: content -->
+      <div style="flex:1;padding:28px 32px;position:relative;z-index:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;font-size:11px;font-weight:800;padding:3px 12px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;animation:qbBadge 2s ease-in-out infinite">🆕 New Game</span>
+          <span style="background:rgba(168,85,247,0.2);color:#c084fc;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🧠 Quiz</span>
+          <span style="background:rgba(99,102,241,0.2);color:#818cf8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">👥 Multiplayer</span>
+        </div>
+        <div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:-.02em">
+          🧠 QuizBlaze
+        </div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;max-width:480px;margin-bottom:18px">
+          Multiplayer trivia battles across 8 categories. Fastest answer wins — compete live with friends or bot opponents, earn XP &amp; climb the leaderboard!
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <button onclick="event.stopPropagation();window.location.href='game.html?id=quizblaze'" style="
+            background:linear-gradient(135deg,#a855f7,#6366f1);
+            border:none;color:#fff;font-size:14px;font-weight:800;
+            padding:10px 24px;border-radius:12px;cursor:pointer;
+            box-shadow:0 4px 20px rgba(168,85,247,0.5);
+            transition:transform 0.15s,box-shadow 0.15s;
+          " onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 30px rgba(168,85,247,0.7)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(168,85,247,0.5)'">
+            ▶ Play Now — Free
+          </button>
+          <div style="display:flex;gap:20px">
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:900;color:#c084fc">8</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Categories</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:900;color:#818cf8">11</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Screens</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:900;color:#34d399">XP+</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Rewards</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:900;color:#fb923c">Live</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Leaderboard</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- right: floating emoji -->
+      <div style="width:140px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;flex-shrink:0">
+        <span style="font-size:80px;animation:qbFloat 3.5s ease-in-out infinite;filter:drop-shadow(0 4px 30px rgba(168,85,247,0.8))">🧠</span>
+      </div>
+    </div>
+
     <!-- ── MYSTERY GAME ── -->
     <div class="mystery-box" onclick="launchMystery()">
       <div class="mb-icon">🎲</div>
@@ -342,6 +420,7 @@
     </div>
     <div class="footer-col">
       <h4>Categories</h4>
+      <a href="game.html?id=quizblaze">🧠 QuizBlaze — NEW!</a>
       <a href="categories/action.html">⚡ Action Games</a>
       <a href="categories/puzzle.html">🧩 Puzzle Games</a>
       <a href="categories/runner.html">🏃 Runner Games</a>
@@ -359,6 +438,8 @@
     <div class="footer-col">
       <h4>Community</h4>
       <a href="#mini-leaderboard" onclick="document.getElementById('mini-leaderboard').scrollIntoView({behavior:'smooth'});return false">🏆 Leaderboard</a>
+      <a href="game.html?id=quizblaze">🧠 Play QuizBlaze</a>
+      <a href="quizblaze-architecture.html">📐 Architecture Docs</a>
       <a href="contact.html?subject=submit">📤 Submit a Game</a>
       <a href="contact.html?subject=advertise">📢 Advertise</a>
       <a href="sitemap.html">🗺️ Sitemap</a>

@@ -17,9 +17,13 @@ const CATEGORIES = [
   { id:'classic',   label:'🎯 Classic',       color:'#f59e0b' },
   { id:'edu',       label:'📚 Education',     color:'#06b6d4' },
   { id:'sim',       label:'🏗️ Simulation',    color:'#84cc16' },
+  { id:'quiz',      label:'🧠 Quizzes',       color:'#a855f7' },
 ];
 
 const GAMES = [
+
+  // ── QUIZBLAZE (FEATURED) ─────────────────────────────────────────────────────
+  { id:'quizblaze',        slug:'quizblaze',        title:'QuizBlaze',            category:'quiz',      tags:['quiz','trivia','multiplayer','edu'], featured:true,  trending:true,  isNew:true,  plays:0,      rating:5.0, likes:0,     src:'quizblaze-v2.html',                emoji:'🧠', color:'#a855f7', desc:'Multiplayer trivia battles! 8 categories, live leaderboards, XP system, and bot opponents. Fastest answer wins more points!', controls:'Click answer buttons to respond', thumb:'' },
 
   // ── RUNNER ──────────────────────────────────────────────────────────────────
   { id:'temple-run',      slug:'temple-run',      title:'Temple Run',           category:'runner',    tags:['runner','action','popular'],      featured:true,  trending:true,  isNew:false, plays:248000, rating:4.8, likes:12400, src:BASE+'templerun.html',              emoji:'🏃', color:'#ef4444', desc:'Run through ancient temples! Jump, slide and dodge obstacles in this epic endless runner.',         controls:'← → Move | ↑ / SPACE Jump | ↓ Slide',   thumb:'assets/thumbs/temple-run.jpg',    videoPreview:'assets/previews/templerun.GIF.gif' },
