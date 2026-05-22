@@ -236,7 +236,7 @@ function initGame(){
   pl={x:PX(),y:GY,vy:0,onGround:true,jumping:false,slideTimer:0,runFrame:0,invincible:0,w:26,h:42};
   landImpact=0;wasOnGround=true;
   obs=[];coinList=[];particles=[];floats=[];pwrList=[];
-  score=0;dist=0;coins=0;mult=1;maxMult=1;frame=0;speed=4.5;lives=5;
+  score=0;dist=0;coins=0;mult=1;maxMult=1;frame=0;speed=6.2;lives=5;
   shieldOn=false;magnetOn=false;slowOn=false;shieldT=0;magnetT=0;slowT=0;
   whaleEvt={active:false,timer:0,dur:420,nextAt:1200+Math.random()*600,x:0,phase:0};
   boarEvt={active:false,timer:0,dur:380,nextAt:2600+Math.random()*800,x:0,phase:0};
@@ -288,7 +288,7 @@ function spawnWave(){
   else if(r<.52)obs.push({x:sx+W*.3,y:GY,w:28,h:55,type:'tall'});
   else if(r<.68){obs.push({x:sx,y:GY,w:28,h:40,type:'short'});obs.push({x:sx+115,y:GY,w:28,h:40,type:'short'});}
   else if(r<.84)obs.push({x:sx,y:GY,w:28,h:38,type:'fire'});
-  else{obs.push({x:sx,y:GY,w:28,h:36,type:'short'});obs.push({x:sx+100,y:GY,w:28,h:36,type:'short'});obs.push({x:sx+200,y:GY,w:28,h:38,type:'fire'});}
+  else{obs.push({x:sx,y:GY,w:28,h:40,type:'short'});obs.push({x:sx+130,y:GY,w:28,h:38,type:'fire'});}
   if(cheetah.state==='surging'){cheetah.obsCleared++;if(cheetah.obsCleared>=2){cheetah.state='chase';cheetah.targetGap=CHEETAH_NORMAL_GAP;cheetah.obsCleared=0;}}
   const n=3+Math.floor(Math.random()*4);
   for(let i=0;i<n;i++)coinList.push({x:sx+20+i*42,y:GY-H*.20-Math.sin(i*.8)*H*.06,r:10,anim:i*.4,done:false});
