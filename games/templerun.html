@@ -283,6 +283,7 @@ cv.addEventListener('click',e=>{
 /* ── SPAWNING ── */
 let spawnClock=0;
 function spawnWave(){
+  if(whaleEvt.active||boarEvt.active)return; /* no obstacles during special events */
   const r=Math.random(),sx=W+60;
   if(r<.28)obs.push({x:sx,y:GY,w:30,h:42,type:'short'});
   else if(r<.52)obs.push({x:sx+W*.3,y:GY,w:28,h:55,type:'tall'});
@@ -537,6 +538,7 @@ function updateWhale(){
   const inWindow=cycle>=0&&cycle<400;
   if(inWindow&&!whaleEvt.active){
     whaleEvt.active=true;whaleEvt.phase=0;whaleEvt.x=W*1.5;
+    obs=[];spawnClock=0; /* clear obstacles for clean bridge entry */
   }
   if(!inWindow&&whaleEvt.active){whaleEvt.active=false;whaleEvt.fade=0;}
   if(!whaleEvt.active)return;
@@ -700,10 +702,12 @@ function updateBoar(){
   const cycle=dist>=800?(dist-800)%800:-1;
   const inWindow=cycle>=400;
   if(inWindow&&!boarEvt.active){
-    boarEvt.active=true;boarEvt.phase=0;boarEvt.x=W+90;
+    boarEvt.active=true;boarEvt.phase=0;boarEvt.timer=0;boarEvt.x=W+90;
+    obs=[];spawnClock=0; /* clear obstacles for clean boar entry */
   }
-  if(!inWindow&&boarEvt.active) boarEvt.active=false;
+  if(!inWindow&&boarEvt.active){boarEvt.active=false;boarEvt.fade=0;}
   if(!boarEvt.active)return;
+  boarEvt.timer++;
   boarEvt.phase+=0.14;
   boarEvt.x-=speed*0.95;
   if(boarEvt.x<-180) boarEvt.x=W+80; /* loop boar back across */
