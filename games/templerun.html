@@ -178,7 +178,8 @@ function drawWX(){
 
 /* ── CONSTANTS ── */
 const PX=()=>W*0.22;
-const GRAVITY=0.55,JUMP_V=-13.5,SLIDE_DUR=38;
+const GRAVITY=0.72,JUMP_V=-15.2,SLIDE_DUR=38;
+const BASE_SPEED=6.2; /* speed at game start — gravity scales against this */
 const PLAYER_FOOT_OFFSET=56;
 const PLAYER_SCALE=0.72;
 const PLAYER_FOOT_SCALED=Math.round(PLAYER_FOOT_OFFSET*PLAYER_SCALE); /* =40 */
@@ -327,7 +328,7 @@ function update(){
   CLOUDS.forEach(c=>{c.x-=c.spd*(slowOn?.45:1);if(c.x+c.w+60<0)c.x=W+c.w;});
   HILLS.forEach(h=>{h.x-=spd*.4;if(h.x+h.w<0)h.x=W+Math.random()*100;});
   if(pl.slideTimer>0)pl.slideTimer--;
-  pl.y+=pl.vy;pl.vy+=GRAVITY;
+  pl.y+=pl.vy;pl.vy+=GRAVITY*(speed/BASE_SPEED);
   if(pl.y>=GY){pl.y=GY;pl.vy=0;if(!pl.onGround){pl.onGround=true;pl.jumping=false;SND.land();}}else pl.onGround=false;
   if(pl.invincible>0)pl.invincible--;
   pl.runFrame+=spd*.22;
