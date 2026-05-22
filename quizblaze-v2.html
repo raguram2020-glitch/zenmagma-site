@@ -111,6 +111,10 @@ html,body{
   -webkit-font-smoothing:antialiased;
 }
 
+/* ─── IFRAME / EMBEDDED VIEWPORT FIX ─── */
+/* Ensures layout fits correctly inside game.html iframe and direct visits */
+html { font-size: 15px; }
+
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -379,7 +383,8 @@ html,body{
 }
 .hero-section{
   width:100%;max-width:600px;
-  padding:60px 24px 40px;
+  /* Reduced top padding so hero title is immediately visible in iframe */
+  padding:20px 24px 20px;
   text-align:center;
   display:flex;flex-direction:column;align-items:center;
 }
@@ -393,14 +398,15 @@ html,body{
 }
 .hero-eyebrow .live-dot{width:7px;height:7px;border-radius:50%;background:#10B981;animation:pulse 1s infinite}
 .hero-title{
-  font-size:clamp(3rem,10vw,5.5rem);font-weight:var(--fw-black);
-  line-height:.95;letter-spacing:-3px;
-  margin-bottom:20px;
+  /* Scaled down so full title is visible without scrolling in iframe */
+  font-size:clamp(2.2rem,7vw,4rem);font-weight:var(--fw-black);
+  line-height:1;letter-spacing:-2px;
+  margin-bottom:12px;
   animation:slideUp .6s var(--ease-out) .2s both;
 }
 .hero-sub{
-  font-size:clamp(1rem,3vw,1.2rem);color:rgba(167,139,250,0.8);
-  line-height:1.6;max-width:420px;margin:0 auto 36px;
+  font-size:clamp(.9rem,2.5vw,1.05rem);color:rgba(167,139,250,0.8);
+  line-height:1.5;max-width:420px;margin:0 auto 20px;
   animation:slideUp .6s var(--ease-out) .3s both;
 }
 .hero-cta-row{
@@ -420,47 +426,46 @@ html,body{
 }
 .hero-join-row input::placeholder{color:rgba(167,139,250,0.3);letter-spacing:.05em;font-weight:var(--fw-reg)}
 .hero-stats{
-  display:flex;gap:24px;margin-top:48px;
+  display:flex;gap:24px;margin-top:20px;
   animation:slideUp .6s var(--ease-out) .5s both;
 }
 .hero-stat{text-align:center}
 .hero-stat .n{font-size:2rem;font-weight:var(--fw-black);line-height:1}
 .hero-stat .l{font-size:.75rem;color:rgba(167,139,250,0.5);margin-top:4px}
 
-/* Floating game cards */
+/* Floating game cards — now a normal flex row to eliminate overlap */
 .float-cards{
-  position:relative;width:100%;max-width:500px;height:220px;margin:24px auto 0;
+  display:flex;gap:10px;width:100%;max-width:600px;
+  padding:12px 24px 0;
   animation:slideUp .8s var(--ease-out) .3s both;
+  overflow:hidden;
 }
 .fcard{
-  position:absolute;border-radius:20px;padding:16px;
-  box-shadow:var(--shadow-lg);backdrop-filter:blur(16px);
+  flex:1;min-width:0;border-radius:16px;padding:14px 12px;
+  box-shadow:var(--shadow-md);backdrop-filter:blur(16px);
   border:1px solid rgba(255,255,255,0.1);
-  transition:transform var(--t-slow) ease;
+  position:relative;/* no longer absolutely positioned */
 }
 .fcard-1{
-  width:180px;left:5%;top:10px;
   background:linear-gradient(135deg,rgba(124,58,237,0.5),rgba(168,85,247,0.3));
   animation:float 4s ease-in-out infinite;
 }
 .fcard-2{
-  width:200px;left:50%;top:40px;transform:translateX(-50%);
   background:linear-gradient(135deg,rgba(236,72,153,0.5),rgba(244,114,182,0.3));
   animation:float 5s ease-in-out .8s infinite;
 }
 .fcard-3{
-  width:170px;right:5%;top:15px;
   background:linear-gradient(135deg,rgba(6,182,212,0.5),rgba(103,232,249,0.3));
   animation:float 4.5s ease-in-out .4s infinite;
 }
-.fcard-emoji{font-size:2rem;margin-bottom:8px}
-.fcard-title{font-size:.85rem;font-weight:var(--fw-extra);margin-bottom:4px}
-.fcard-sub{font-size:.7rem;color:rgba(255,255,255,0.6)}
-.fcard-players{display:flex;gap:4px;margin-top:10px;align-items:center}
-.fcard-players span{font-size:.7rem;color:rgba(255,255,255,0.7)}
+.fcard-emoji{font-size:1.5rem;margin-bottom:6px}
+.fcard-title{font-size:.8rem;font-weight:var(--fw-extra);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcard-sub{font-size:.65rem;color:rgba(255,255,255,0.6)}
+.fcard-players{display:flex;gap:4px;margin-top:8px;align-items:center}
+.fcard-players span{font-size:.65rem;color:rgba(255,255,255,0.7)}
 
 /* Category grid */
-.category-section{width:100%;max-width:600px;padding:0 24px}
+.category-section{width:100%;max-width:600px;padding:0 24px;margin-top:16px}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .section-title{font-size:1.3rem;font-weight:var(--fw-extra)}
 .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -1221,7 +1226,7 @@ html,body{
   </div>
 
   <!-- Categories -->
-  <section class="category-section mt24">
+  <section class="category-section">
     <div class="section-header">
       <h2 class="fs-lg fw800">Browse <span class="gt-purple">Categories</span></h2>
       <button class="btn btn-ghost btn-sm">See all</button>
