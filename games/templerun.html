@@ -452,8 +452,8 @@ function drawBg(){
 /* ── SEASONAL GROUND ── */
 function drawGround(){
   /* ── BRIDGE MODE when whale event is active ── */
-  if(whaleEvt.active){
-    const wa=Math.min(1,Math.min(whaleEvt.timer,whaleEvt.dur-whaleEvt.timer)/40);
+  if(whaleEvt.active&&(whaleEvt.fade||0)>0){
+    const wa=whaleEvt.fade;
     /* Water below bridge */
     const wG=ctx.createLinearGradient(0,GY+10,0,H);
     wG.addColorStop(0,'rgba(18,68,130,0.97)');
@@ -543,25 +543,23 @@ function drawGround(){
    WHALE EVENT  — giant whale swims below bridge
 ══════════════════════════════════════════════════════════ */
 function updateWhale(){
-  if(!whaleEvt.active){
-    if(dist>whaleEvt.nextAt&&!boarEvt.active){
-      whaleEvt.active=true;whaleEvt.timer=0;
-      whaleEvt.x=W*1.5;whaleEvt.phase=0;
-    }
-    return;
+  /* Whale window: 800–1200m per 800m cycle, looping forever */
+  const cycle=dist>=800?(dist-800)%800:-1;
+  const inWindow=cycle>=0&&cycle<400;
+  if(inWindow&&!whaleEvt.active){
+    whaleEvt.active=true;whaleEvt.phase=0;whaleEvt.x=W*1.5;
   }
-  whaleEvt.timer++;whaleEvt.phase+=0.038;
+  if(!inWindow&&whaleEvt.active) whaleEvt.active=false;
+  if(!whaleEvt.active)return;
+  whaleEvt.phase+=0.038;
   whaleEvt.x-=speed*0.44;
-  if(whaleEvt.timer>=whaleEvt.dur||whaleEvt.x<-320){
-    whaleEvt.active=false;
-    whaleEvt.nextAt=dist+1800+Math.random()*1000;
-  }
+  if(whaleEvt.x<-320) whaleEvt.x=W+200; /* loop whale back across */
+  whaleEvt.fade=Math.min(1,Math.min(cycle,400-cycle)/30);
 }
 
 function drawWhaleEvt(){
   if(!whaleEvt.active)return;
-  const ti=whaleEvt.timer,dur=whaleEvt.dur;
-  const alpha=Math.min(1,Math.min(ti,dur-ti)/40);
+  const alpha=whaleEvt.fade||0;if(alpha<=0)return;
   const wx=whaleEvt.x;
   const wy=GY+72+Math.sin(whaleEvt.phase)*20;
   const ph=whaleEvt.phase;
@@ -709,25 +707,23 @@ function drawWhaleEvt(){
    BOAR EVENT — giant boar digging alongside player
 ══════════════════════════════════════════════════════════ */
 function updateBoar(){
-  if(!boarEvt.active){
-    if(dist>boarEvt.nextAt&&!whaleEvt.active){
-      boarEvt.active=true;boarEvt.timer=0;
-      boarEvt.x=W+90;boarEvt.phase=0;
-    }
-    return;
+  /* Boar window: 1200–1600m per 800m cycle (offset 400 within cycle), looping forever */
+  const cycle=dist>=800?(dist-800)%800:-1;
+  const inWindow=cycle>=400;
+  if(inWindow&&!boarEvt.active){
+    boarEvt.active=true;boarEvt.phase=0;boarEvt.x=W+90;
   }
-  boarEvt.timer++;boarEvt.phase+=0.14;
+  if(!inWindow&&boarEvt.active) boarEvt.active=false;
+  if(!boarEvt.active)return;
+  boarEvt.phase+=0.14;
   boarEvt.x-=speed*0.95;
-  if(boarEvt.timer>=boarEvt.dur||boarEvt.x<-180){
-    boarEvt.active=false;
-    boarEvt.nextAt=dist+2200+Math.random()*1400;
-  }
+  if(boarEvt.x<-180) boarEvt.x=W+80; /* loop boar back across */
+  boarEvt.fade=Math.min(1,Math.min(cycle-400,800-cycle)/25);
 }
 
 function drawBoarEvt(){
   if(!boarEvt.active)return;
-  const ti=boarEvt.timer,dur=boarEvt.dur;
-  const alpha=Math.min(1,Math.min(ti,dur-ti)/32);
+  const alpha=boarEvt.fade||0;if(alpha<=0)return;
   const bx=boarEvt.x,by=GY;
   const ph=boarEvt.phase;
   const bob=Math.sin(ph*2)*3.5;
