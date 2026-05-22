@@ -451,60 +451,7 @@ function drawBg(){
 
 /* ── SEASONAL GROUND ── */
 function drawGround(){
-  /* ── BRIDGE MODE when whale event is active ── */
-  if(whaleEvt.active&&(whaleEvt.fade||0)>0){
-    const wa=whaleEvt.fade;
-    /* Water below bridge */
-    const wG=ctx.createLinearGradient(0,GY+10,0,H);
-    wG.addColorStop(0,'rgba(18,68,130,0.97)');
-    wG.addColorStop(0.45,'rgba(8,40,90,1)');
-    wG.addColorStop(1,'rgba(4,18,48,1)');
-    ctx.globalAlpha=wa;ctx.fillStyle=wG;ctx.fillRect(0,GY+10,W,H);
-    /* Water shimmer on surface */
-    ctx.strokeStyle=`rgba(120,210,255,${0.35*wa})`;ctx.lineWidth=1.5;
-    for(let i=0;i<6;i++){
-      const sx=(i*170+groundX*0.6+frame*0.7)%W;
-      ctx.beginPath();ctx.moveTo(sx,GY+12);ctx.bezierCurveTo(sx+28,GY+10,sx+52,GY+15,sx+80,GY+12);ctx.stroke();
-    }
-    ctx.globalAlpha=1;
-    /* Bridge deck planks */
-    const deckG=ctx.createLinearGradient(0,GY-10,0,GY+12);
-    deckG.addColorStop(0,'#6a4018');deckG.addColorStop(0.4,'#7e5022');deckG.addColorStop(1,'#4a2a0c');
-    ctx.fillStyle=deckG;ctx.fillRect(0,GY-10,W,22);
-    /* Plank joints */
-    ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=2;
-    for(let col=(groundX%38)-38;col<W+38;col+=38){
-      ctx.beginPath();ctx.moveTo(col,GY-10);ctx.lineTo(col,GY+12);ctx.stroke();
-    }
-    /* Plank highlight */
-    ctx.fillStyle='rgba(255,200,120,0.16)';ctx.fillRect(0,GY-10,W,5);
-    ctx.fillStyle='rgba(0,0,0,0.22)';ctx.fillRect(0,GY+9,W,3);
-    /* Bridge posts */
-    ctx.fillStyle='#3a1e08';
-    for(let col=(groundX%90)-90;col<W+90;col+=90){
-      ctx.fillRect(col-4,GY-38,8,38);
-      /* Post cap */
-      ctx.fillStyle='#5a3010';ctx.beginPath();ctx.arc(col,GY-38,5,Math.PI,0);ctx.fill();
-      ctx.fillStyle='#3a1e08';
-    }
-    /* Top rope / cable */
-    ctx.strokeStyle='#5a3810';ctx.lineWidth=4.5;
-    ctx.beginPath();ctx.moveTo(0,GY-35);
-    for(let col=(groundX%90)-90+45;col<W+90;col+=90){
-      ctx.quadraticCurveTo(col-45,GY-30,col,GY-36);
-      ctx.quadraticCurveTo(col+45,GY-30,col+90,GY-36);
-    }
-    ctx.stroke();
-    ctx.strokeStyle='rgba(160,110,50,0.4)';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(0,GY-33);
-    for(let col=(groundX%90)-90+45;col<W+90;col+=90){
-      ctx.quadraticCurveTo(col-45,GY-28,col,GY-34);
-      ctx.quadraticCurveTo(col+45,GY-28,col+90,GY-34);
-    }
-    ctx.stroke();
-    return;
-  }
-
+  /* ── Seasonal ground always drawn first (no early return) ── */
   const{i0,i1,tt}=getSeaBlend();
   const gC=lC3(SEA_GRASS[i0],SEA_GRASS[i1],tt);
   const dC=lC3(SEA_DIRT[i0],SEA_DIRT[i1],tt);
@@ -537,6 +484,48 @@ function drawGround(){
     }
     ctx.globalAlpha=1;
   }
+  /* ── Bridge overlay fades in/out on top of normal ground ── */
+  const wa=whaleEvt.fade||0;
+  if(wa>0){
+    ctx.save();ctx.globalAlpha=wa;
+    /* Water covers ground area */
+    const wG=ctx.createLinearGradient(0,GY+10,0,H);
+    wG.addColorStop(0,'rgba(18,68,130,0.97)');
+    wG.addColorStop(0.45,'rgba(8,40,90,1)');
+    wG.addColorStop(1,'rgba(4,18,48,1)');
+    ctx.fillStyle=wG;ctx.fillRect(0,GY+10,W,H);
+    /* Water shimmer */
+    ctx.strokeStyle=`rgba(120,210,255,0.35)`;ctx.lineWidth=1.5;
+    for(let i=0;i<6;i++){
+      const sx=(i*170+groundX*0.6+frame*0.7)%W;
+      ctx.beginPath();ctx.moveTo(sx,GY+12);ctx.bezierCurveTo(sx+28,GY+10,sx+52,GY+15,sx+80,GY+12);ctx.stroke();
+    }
+    /* Bridge deck */
+    const deckG=ctx.createLinearGradient(0,GY-10,0,GY+12);
+    deckG.addColorStop(0,'#6a4018');deckG.addColorStop(0.4,'#7e5022');deckG.addColorStop(1,'#4a2a0c');
+    ctx.fillStyle=deckG;ctx.fillRect(0,GY-10,W,22);
+    ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=2;
+    for(let col=(groundX%38)-38;col<W+38;col+=38){ctx.beginPath();ctx.moveTo(col,GY-10);ctx.lineTo(col,GY+12);ctx.stroke();}
+    ctx.fillStyle='rgba(255,200,120,0.16)';ctx.fillRect(0,GY-10,W,5);
+    ctx.fillStyle='rgba(0,0,0,0.22)';ctx.fillRect(0,GY+9,W,3);
+    /* Bridge posts */
+    ctx.fillStyle='#3a1e08';
+    for(let col=(groundX%90)-90;col<W+90;col+=90){
+      ctx.fillRect(col-4,GY-38,8,38);
+      ctx.fillStyle='#5a3010';ctx.beginPath();ctx.arc(col,GY-38,5,Math.PI,0);ctx.fill();
+      ctx.fillStyle='#3a1e08';
+    }
+    /* Rope cables */
+    ctx.strokeStyle='#5a3810';ctx.lineWidth=4.5;
+    ctx.beginPath();ctx.moveTo(0,GY-35);
+    for(let col=(groundX%90)-90+45;col<W+90;col+=90){ctx.quadraticCurveTo(col-45,GY-30,col,GY-36);ctx.quadraticCurveTo(col+45,GY-30,col+90,GY-36);}
+    ctx.stroke();
+    ctx.strokeStyle='rgba(160,110,50,0.4)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,GY-33);
+    for(let col=(groundX%90)-90+45;col<W+90;col+=90){ctx.quadraticCurveTo(col-45,GY-28,col,GY-34);ctx.quadraticCurveTo(col+45,GY-28,col+90,GY-34);}
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -549,7 +538,7 @@ function updateWhale(){
   if(inWindow&&!whaleEvt.active){
     whaleEvt.active=true;whaleEvt.phase=0;whaleEvt.x=W*1.5;
   }
-  if(!inWindow&&whaleEvt.active) whaleEvt.active=false;
+  if(!inWindow&&whaleEvt.active){whaleEvt.active=false;whaleEvt.fade=0;}
   if(!whaleEvt.active)return;
   whaleEvt.phase+=0.038;
   whaleEvt.x-=speed*0.44;
