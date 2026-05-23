@@ -533,9 +533,9 @@ function drawGround(){
    WHALE EVENT  — giant whale swims below bridge
 ══════════════════════════════════════════════════════════ */
 function updateWhale(){
-  /* Whale window: 800–1200m per 800m cycle, looping forever */
-  const cycle=dist>=800?(dist-800)%800:-1;
-  const inWindow=cycle>=0&&cycle<400;
+  /* Whale window: 400–800m per 800m cycle (dist%800 >= 400), looping forever */
+  const cycle=dist%800;
+  const inWindow=cycle>=400;
   if(inWindow&&!whaleEvt.active){
     whaleEvt.active=true;whaleEvt.phase=0;whaleEvt.x=W*1.5;
     obs=[];spawnClock=0; /* clear obstacles for clean bridge entry */
@@ -545,7 +545,7 @@ function updateWhale(){
   whaleEvt.phase+=0.038;
   whaleEvt.x-=speed*0.44;
   if(whaleEvt.x<-320) whaleEvt.x=W+200; /* loop whale back across */
-  whaleEvt.fade=Math.min(1,Math.min(cycle,400-cycle)/30);
+  whaleEvt.fade=Math.min(1,Math.min(cycle-400,800-cycle)/30);
 }
 
 function drawWhaleEvt(){
@@ -698,9 +698,9 @@ function drawWhaleEvt(){
    BOAR EVENT — giant boar digging alongside player
 ══════════════════════════════════════════════════════════ */
 function updateBoar(){
-  /* Boar window: 1200–1600m per 800m cycle (offset 400 within cycle), looping forever */
-  const cycle=dist>=800?(dist-800)%800:-1;
-  const inWindow=cycle>=400;
+  /* Boar window: 0–400m per 800m cycle (dist%800 < 400), looping forever */
+  const cycle=dist%800;
+  const inWindow=cycle<400;
   if(inWindow&&!boarEvt.active){
     boarEvt.active=true;boarEvt.phase=0;boarEvt.timer=0;boarEvt.x=W+90;
     obs=[];spawnClock=0; /* clear obstacles for clean boar entry */
@@ -711,7 +711,7 @@ function updateBoar(){
   boarEvt.phase+=0.14;
   boarEvt.x-=speed*0.95;
   if(boarEvt.x<-180) boarEvt.x=W+80; /* loop boar back across */
-  boarEvt.fade=Math.min(1,Math.min(cycle-400,800-cycle)/25);
+  boarEvt.fade=Math.min(1,Math.min(cycle,400-cycle)/25);
 }
 
 function drawBoarEvt(){
