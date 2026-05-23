@@ -193,9 +193,11 @@ let shieldOn=false,magnetOn=false,slowOn=false;
 let shieldT=0,magnetT=0,slowT=0;
 
 /* ── WHALE EVENT ── */
-let whaleEvt={active:false,timer:0,dur:420,nextAt:1200,x:0,phase:0};
+let whaleEvt={active:false,timer:0,dur:420,nextAt:1200,x:0,phase:0,_boarAnnounced:false};
 /* ── BOAR EVENT ── */
-let boarEvt={active:false,timer:0,dur:380,nextAt:2600,x:0,phase:0};
+let boarEvt={active:false,timer:0,dur:380,nextAt:2600,x:0,phase:0,_whaleAnnounced:false};
+/* ── SCENE INTRO BOARD ── */
+let sceneIntro={active:false,title:'',subtitle:'',emoji:'',accentCol:'#ff6600',phase:0,timer:0,inDur:28,holdDur:95,outDur:22};
 bestScore=parseInt(localStorage.getItem('tr_hs')||'0');
 
 /* ── CHEETAH ── */
@@ -239,7 +241,8 @@ function initGame(){
   score=0;dist=0;coins=0;mult=1;maxMult=1;frame=0;speed=6.2;lives=5;
   shieldOn=false;magnetOn=false;slowOn=false;shieldT=0;magnetT=0;slowT=0;
   whaleEvt={active:false,timer:0,dur:420,nextAt:1200+Math.random()*600,x:0,phase:0};
-  boarEvt={active:false,timer:0,dur:380,nextAt:2600+Math.random()*800,x:0,phase:0};
+  boarEvt={active:false,timer:0,dur:380,nextAt:2600+Math.random()*800,x:0,phase:0,_whaleAnnounced:false};
+  sceneIntro={active:false,title:'',subtitle:'',emoji:'',accentCol:'#ff6600',phase:0,timer:0,inDur:28,holdDur:95,outDur:22};
   bgX=0;bgX2=0;groundX=0;
   moodIdx=0;moodFade=0;moodChanging=false;moodText='';moodTextT=0;rainDrops=[];
   seasonProgress=0;prevSeaIdx=0;seaText='';seaTextT=0;
@@ -344,7 +347,7 @@ function update(){
   if(shieldOn){shieldT--;if(shieldT<=0)shieldOn=false;}
   if(magnetOn){magnetT--;if(magnetT<=0)magnetOn=false;}
   if(slowOn){slowT--;if(slowT<=0)slowOn=false;}
-  updateWhale();updateBoar();
+  updateWhale();updateBoar();updateSceneIntro();
   if(pl.invincible===0){
     const plTop=pl.y-(pl.slideTimer>0?pl.h*.48:pl.h),plLeft=pl.x-pl.w*.38,plRight=pl.x+pl.w*.38;
     for(const o of obs){
@@ -532,6 +535,62 @@ function drawGround(){
 /* ══════════════════════════════════════════════════════════
    WHALE EVENT  — giant whale swims below bridge
 ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════
+   SCENE INTRO / TRANSITION BOARD  — reusable for all enemies
+══════════════════════════════════════════════════════════ */
+function announceIncomingEntity(cfg){
+  /* cfg: { title, subtitle, emoji, accentCol, holdDur } */
+  sceneIntro={active:true,title:cfg.title||'',subtitle:cfg.subtitle||'',
+    emoji:cfg.emoji||'',accentCol:cfg.accentCol||'#ff6600',
+    phase:0,timer:0,inDur:28,holdDur:cfg.holdDur||95,outDur:22};
+}
+function updateSceneIntro(){
+  if(!sceneIntro.active)return;
+  sceneIntro.timer++;
+  if(sceneIntro.phase===0&&sceneIntro.timer>=sceneIntro.inDur){sceneIntro.phase=1;sceneIntro.timer=0;}
+  else if(sceneIntro.phase===1&&sceneIntro.timer>=sceneIntro.holdDur){sceneIntro.phase=2;sceneIntro.timer=0;}
+  else if(sceneIntro.phase===2&&sceneIntro.timer>=sceneIntro.outDur){sceneIntro.active=false;}
+}
+function drawSceneIntroBoard(){
+  if(!sceneIntro.active)return;
+  let a;
+  if(sceneIntro.phase===0)a=sceneIntro.timer/sceneIntro.inDur;
+  else if(sceneIntro.phase===1)a=1;
+  else a=1-sceneIntro.timer/sceneIntro.outDur;
+  a=Math.max(0,Math.min(1,a));
+  const slide=(1-a)*H*0.06; /* slides down from above */
+  ctx.save();
+  /* dark overlay */
+  ctx.globalAlpha=a*0.52;ctx.fillStyle='rgba(0,0,0,1)';ctx.fillRect(0,0,W,H);
+  /* board */
+  const bw=Math.min(480,W*.84),bh=Math.min(118,H*.2);
+  const bx=(W-bw)/2,by=H*.34+slide;
+  ctx.globalAlpha=a;
+  ctx.shadowColor=sceneIntro.accentCol;ctx.shadowBlur=32;
+  ctx.fillStyle='rgba(8,4,0,0.92)';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,16);ctx.fill();
+  ctx.strokeStyle=sceneIntro.accentCol;ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(bx,by,bw,bh,16);ctx.stroke();
+  ctx.shadowBlur=0;
+  /* inner accent line */
+  ctx.fillStyle=sceneIntro.accentCol;ctx.globalAlpha=a*0.18;
+  ctx.fillRect(bx+12,by+bh-6,bw-24,3);
+  ctx.globalAlpha=a;
+  /* emoji */
+  const pulse=1+Math.sin(frame*.18)*0.04;
+  ctx.save();ctx.translate(W/2,by+bh*.36);ctx.scale(pulse,pulse);
+  ctx.font=`${Math.min(36,bh*.32)}px sans-serif`;ctx.textAlign='center';ctx.fillText(sceneIntro.emoji,0,0);
+  ctx.restore();
+  /* title */
+  ctx.font=`900 ${Math.min(22,bh*.2)}px Segoe UI,sans-serif`;
+  ctx.textAlign='center';ctx.fillStyle=sceneIntro.accentCol;
+  ctx.shadowColor=sceneIntro.accentCol;ctx.shadowBlur=14;
+  ctx.fillText(sceneIntro.title,W/2,by+bh*.64);ctx.shadowBlur=0;
+  /* subtitle */
+  ctx.font=`${Math.min(13,bh*.115)}px Segoe UI,sans-serif`;
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillText(sceneIntro.subtitle,W/2,by+bh*.84);
+  ctx.restore();
+}
+
 function updateWhale(){
   /* Whale window: 400–800m per 800m cycle (dist%800 >= 400), looping forever */
   const cycle=dist%800;
@@ -539,13 +598,19 @@ function updateWhale(){
   if(inWindow&&!whaleEvt.active){
     whaleEvt.active=true;whaleEvt.phase=0;whaleEvt.x=W*1.5;
     obs=[];spawnClock=0; /* clear obstacles for clean bridge entry */
+    whaleEvt._boarAnnounced=false;
   }
   if(!inWindow&&whaleEvt.active){whaleEvt.active=false;whaleEvt.fade=0;}
+  /* announce upcoming boar when whale cycle is ~60m from end */
+  if(whaleEvt.active&&cycle>740&&!whaleEvt._boarAnnounced&&!sceneIntro.active){
+    whaleEvt._boarAnnounced=true;
+    announceIncomingEntity({title:'BOAR INCOMING',subtitle:'It\'s tunneling under you!',emoji:'🐗',accentCol:'#f97316',holdDur:95});
+  }
   if(!whaleEvt.active)return;
   whaleEvt.phase+=0.038;
   whaleEvt.x-=speed*0.44;
   if(whaleEvt.x<-320) whaleEvt.x=W+200; /* loop whale back across */
-  whaleEvt.fade=Math.min(1,Math.min(cycle-400,800-cycle)/30);
+  whaleEvt.fade=Math.min(1,Math.min(cycle-400,800-cycle)/45); /* longer fade-in/out */
 }
 
 function drawWhaleEvt(){
@@ -702,15 +767,24 @@ function updateBoar(){
   const cycle=dist%800;
   const inWindow=cycle<400;
   if(inWindow&&!boarEvt.active){
-    boarEvt.active=true;boarEvt.phase=0;boarEvt.timer=0;boarEvt.x=W+90;
+    boarEvt.active=true;boarEvt.phase=0;boarEvt.timer=0;boarEvt.x=W+180;
+    boarEvt._whaleAnnounced=false;
   }
   if(!inWindow&&boarEvt.active){boarEvt.active=false;boarEvt.fade=0;}
+  /* announce upcoming whale when boar cycle is ~60m from end */
+  if(boarEvt.active&&cycle>340&&!boarEvt._whaleAnnounced&&!sceneIntro.active){
+    boarEvt._whaleAnnounced=true;
+    announceIncomingEntity({title:'WHALE INCOMING',subtitle:'Run across the bridge!',emoji:'🐋',accentCol:'#06B6D4',holdDur:95});
+  }
   if(!boarEvt.active)return;
   boarEvt.timer++;
-  boarEvt.phase+=0.14;
-  boarEvt.x-=speed*0.95;
-  if(boarEvt.x<-180) boarEvt.x=W+80; /* loop boar back across */
-  boarEvt.fade=Math.min(1,Math.min(cycle,400-cycle)/25);
+  /* faster phase for aggressive dig animation */
+  boarEvt.phase+=0.19;
+  /* move faster than world (1.12x) — charges through underground */
+  boarEvt.x-=speed*1.12;
+  /* smooth re-entry: when off left edge, re-enter from far right */
+  if(boarEvt.x<-200) boarEvt.x=W+200;
+  boarEvt.fade=Math.min(1,Math.min(cycle,400-cycle)/35);
 }
 
 function drawBoarEvt(){
@@ -718,192 +792,153 @@ function drawBoarEvt(){
   const alpha=boarEvt.fade||0;if(alpha<=0)return;
   const bx=boarEvt.x,by=GY;
   const ph=boarEvt.phase;
-  const bob=Math.sin(ph*2)*2;          /* subtle vertical body bob */
-  const headBob=Math.sin(ph*2+0.6)*2.5;
-  const ls=Math.sin(ph*2);             /* leg swing -1..+1 */
+  /* vertical tunneling bob — 4px amplitude */
+  const digBob=Math.sin(ph*1.8)*4;
+  /* head thrust: periodically lunges upward */
+  const headThrust=Math.max(0,Math.sin(ph*0.9))*14;
+  const headBob=Math.sin(ph*1.8+0.6)*3+headThrust;
 
-  /* ── Ground ember glow ── */
-  ctx.save();ctx.globalAlpha=alpha*0.42;
-  const gGlow=ctx.createRadialGradient(bx,by,4,bx,by+2,72);
-  gGlow.addColorStop(0,'rgba(255,110,0,0.38)');
-  gGlow.addColorStop(0.5,'rgba(180,60,0,0.14)');
-  gGlow.addColorStop(1,'rgba(80,20,0,0)');
-  ctx.fillStyle=gGlow;ctx.fillRect(bx-80,by-14,160,28);
-  ctx.restore();
-
-  /* ── Ground sparks — ember scrape effect ── */
+  /* ══ DISTURBED GROUND STRIP — drawn on ground surface above boar ══ */
   ctx.save();ctx.globalAlpha=alpha;
-  const legStrike=Math.abs(ls);       /* 0=swing apex, 1=ground strike */
-  for(let i=0;i<9;i++){
-    const t2=ph*2+i*0.72;
-    const strike=Math.abs(Math.sin(t2));
-    if(strike<0.55)continue;           /* emit only near ground contact */
-    const sx=bx-40+i*10+Math.sin(t2*1.3)*5;
-    const sy=by-1;
-    const sr=0.9+strike*1.8;
-    const sa=(strike-0.55)*alpha*1.8;
-    const heat=((i+frame)%3);
-    const col=heat===0?`rgba(255,230,80,${sa})`
-              :heat===1?`rgba(255,130,20,${sa})`
-              :`rgba(255,50,0,${sa})`;
-    ctx.fillStyle=col;
-    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);ctx.fill();
-    if(sr>1.5){                        /* upward streak for hot embers */
-      ctx.strokeStyle=col;ctx.lineWidth=sr*0.5;
-      ctx.beginPath();ctx.moveTo(sx,sy);
-      ctx.lineTo(sx+(i%2===0?-1:1)*2+Math.sin(t2)*3,sy-(3+strike*6));
-      ctx.stroke();
-    }
+  /* rough dirt trench on the platform surface */
+  const trenchW=88+Math.sin(ph*2)*10;
+  const trG=ctx.createLinearGradient(bx-trenchW/2,by-6,bx-trenchW/2,by+4);
+  trG.addColorStop(0,'rgba(90,48,8,0.75)');trG.addColorStop(1,'rgba(60,30,4,0)');
+  ctx.fillStyle=trG;ctx.beginPath();ctx.ellipse(bx,by-3,trenchW/2,8,0,0,Math.PI*2);ctx.fill();
+  /* crack lines radiating from boar position */
+  ctx.strokeStyle='rgba(55,25,4,0.65)';ctx.lineWidth=1.5;
+  for(let i=0;i<5;i++){
+    const ca=ph*0.3+i*1.26;const cl=14+Math.sin(ph+i)*8;
+    ctx.beginPath();ctx.moveTo(bx+(i-2)*16,by);
+    ctx.lineTo(bx+(i-2)*16+Math.cos(ca)*cl,by-Math.abs(Math.sin(ca))*cl*0.5);ctx.stroke();
   }
-  /* Occasional dust puff at feet */
-  const dustPh=(ph*1.6)%(Math.PI*2);
-  if(dustPh<0.6){
-    const dp=dustPh/0.6;
-    ctx.globalAlpha=alpha*(1-dp)*0.35;
-    ctx.fillStyle='rgba(160,100,40,1)';
-    ctx.beginPath();ctx.arc(bx-18+Math.sin(ph*3)*8,by-3,5+dp*8,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(bx+10+Math.cos(ph*3)*6,by-2,4+dp*6,0,Math.PI*2);ctx.fill();
+  /* dirt debris spraying backward (to the right, since boar moves left) */
+  for(let i=0;i<8;i++){
+    const t2=ph*1.8+i*0.8;
+    const burst=Math.abs(Math.sin(t2));
+    if(burst<0.45)continue;
+    const dx=bx+12+i*9+Math.sin(t2*1.4)*6;
+    const dy=by-2-burst*12-i*1.5;
+    const dr=1.2+burst*2;
+    const da=burst*alpha*0.85;
+    ctx.fillStyle=i%3===0?`rgba(190,120,40,${da})`:i%3===1?`rgba(140,80,25,${da})`:`rgba(100,55,10,${da})`;
+    ctx.beginPath();ctx.arc(dx,dy,dr,0,Math.PI*2);ctx.fill();
   }
+  /* ground glow — warm amber under boar */
+  ctx.globalAlpha=alpha*0.32;
+  const gG=ctx.createRadialGradient(bx,by,6,bx,by+8,60);
+  gG.addColorStop(0,'rgba(220,110,20,0.45)');gG.addColorStop(1,'rgba(80,30,0,0)');
+  ctx.fillStyle=gG;ctx.fillRect(bx-68,by-8,136,28);
   ctx.restore();
 
-  /* ══ Main boar — translated 18px into ground for strong contact feel ══ */
-  ctx.save();ctx.globalAlpha=alpha;ctx.translate(bx,by+18);
+  /* ══ BOAR BODY — root is 42px BELOW ground; only back/head peeks up ══ */
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(bx,by+42+digBob);
 
-  /* Ground shadow ellipse */
-  ctx.fillStyle='rgba(0,0,0,0.28)';
-  ctx.beginPath();ctx.ellipse(-4,1,50,6,0,0,Math.PI*2);ctx.fill();
-
-  /* ── Legs (drawn first so body overlaps top) ── */
-  const legW=9,legH=20;
-  /* back pair */
-  ctx.fillStyle='#2e1504';
-  ctx.save();ctx.translate(-42,0+bob);ctx.rotate(-ls*0.14);
-  ctx.beginPath();ctx.roundRect(-legW/2,-4,legW,legH,3);ctx.fill();
-  /* hoof */
-  ctx.fillStyle='#1a0a02';ctx.beginPath();ctx.ellipse(0,legH-3,legW*.55,3.5,0,0,Math.PI*2);ctx.fill();
-  ctx.restore();
-  ctx.fillStyle='#2e1504';
-  ctx.save();ctx.translate(-26,0+bob);ctx.rotate(ls*0.12);
-  ctx.beginPath();ctx.roundRect(-legW/2,-4,legW,legH,3);ctx.fill();
-  ctx.fillStyle='#1a0a02';ctx.beginPath();ctx.ellipse(0,legH-3,legW*.55,3.5,0,0,Math.PI*2);ctx.fill();
-  ctx.restore();
-  /* front pair */
-  ctx.fillStyle='#3a1806';
-  ctx.save();ctx.translate(-4,0+bob);ctx.rotate(ls*0.18);
-  ctx.beginPath();ctx.roundRect(-legW/2,-4,legW,legH+2,3);ctx.fill();
-  ctx.fillStyle='#1a0a02';ctx.beginPath();ctx.ellipse(0,legH,legW*.6,4,0,0,Math.PI*2);ctx.fill();
-  ctx.restore();
-  ctx.fillStyle='#3a1806';
-  ctx.save();ctx.translate(14,0+bob);ctx.rotate(-ls*0.18);
-  ctx.beginPath();ctx.roundRect(-legW/2,-4,legW,legH+2,3);ctx.fill();
-  ctx.fillStyle='#1a0a02';ctx.beginPath();ctx.ellipse(0,legH,legW*.6,4,0,0,Math.PI*2);ctx.fill();
-  ctx.restore();
-
-  /* ── Main body ── */
-  const bodyG=ctx.createRadialGradient(-6,-20+bob,5,-6,-20+bob,50);
-  bodyG.addColorStop(0,'#7e4020');bodyG.addColorStop(0.45,'#4a2208');bodyG.addColorStop(1,'#1e0a02');
+  /* ── Main body (mostly underground) ── */
+  const bodyG=ctx.createRadialGradient(-4,-18,6,-4,-18,52);
+  bodyG.addColorStop(0,'#8a4020');bodyG.addColorStop(0.45,'#4e2208');bodyG.addColorStop(1,'#1e0a02');
   ctx.fillStyle=bodyG;
-  ctx.beginPath();ctx.ellipse(-6,-22+bob,52,32,0,0,Math.PI*2);ctx.fill();
-
-  /* Fur direction strokes */
-  ctx.strokeStyle='rgba(115,58,16,0.26)';ctx.lineWidth=1.1;
-  for(let i=0;i<11;i++){
-    const fa=i*0.58;
-    ctx.beginPath();
-    ctx.moveTo(-52+Math.cos(fa)*50,-22+bob+Math.sin(fa)*30);
-    ctx.lineTo(-52+Math.cos(fa+.36)*56,-22+bob+Math.sin(fa+.36)*34);
-    ctx.stroke();
+  ctx.beginPath();ctx.ellipse(-4,-20,52,34,0,0,Math.PI*2);ctx.fill();
+  /* fur texture */
+  ctx.strokeStyle='rgba(120,60,18,0.22)';ctx.lineWidth=1;
+  for(let i=0;i<9;i++){
+    const fa=i*0.62;
+    ctx.beginPath();ctx.moveTo(-50+Math.cos(fa)*50,-20+Math.sin(fa)*32);
+    ctx.lineTo(-50+Math.cos(fa+.38)*56,-20+Math.sin(fa+.38)*35);ctx.stroke();
   }
 
-  /* Spine ridge mane */
+  /* ── Spine ridge mane — first thing fully visible above soil ── */
   ctx.fillStyle='#180800';
-  for(let i=0;i<6;i++){
-    const mx=-26+i*9,mh=9+Math.sin(ph*1.8+i)*5;
-    ctx.beginPath();ctx.moveTo(mx,-52+bob);
-    ctx.quadraticCurveTo(mx+4.5,-(52+mh)+bob,mx+9,-52+bob);ctx.fill();
+  for(let i=0;i<7;i++){
+    const mx=-28+i*9;
+    const mh=10+Math.sin(ph*1.9+i*0.7)*6;
+    ctx.beginPath();ctx.moveTo(mx,-50);
+    ctx.quadraticCurveTo(mx+4.5,-(50+mh),mx+9,-50);ctx.fill();
+  }
+  /* shoulder humps — just cresting the soil */
+  ctx.fillStyle='#522a10';
+  ctx.beginPath();ctx.ellipse(-15,-36,26,20,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(10,-36,23,18,0,0,Math.PI*2);ctx.fill();
+
+  /* ── Head — thrusts up periodically ── */
+  /* headBob carries the surge; when positive the head breaks surface */
+  const hCy=-34+headBob;
+  const hG=ctx.createRadialGradient(26,hCy,3,26,hCy,34);
+  hG.addColorStop(0,'#8e4422');hG.addColorStop(0.5,'#4e2410');hG.addColorStop(1,'#1e0a02');
+  ctx.fillStyle=hG;
+  ctx.beginPath();ctx.ellipse(26,hCy,34,25,-0.07,0,Math.PI*2);ctx.fill();
+
+  /* ears — visible only when head thrusts up */
+  if(headThrust>4){
+    const earA=Math.min(1,(headThrust-4)/10);
+    ctx.globalAlpha=alpha*earA;
+    ctx.fillStyle='#4a2008';
+    ctx.beginPath();ctx.moveTo(12,-54+hCy+34);ctx.lineTo(5,-72+hCy+34);ctx.lineTo(20,-54+hCy+34);ctx.fill();
+    ctx.beginPath();ctx.moveTo(34,-54+hCy+34);ctx.lineTo(40,-72+hCy+34);ctx.lineTo(50,-54+hCy+34);ctx.fill();
+    ctx.globalAlpha=alpha;
   }
 
-  /* Shoulder humps */
-  ctx.fillStyle='#502810';
-  ctx.beginPath();ctx.ellipse(-14,-34+bob,26,20,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(10,-34+bob,24,19,0,0,Math.PI*2);ctx.fill();
-
-  /* ── Head — positioned at front (right), lower on body ── */
-  const hCx=26,hCy=-32+headBob;
-  const hG=ctx.createRadialGradient(hCx,hCy,3,hCx,hCy,34);
-  hG.addColorStop(0,'#8a4422');hG.addColorStop(0.5,'#4e2410');hG.addColorStop(1,'#1e0a02');
-  ctx.fillStyle=hG;
-  ctx.beginPath();ctx.ellipse(hCx,hCy,34,25,-0.06,0,Math.PI*2);ctx.fill();
-
-  /* ── Ears — atop head ── */
-  ctx.fillStyle='#4a2008';
-  ctx.beginPath();ctx.moveTo(10,-53+headBob);ctx.lineTo(3,-70+headBob);ctx.lineTo(19,-53+headBob);ctx.fill();
-  ctx.beginPath();ctx.moveTo(34,-53+headBob);ctx.lineTo(40,-70+headBob);ctx.lineTo(50,-53+headBob);ctx.fill();
-  /* inner ear */
-  ctx.fillStyle='#7a3c16';
-  ctx.beginPath();ctx.moveTo(12,-54+headBob);ctx.lineTo(6,-66+headBob);ctx.lineTo(17,-54+headBob);ctx.fill();
-  ctx.beginPath();ctx.moveTo(36,-54+headBob);ctx.lineTo(40,-65+headBob);ctx.lineTo(48,-54+headBob);ctx.fill();
-
-  /* ── Snout — forward face ── */
-  const snx=58,sny=-32+headBob;
-  const sG=ctx.createRadialGradient(snx,sny,2,snx,sny,16);
-  sG.addColorStop(0,'#6e3414');sG.addColorStop(1,'#381006');
-  ctx.fillStyle=sG;
-  ctx.beginPath();ctx.ellipse(snx,sny,16,12,0.05,0,Math.PI*2);ctx.fill();
-  /* nostrils */
+  /* snout */
+  const snx=58,sny=hCy;
+  const sG=ctx.createRadialGradient(snx,sny,2,snx,sny,15);
+  sG.addColorStop(0,'#703618');sG.addColorStop(1,'#3a1006');
+  ctx.fillStyle=sG;ctx.beginPath();ctx.ellipse(snx,sny,15,11,0.05,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#100202';
-  ctx.beginPath();ctx.ellipse(snx-5,sny+1,3.5,2.5,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(snx+5,sny+1,3.5,2.5,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(snx-5,sny+2,3,2,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(snx+5,sny+2,3,2,0,0,Math.PI*2);ctx.fill();
 
-  /* ── Tusks — emerge from snout lower jaw, curve forward ── */
-  const tw=Math.sin(ph*2.1)*5;
-  const tG=ctx.createLinearGradient(46,-44,82,-26+tw);
-  tG.addColorStop(0,'#f2eac4');tG.addColorStop(0.55,'#d8c870');tG.addColorStop(1,'#a89040');
-  ctx.fillStyle=tG;
-  ctx.shadowColor='rgba(240,220,100,0.45)';ctx.shadowBlur=5;
-  /* lower tusk — anchored at snout jaw, curves outward & down */
-  ctx.beginPath();
-  ctx.moveTo(48,-40+headBob);
-  ctx.quadraticCurveTo(68,-26+tw+headBob,84,-34+tw+headBob);
-  ctx.lineTo(80,-29+tw+headBob);
-  ctx.quadraticCurveTo(66,-21+tw+headBob,47,-35+headBob);
+  /* tusks — emerge from snout, angle downward (digging pose) */
+  const tw=Math.sin(ph*2.0)*4;
+  const tG=ctx.createLinearGradient(46,hCy-6,84,hCy+tw+12);
+  tG.addColorStop(0,'#f0e8c0');tG.addColorStop(0.6,'#d4c060');tG.addColorStop(1,'#a08030');
+  ctx.fillStyle=tG;ctx.shadowColor='rgba(230,200,80,0.4)';ctx.shadowBlur=5;
+  /* lower tusk — digs into ground */
+  ctx.beginPath();ctx.moveTo(48,hCy-2);
+  ctx.quadraticCurveTo(68,hCy+10+tw,84,hCy+4+tw);
+  ctx.lineTo(80,hCy+10+tw);
+  ctx.quadraticCurveTo(66,hCy+16+tw,47,hCy+4);
   ctx.closePath();ctx.fill();
-  /* upper tusk — anchored just above, curves outward & slightly up */
-  ctx.beginPath();
-  ctx.moveTo(48,-48+headBob);
-  ctx.quadraticCurveTo(66,-58+tw*0.4+headBob,82,-51+tw*0.6+headBob);
-  ctx.lineTo(79,-56+tw*0.4+headBob);
-  ctx.quadraticCurveTo(64,-64+tw*0.4+headBob,47,-52+headBob);
+  /* upper tusk */
+  ctx.beginPath();ctx.moveTo(48,hCy-12);
+  ctx.quadraticCurveTo(66,hCy-18+tw*0.4,82,hCy-12+tw*0.5);
+  ctx.lineTo(79,hCy-17+tw*0.4);
+  ctx.quadraticCurveTo(65,hCy-23+tw*0.4,47,hCy-16);
   ctx.closePath();ctx.fill();
   ctx.shadowBlur=0;
 
-  /* ── Eyes — on head, symmetrical, smaller clean glow ── */
-  /* Eyes sit on the head face (hCx≈26,hCy≈-32), forward half */
-  [[13,-40+headBob],[33,-40+headBob]].forEach(([ex,ey])=>{
-    /* soft red halo */
-    const eG=ctx.createRadialGradient(ex,ey,0,ex,ey,11);
-    eG.addColorStop(0,'rgba(255,50,0,0.62)');
-    eG.addColorStop(0.45,'rgba(200,10,0,0.22)');
-    eG.addColorStop(1,'rgba(150,0,0,0)');
-    ctx.fillStyle=eG;ctx.beginPath();ctx.arc(ex,ey,11,0,Math.PI*2);ctx.fill();
-    /* eyeball */
-    ctx.fillStyle='#0e0202';ctx.beginPath();ctx.arc(ex,ey,5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#cc2000';ctx.beginPath();ctx.arc(ex,ey,3.5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#ff4400';ctx.beginPath();ctx.arc(ex,ey,2,0,Math.PI*2);ctx.fill();
-    /* vertical slit pupil */
-    ctx.fillStyle='#060000';ctx.beginPath();ctx.ellipse(ex,ey,0.9,2.8,0,0,Math.PI*2);ctx.fill();
-    /* cornea highlight */
-    ctx.fillStyle='rgba(255,255,255,0.72)';ctx.beginPath();ctx.arc(ex+1.8,ey-1.8,1.1,0,Math.PI*2);ctx.fill();
+  /* eyes — on head, cleaner and symmetrical */
+  [[14,hCy-8],[34,hCy-8]].forEach(([ex,ey])=>{
+    const eG=ctx.createRadialGradient(ex,ey,0,ex,ey,10);
+    eG.addColorStop(0,'rgba(255,45,0,0.65)');eG.addColorStop(0.45,'rgba(200,10,0,0.2)');eG.addColorStop(1,'rgba(150,0,0,0)');
+    ctx.fillStyle=eG;ctx.beginPath();ctx.arc(ex,ey,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#0e0202';ctx.beginPath();ctx.arc(ex,ey,4.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#cc1e00';ctx.beginPath();ctx.arc(ex,ey,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff3800';ctx.beginPath();ctx.arc(ex,ey,1.8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#050000';ctx.beginPath();ctx.ellipse(ex,ey,0.8,2.6,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.7)';ctx.beginPath();ctx.arc(ex+1.6,ey-1.6,1,0,Math.PI*2);ctx.fill();
   });
 
-  /* ── Rumble label ── */
+  /* ground soil mask — solid platform-colour strip to bury the lower body */
+  /* This re-draws the ground color over the lower portion of the boar,
+     reinforcing the underground feel without a canvas clip call */
+  ctx.globalAlpha=alpha;
+  /* get approximate seasonal ground color — use green/dirt at 40px below body root */
+  const{i0,i1,tt}=getSeaBlend();
+  const dC=lC3(SEA_DIRT[i0],SEA_DIRT[i1],tt);
+  const maskG=ctx.createLinearGradient(0,-8,0,18);
+  maskG.addColorStop(0,'rgba(0,0,0,0)');   /* fully transparent at soil line */
+  maskG.addColorStop(0.4,`rgba(${dC},0.55)`);
+  maskG.addColorStop(1,`rgba(${dC},0.88)`);
+  ctx.fillStyle=maskG;ctx.fillRect(-68,-8,136,28); /* blend lower body into soil */
+
+  /* ── UNDERGROUND rumble label ── */
   const ti=boarEvt.timer;
-  if(ti<90||(ti>160&&ti<260)){
-    const ra=0.48+Math.sin(ph*8)*0.26;
-    ctx.save();ctx.globalAlpha=ra;ctx.fillStyle='#ff7700';
-    ctx.font=`bold ${Math.min(13,W*.028)}px Segoe UI,sans-serif`;
-    ctx.textAlign='center';ctx.shadowColor='#ff2200';ctx.shadowBlur=11;
-    ctx.fillText('💥 RUMBLE!',8,-76+headBob);
+  if(ti<80||(ti>150&&ti<240)){
+    const ra=0.45+Math.sin(ph*9)*0.28;
+    ctx.save();ctx.globalAlpha=ra*alpha;ctx.fillStyle='#ff7a00';
+    ctx.font=`bold ${Math.min(12,W*.026)}px Segoe UI,sans-serif`;
+    ctx.textAlign='center';ctx.shadowColor='#ff2200';ctx.shadowBlur=10;
+    ctx.fillText('⛏ DIGGING!',6,-68);
     ctx.shadowBlur=0;ctx.restore();
   }
   ctx.restore();
@@ -1443,6 +1478,7 @@ function draw(){
   drawPlayer();
   drawVignette();
   drawHUD();
+  drawSceneIntroBoard(); /* scene transition board — drawn above HUD */
   if(screen==='dying')drawCatchOverlay();
   if(screen==='dead')drawDeadScreen();
   if(shook)ctx.restore();
