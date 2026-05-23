@@ -283,7 +283,7 @@ cv.addEventListener('click',e=>{
 /* ── SPAWNING ── */
 let spawnClock=0;
 function spawnWave(){
-  if(whaleEvt.active||boarEvt.active)return; /* no obstacles during special events */
+  if(whaleEvt.active)return; /* no obstacles on bridge during whale event */
   const r=Math.random(),sx=W+60;
   if(r<.28)obs.push({x:sx,y:GY,w:30,h:42,type:'short'});
   else if(r<.52)obs.push({x:sx+W*.3,y:GY,w:28,h:55,type:'tall'});
@@ -703,7 +703,6 @@ function updateBoar(){
   const inWindow=cycle<400;
   if(inWindow&&!boarEvt.active){
     boarEvt.active=true;boarEvt.phase=0;boarEvt.timer=0;boarEvt.x=W+90;
-    obs=[];spawnClock=0; /* clear obstacles for clean boar entry */
   }
   if(!inWindow&&boarEvt.active){boarEvt.active=false;boarEvt.fade=0;}
   if(!boarEvt.active)return;
