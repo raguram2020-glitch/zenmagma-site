@@ -848,6 +848,7 @@ function drawBoarEvt(){
   ctx.beginPath();ctx.roundRect(-7,0,15,38,4);ctx.fill();ctx.restore();
 
   /* Rumble label */
+  const ti=boarEvt.timer;
   if(ti<90||(ti>160&&ti<260)){
     const ra=0.55+Math.sin(ph*8)*0.3;
     ctx.save();ctx.globalAlpha=ra;ctx.fillStyle='#ff7700';
