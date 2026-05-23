@@ -558,21 +558,24 @@ function drawSceneIntroBoard(){
   else if(sceneIntro.phase===1)a=1;
   else a=1-sceneIntro.timer/sceneIntro.outDur;
   a=Math.max(0,Math.min(1,a));
-  const slide=(1-a)*H*0.06; /* slides down from above */
+  const slide=(1-a)*H*0.05; /* slides down from above */
   ctx.save();
-  /* dark overlay */
-  ctx.globalAlpha=a*0.52;ctx.fillStyle='rgba(0,0,0,1)';ctx.fillRect(0,0,W,H);
-  /* board */
-  const bw=Math.min(480,W*.84),bh=Math.min(118,H*.2);
-  const bx=(W-bw)/2,by=H*.34+slide;
+  /* very light dark overlay — keeps gameplay visible */
+  ctx.globalAlpha=a*0.28;ctx.fillStyle='rgba(0,0,0,1)';ctx.fillRect(0,0,W,H);
+  /* board — higher up, transparent glass style */
+  const bw=Math.min(460,W*.80),bh=Math.min(108,H*.18);
+  const bx=(W-bw)/2,by=H*.14+slide;
   ctx.globalAlpha=a;
-  ctx.shadowColor=sceneIntro.accentCol;ctx.shadowBlur=32;
-  ctx.fillStyle='rgba(8,4,0,0.92)';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,16);ctx.fill();
-  ctx.strokeStyle=sceneIntro.accentCol;ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(bx,by,bw,bh,16);ctx.stroke();
-  ctx.shadowBlur=0;
-  /* inner accent line */
-  ctx.fillStyle=sceneIntro.accentCol;ctx.globalAlpha=a*0.18;
-  ctx.fillRect(bx+12,by+bh-6,bw-24,3);
+  /* glass panel background — low opacity */
+  ctx.shadowColor=sceneIntro.accentCol;ctx.shadowBlur=24;
+  ctx.fillStyle='rgba(5,2,0,0.32)';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,14);ctx.fill();
+  /* border — semi-transparent accent */
+  ctx.strokeStyle=sceneIntro.accentCol;ctx.lineWidth=1.8;ctx.globalAlpha=a*0.7;
+  ctx.beginPath();ctx.roundRect(bx,by,bw,bh,14);ctx.stroke();
+  ctx.shadowBlur=0;ctx.globalAlpha=a;
+  /* inner accent bar — barely visible */
+  ctx.fillStyle=sceneIntro.accentCol;ctx.globalAlpha=a*0.14;
+  ctx.fillRect(bx+14,by+bh-5,bw-28,2);
   ctx.globalAlpha=a;
   /* emoji */
   const pulse=1+Math.sin(frame*.18)*0.04;
@@ -832,7 +835,7 @@ function drawBoarEvt(){
   ctx.restore();
 
   /* ══ BOAR BODY — root is 42px BELOW ground; only back/head peeks up ══ */
-  ctx.save();ctx.globalAlpha=alpha;ctx.translate(bx,by+42+digBob);
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(bx,by+67+digBob);
 
   /* ── Main body (mostly underground) ── */
   const bodyG=ctx.createRadialGradient(-4,-18,6,-4,-18,52);
@@ -929,7 +932,7 @@ function drawBoarEvt(){
   maskG.addColorStop(0,'rgba(0,0,0,0)');   /* fully transparent at soil line */
   maskG.addColorStop(0.4,`rgba(${dC},0.55)`);
   maskG.addColorStop(1,`rgba(${dC},0.88)`);
-  ctx.fillStyle=maskG;ctx.fillRect(-68,-8,136,28); /* blend lower body into soil */
+  ctx.fillStyle=maskG;ctx.fillRect(-72,-10,144,36); /* blend lower body into soil — taller mask matches deeper offset */
 
   /* ── UNDERGROUND rumble label ── */
   const ti=boarEvt.timer;
