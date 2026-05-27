@@ -152,5 +152,3 @@ document.querySelectorAll('a[href]:not([onclick])').forEach(link => {
     setTimeout(() => { window.location.href = href; }, 200);
   });
 });
-
-console.log('🌋 ZenMagma Premium UI loaded');

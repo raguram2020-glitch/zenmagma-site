@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2048 - Join the numbers!</title>
-    <style>
+        <meta name="description" content="Slide and merge numbered tiles to reach 2048! The classic brain puzzle.">
+    <link rel="canonical" href="https://zenmagma.com/games/2048">
+    <meta property="og:title" content="2048 - ZenMagma">
+    <meta property="og:description" content="Slide and merge numbered tiles to reach 2048! The classic brain puzzle.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/2048">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/2048.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -729,7 +737,7 @@
             if (bestDirection) {
                 document.title='💡 Move '+bestDirection.toUpperCase();setTimeout(()=>document.title='2048',2000);
             } else {
-                console.log('No valid moves');
+
             }
         }
 
@@ -928,5 +936,6 @@
             }
         }
     </script>
+    <script src="../js/mobile-controls.js" defer></script>
 </body>
 </html>

@@ -1,8 +1,17 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
 <title>Sky Glider</title>
+    <meta name="description" content="Soar through the clouds on a hang glider. Avoid storm clouds and obstacles!">
+    <link rel="canonical" href="https://zenmagma.com/games/50-sky-glider">
+    <meta property="og:title" content="Sky Glider - ZenMagma">
+    <meta property="og:description" content="Soar through the clouds on a hang glider. Avoid storm clouds and obstacles!">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/50-sky-glider">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/sky-glider.jpg">
+    <meta name="twitter:card" content="summary_large_image">
 <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#87CEEB;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0}</style>
 </head>
 <body>
@@ -194,5 +203,6 @@ function draw(){
 function loop(){update();if(state==='start')drawStart();else if(state==='over'){draw();drawOver();}else draw();requestAnimationFrame(loop);}
 init();loop();
 </script>
+    <script src="../js/mobile-controls.js" defer></script>
 </body>
 </html>

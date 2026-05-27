@@ -22,6 +22,14 @@ if(!CanvasRenderingContext2D.prototype.roundRect){
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Space Shooter 🚀</title>
+    <meta name="description" content="Classic space shooter! Destroy alien ships and survive the onslaught.">
+    <link rel="canonical" href="https://zenmagma.com/games/spaceshooter">
+    <meta property="og:title" content="Space Shooter - ZenMagma">
+    <meta property="og:description" content="Classic space shooter! Destroy alien ships and survive the onslaught.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/spaceshooter">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/space-shooter.jpg">
+    <meta name="twitter:card" content="summary_large_image">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden}
@@ -515,5 +523,6 @@ cv.addEventListener('touchstart',e=>{if(!running){initGame();loop();return;}
 // Draw start screen
 drawStart();
 </script>
+    <script src="../js/mobile-controls.js" defer></script>
 </body>
 </html>

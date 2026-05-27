@@ -1,8 +1,17 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
 <title>Highway Rush</title>
+    <meta name="description" content="Dodge traffic on a skateboard! Hit the streets and dodge everything in your way.">
+    <link rel="canonical" href="https://zenmagma.com/games/49-highway-rush">
+    <meta property="og:title" content="Highway Rush - ZenMagma">
+    <meta property="og:description" content="Dodge traffic on a skateboard! Hit the streets and dodge everything in your way.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/49-highway-rush">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/highway-rush.jpg">
+    <meta name="twitter:card" content="summary_large_image">
 <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0}
 body{touch-action:none;user-select:none;-webkit-user-select:none}
 #touch-btns{display:none;position:fixed;bottom:18px;left:0;width:100%;z-index:10;pointer-events:none}
@@ -251,5 +260,6 @@ function draw(){
 function loop(){update();if(state==='start')drawStart();else if(state==='over'){draw();drawOver();}else draw();requestAnimationFrame(loop);}
 init();loop();
 </script>
+    <script src="../js/mobile-controls.js" defer></script>
 </body>
 </html>

@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spot the Difference - Game</title>
-    <style>
+        <meta name="description" content="Find all differences between two pictures! How sharp are your eyes?">
+    <link rel="canonical" href="https://zenmagma.com/games/spot-the-difference">
+    <meta property="og:title" content="Spot the Difference - ZenMagma">
+    <meta property="og:description" content="Find all differences between two pictures! How sharp are your eyes?">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/spot-the-difference">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/spot-difference.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -2510,10 +2518,8 @@
             if (paths) {
                 image1.src = paths.original;
                 image2.src = paths.modified;
-                image1.onload = () => console.log('Image 1 loaded');
-                image2.onload = () => console.log('Image 2 loaded');
                 image1.onerror = () => {
-                    console.error('Failed to load image 1');
+
                     // Fallback to canvas if image fails
                     canvas1.style.display = 'block';
                     image1.style.display = 'none';
@@ -2744,7 +2750,7 @@
             const nextBtn = document.getElementById('modalNextBtn');
 
             if (!modal || !modalTitle) {
-                console.error('Modal elements not found');
+
                 return;
             }
 
@@ -2937,5 +2943,6 @@
     </script>
 <div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
+    <script src="../js/mobile-controls.js" defer></script>
 </body>
 </html>
