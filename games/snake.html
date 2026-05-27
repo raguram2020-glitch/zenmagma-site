@@ -82,6 +82,7 @@ canvas{
   <div class="hud-box"><div class="hud-label">Best</div><div class="hud-val" id="h-best">0</div></div>
   <div class="hud-box"><div class="hud-label">Level</div><div class="hud-val" id="h-level">1</div></div>
   <div class="hud-box"><div class="hud-label">Length</div><div class="hud-val" id="h-len">1</div></div>
+  <div class="hud-box" id="wrap-box" onclick="wallWrap=!wallWrap;document.getElementById('wrap-box').style.background=wallWrap?'rgba(0,200,100,0.3)':'rgba(0,0,0,0.5)';document.getElementById('wrap-label').textContent=wallWrap?'Wrap: ON':'Wrap: OFF';" style="cursor:pointer"><div class="hud-label" id="wrap-label">Wrap: OFF</div></div>
 </div>
 <canvas id="c"></canvas>
 <div id="dpad">
@@ -132,7 +133,7 @@ resize();
 window.addEventListener('resize',()=>{resize();if(!running)drawStart();});
 
 // ── State ──
-let snake,food,dir,nextDir,score,hiScore,level,running,gamePaused,loopId,frame,particles;
+let snake,food,dir,nextDir,score,hiScore,level,running,gamePaused,loopId,frame,particles,wallWrap=false;
 let shakeF=0,shakeM=0;
 hiScore=+localStorage.getItem('snk2_hi')||0;
 document.getElementById('h-best').textContent=hiScore;
@@ -201,7 +202,8 @@ function update(){
   const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
 
   // Wall collision
-  if(head.x<0||head.x>=TC||head.y<0||head.y>=TC){die();return;}
+  if(wallWrap){head.x=(head.x+TC)%TC;head.y=(head.y+TC)%TC;}
+  else if(head.x<0||head.x>=TC||head.y<0||head.y>=TC){die();return;}
   // Self collision
   if(snake.some(s=>s.x===head.x&&s.y===head.y)){die();return;}
 

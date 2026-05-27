@@ -48,7 +48,7 @@ document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:
 
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),W=480,H=460;
 let paddle,ball,bricks,powerups,score,lives,level,frame,running;
-let particles=[],shakeF=0,ballTrail=[];
+let particles=[],shakeF=0,ballTrail=[],lasers=[],laserCharges=0;
 
 const BRICK_COLS=[
   {base:'#e74c3c',glow:'#ff2020',light:'#ff8888'},
@@ -72,7 +72,7 @@ function init(){
   paddle={x:W/2-50,y:H-30,w:100,h:14};
   ball={x:W/2,y:H-60,vx:4*(Math.random()>.5?1:-1),vy:-5,r:9,attached:true};
   powerups=[];score=0;lives=3;level=1;
-  particles=[];ballTrail=[];shakeF=0;
+  particles=[];ballTrail=[];shakeF=0;lasers=[];laserCharges=0;
   mkBricks();
   document.getElementById('sc').textContent=0;
   document.getElementById('lf').textContent=3;
@@ -92,6 +92,7 @@ cv.addEventListener('touchmove',e=>{
 },{passive:false});
 cv.addEventListener('click',()=>{
   if(ball.attached){ball.attached=false;ball.vx=4*(Math.random()>.5?1:-1);ball.vy=-6;}
+  else if(laserCharges>0){laserCharges--;lasers.push({x:paddle.x+paddle.w/2,y:paddle.y,vy:-14});}
 });
 
 function spawnParticles(x,y,col,count){
@@ -138,7 +139,7 @@ function update(){
       spawnParticles(b.x+b.w/2,b.y+b.h/2,b.col.light,6);
       shakeF=3;
       if(b.hp<=0){
-        if(Math.random()<0.22)powerups.push({x:b.x+b.w/2,y:b.y,dy:2.2,type:Math.random()<.5?'wide':'life',col:Math.random()<.5?'#43e97b':'#ff4444'});
+        if(Math.random()<0.22){const r=Math.random();const t=r<.4?'wide':r<.7?'life':'laser';const c=t==='wide'?'#43e97b':t==='life'?'#ff4444':'#00cfff';powerups.push({x:b.x+b.w/2,y:b.y,dy:2.2,type:t,col:c});}
         return false;
       }
       return true;
@@ -152,7 +153,8 @@ function update(){
     pu.y+=pu.dy;
     if(pu.y+8>paddle.y&&pu.x>paddle.x&&pu.x<paddle.x+paddle.w){
       if(pu.type==='wide')paddle.w=Math.min(180,paddle.w+24);
-      else{lives++;document.getElementById('lf').textContent=lives;}
+      else if(pu.type==='life'){lives++;document.getElementById('lf').textContent=lives;}
+      else if(pu.type==='laser'){laserCharges+=3;}
       sndPowerup();
       spawnParticles(pu.x,pu.y,pu.col,10);
       return false;
@@ -181,6 +183,21 @@ function update(){
     ball.x=paddle.x+paddle.w/2;ball.y=paddle.y-20;ball.attached=true;
     ball.vy=-(5+level*0.3);
   }
+
+  // Lasers
+  lasers=lasers.filter(l=>{
+    l.y+=l.vy;
+    bricks=bricks.filter(b=>{
+      if(l.x>b.x&&l.x<b.x+b.w&&l.y>b.y&&l.y<b.y+b.h){
+        b.hp--;b.flash=5;score+=10*level;document.getElementById('sc').textContent=score;
+        spawnParticles(b.x+b.w/2,b.y+b.h/2,b.col.light,6);
+        if(b.hp<=0){spawnParticles(b.x+b.w/2,b.y+b.h/2,'#00cfff',8);l.y=-9999;}
+        return b.hp>0;
+      }
+      return true;
+    });
+    return l.y>0;
+  });
 
   // Particles
   particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.04;});
@@ -230,7 +247,7 @@ function draw(){
     ctx.beginPath();ctx.roundRect(pu.x-14,pu.y,28,14,4);ctx.fill();
     ctx.shadowBlur=0;
     ctx.fillStyle='#000';ctx.font='bold 10px "Segoe UI"';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(pu.type==='wide'?'WIDE':'❤',pu.x,pu.y+7);
+    ctx.fillText(pu.type==='wide'?'WIDE':pu.type==='life'?'❤':'⚡',pu.x,pu.y+7);
     ctx.restore();
   });
 
@@ -270,6 +287,18 @@ function draw(){
   ctx.beginPath();ctx.roundRect(paddle.x,paddle.y,paddle.w,paddle.h,7);ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(paddle.x+4,paddle.y+2,paddle.w-8,4);
   ctx.shadowBlur=0;ctx.restore();
+
+  // Lasers
+  lasers.forEach(l=>{
+    ctx.save();ctx.shadowColor='#00cfff';ctx.shadowBlur=16;
+    ctx.strokeStyle='#00cfff';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(l.x,l.y);ctx.lineTo(l.x,l.y+24);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(l.x,l.y);ctx.lineTo(l.x,l.y+24);ctx.stroke();
+    ctx.restore();
+  });
+  // Laser charge HUD
+  if(laserCharges>0){ctx.save();ctx.shadowColor='#00cfff';ctx.shadowBlur=10;ctx.fillStyle='#00cfff';ctx.font='bold 13px "Segoe UI"';ctx.textAlign='left';ctx.fillText('⚡ ×'+laserCharges,8,H-10);ctx.restore();}
 
   // Particles
   particles.forEach(p=>{

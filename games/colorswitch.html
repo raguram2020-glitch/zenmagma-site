@@ -191,6 +191,8 @@
         let lives = 3;
         let gameRunning = false;
         let gameLoopId = null;
+        let particles = [];
+        let lastPlayerX = 0;
 
         const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
         const colorEmojis = ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠'];
@@ -227,6 +229,7 @@
             score = 0;
             lives = 3;
             obstacles = [];
+            particles = [];
             gameRunning = true;
             speed = 3;
             spawnRate = 100;
@@ -244,8 +247,12 @@
         }
 
         function update() {
+            const prevX = player.x;
             if (keys['ArrowLeft'] || keys['a']) player.x = Math.max(0, player.x - 8);
             if (keys['ArrowRight'] || keys['d']) player.x = Math.min(canvas.width - player.width, player.x + 8);
+            if (player.x !== prevX && Math.random() < 0.6) {
+                particles.push({x: player.x + player.width/2 + (Math.random()-0.5)*player.width, y: player.y + player.height/2, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2+1, life: 1, color: targetColor});
+            }
 
             spawnCounter++;
             if (spawnCounter > spawnRate) {
@@ -291,6 +298,8 @@
 
             document.getElementById('score').textContent = score;
             document.getElementById('lives').textContent = lives;
+
+            particles = particles.filter(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.04; return p.life > 0; });
         }
 
         function changeTargetColor() {
@@ -303,9 +312,22 @@
             ctx.fillStyle = '#f0f0f0';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Neon particle trail
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life * 0.7;
+                ctx.shadowColor = p.color; ctx.shadowBlur = 12;
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 5 * p.life, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            });
+
             // Draw player
+            ctx.save();
+            ctx.shadowColor = targetColor; ctx.shadowBlur = 18;
             ctx.fillStyle = targetColor;
             ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.restore();
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
             ctx.strokeRect(player.x, player.y, player.width, player.height);

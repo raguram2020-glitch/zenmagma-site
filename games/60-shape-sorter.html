@@ -64,10 +64,11 @@ function mkLevel(){
 }
 function draw(){
   ctx.fillStyle="#0a0800";ctx.fillRect(0,0,W,H);
-  slots.forEach(s=>{ctx.strokeStyle=s.filled?"#2ecc71":"#555";ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.beginPath();if(s.type==="circle")ctx.arc(s.x,s.y,30,0,Math.PI*2);else ctx.rect(s.x-30,s.y-30,60,60);ctx.stroke();ctx.setLineDash([]);if(!s.filled){ctx.fillStyle="rgba(255,255,255,.1)";drawShape(ctx,s.type,s.x,s.y,26,s.color+"44");}else{ctx.fillStyle="#2ecc71";ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✓",s.x,s.y);}});
+  slots.forEach(s=>{ctx.strokeStyle=s.filled?"#2ecc71":"#555";ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.beginPath();if(s.type==="circle")ctx.arc(s.x,s.y,30,0,Math.PI*2);else ctx.rect(s.x-30,s.y-30,60,60);ctx.stroke();ctx.setLineDash([]);if(!s.filled){ctx.fillStyle="rgba(255,255,255,.1)";drawShape(ctx,s.type,s.x,s.y,26,s.color+"44");}else{ctx.fillStyle="#2ecc71";ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✓",s.x,s.y);}ctx.fillStyle=s.filled?"#2ecc71":"rgba(255,255,255,.5)";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.textBaseline="top";ctx.fillText(s.type,s.x,s.y+32);});
   shapes.forEach(s=>{if(!s.sorted)drawShape(ctx,s.type,s.x,s.y,s.r,s.color);});
 }
 let offX=0,offY=0;
+function cvPos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*(W/r.width),y:(e.clientY-r.top)*(H/r.height)};}
 cv.addEventListener("mousedown",e=>{const mx=e.offsetX,my=e.offsetY;dragging=shapes.find(s=>!s.sorted&&Math.hypot(s.x-mx,s.y-my)<s.r+5);if(dragging){offX=mx-dragging.x;offY=my-dragging.y;}});
 cv.addEventListener("mousemove",e=>{if(dragging){dragging.x=e.offsetX-offX;dragging.y=e.offsetY-offY;draw();}});
 cv.addEventListener("mouseup",e=>{
@@ -77,6 +78,9 @@ cv.addEventListener("mouseup",e=>{
   dragging=null;draw();
   if(shapes.every(s=>s.sorted)){level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkLevel();draw();},500);}
 });
+cv.addEventListener("touchstart",e=>{e.preventDefault();const t=cvPos(e.touches[0]);dragging=shapes.find(s=>!s.sorted&&Math.hypot(s.x-t.x,s.y-t.y)<s.r+5);if(dragging){offX=t.x-dragging.x;offY=t.y-dragging.y;}},{passive:false});
+cv.addEventListener("touchmove",e=>{e.preventDefault();if(!dragging)return;const t=cvPos(e.touches[0]);dragging.x=t.x-offX;dragging.y=t.y-offY;draw();},{passive:false});
+cv.addEventListener("touchend",e=>{e.preventDefault();if(!dragging)return;const slot=slots.find(s=>!s.filled&&s.type===dragging.type&&Math.hypot(s.x-dragging.x,s.y-dragging.y)<50);if(slot){slot.filled=true;dragging.sorted=true;score+=20*level;document.getElementById("sc").textContent=score;}dragging=null;draw();if(shapes.every(s=>s.sorted)){level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkLevel();draw();},500);}},{passive:false});
 function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;setTimeout(()=>window._showMod("Time up! Score: "+score),100);}else timeLeft--;}
 function go(){document.getElementById("ov").style.display="none";running=true;timer=setInterval(tick,1000);(function lp(){if(!running)return;draw();requestAnimationFrame(lp);})();}
 mkLevel();draw();
@@ -92,6 +96,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

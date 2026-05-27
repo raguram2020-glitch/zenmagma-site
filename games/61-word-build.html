@@ -47,7 +47,7 @@ let word,tiles,built=[],score=0,level=1,timeLeft=30,timer,running=false;
 function mkQ(){
   const pool=WORDS.filter(w=>w.length<=Math.min(4+Math.floor(level/2),8));
   word=pool[Math.floor(Math.random()*pool.length)];
-  document.getElementById("target").textContent=word;built=[];
+  document.getElementById("target").textContent="_".repeat(word.length);built=[];
   // Make tiles: letters of word + extra
   const extra="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").filter(c=>!word.includes(c));
   const extras=extra.sort(()=>Math.random()-.5).slice(0,word.length+2);
@@ -60,6 +60,15 @@ function pick(i){if(built.length<word.length){built.push(tiles[i]);renderBuilt()
 function clearBuilt(){built=[];renderBuilt();}
 function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;window._showMod("Time up! Score: "+score);}else timeLeft--;}
 function go(){document.getElementById("ov").style.display="none";running=true;mkQ();clearInterval(timer);timeLeft=30;timer=setInterval(tick,1000);}
+document.addEventListener('keydown',e=>{
+  if(!running)return;
+  const k=e.key.toUpperCase();
+  if(k==='BACKSPACE'){built=built.slice(0,-1);renderBuilt();return;}
+  if(k.length===1&&/[A-Z]/.test(k)){
+    const idx=tiles.findIndex((t,i)=>t===k&&!built.includes(tiles[i]));
+    if(idx>=0&&built.length<word.length){built.push(tiles[idx]);renderBuilt();}
+  }
+});
 
 function doRestart(){
   const g=document.getElementById('goov');if(g)g.style.display='none';
@@ -72,6 +81,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

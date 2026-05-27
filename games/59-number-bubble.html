@@ -42,8 +42,10 @@ const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=440,H=320;
 let bubbles=[],score=0,level=1,timeLeft=45,timer,correct,running=false;
 function mkQ(){
   const a=Math.floor(Math.random()*(5+level*2))+1,b=Math.floor(Math.random()*(5+level*2))+1;
-  const ops=[{s:`${a} + ${b}`,a:a+b},{s:`${a+b} - ${b}`,a:a},{s:`${a} × ${b}`,a:a*b}];
-  const q=ops[Math.floor(Math.random()*Math.min(2+level,3))];
+  const divB=Math.floor(Math.random()*4)+1,divA=divB*(Math.floor(Math.random()*5)+1);
+  const ops=[{s:`${a} + ${b}`,a:a+b},{s:`${a+b} - ${b}`,a:a},{s:`${a} × ${b}`,a:a*b},{s:`${divA} ÷ ${divB}`,a:divA/divB}];
+  const maxOp=level>=4?4:Math.min(2+level,3);
+  const q=ops[Math.floor(Math.random()*maxOp)];
   correct=q.a;document.getElementById("eq").textContent=q.s+" = ?";
   bubbles=[];const n=4+level;
   for(let i=0;i<n;i++){
@@ -55,7 +57,7 @@ function mkQ(){
 }
 function draw(){
   ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);
-  bubbles.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(b.x<b.r||b.x>W-b.r)b.vx*=-1;if(b.y<b.r||b.y>H-b.r)b.vy*=-1;ctx.fillStyle=`hsla(${b.hue},70%,55%,.8)`;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,255,255,.4)";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 18px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(b.val,b.x,b.y);});
+  bubbles.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(b.x<b.r||b.x>W-b.r)b.vx*=-1;if(b.y<b.r||b.y>H-b.r)b.vy*=-1;const isCorrectBubble=b.val===correct;const r=isCorrectBubble?b.r+3:b.r;ctx.save();if(isCorrectBubble){ctx.shadowColor='rgba(255,255,100,0.9)';ctx.shadowBlur=18;}ctx.fillStyle=isCorrectBubble?`hsla(${b.hue},90%,65%,.95)`:`hsla(${b.hue},70%,55%,.8)`;ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=isCorrectBubble?"rgba(255,255,100,.8)":"rgba(255,255,255,.4)";ctx.lineWidth=isCorrectBubble?3:2;ctx.stroke();ctx.restore();ctx.fillStyle="#fff";ctx.font=`bold ${isCorrectBubble?20:18}px Segoe UI`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(b.val,b.x,b.y);});
 }
 cv.addEventListener("click",e=>{
   if(!running)return;
@@ -80,6 +82,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

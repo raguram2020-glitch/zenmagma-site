@@ -238,51 +238,78 @@
         let timeLeft = 30;
         let gameRunning = false;
         let activeMole = -1;
+        let goldenMole = -1;
         let timerInterval = null;
         let moleInterval = null;
+        let moleDelay = 800;
+
+        function getMoleDelay() {
+            if (score >= 150) return 400;
+            if (score >= 100) return 500;
+            if (score >= 50) return 650;
+            return 800;
+        }
 
         function startGame() {
             score = 0;
             timeLeft = 30;
             gameRunning = true;
+            moleDelay = 800;
+            document.getElementById('score').textContent = 0;
             document.getElementById('gameOverModal').classList.remove('active');
 
             hideMole();
+            resetMoleInterval();
 
             timerInterval = setInterval(() => {
                 timeLeft--;
                 document.getElementById('time').textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    endGame();
-                }
+                if (timeLeft <= 0) endGame();
             }, 1000);
-
-            moleInterval = setInterval(() => {
-                if (gameRunning) {
-                    showRandomMole();
-                }
-            }, 800);
 
             showRandomMole();
         }
 
+        function resetMoleInterval() {
+            clearInterval(moleInterval);
+            moleInterval = setInterval(() => {
+                if (gameRunning) showRandomMole();
+            }, getMoleDelay());
+        }
+
         function showRandomMole() {
             hideMole();
+            goldenMole = Math.random() < 0.12 ? Math.floor(Math.random() * 9) : -1;
             activeMole = Math.floor(Math.random() * 9);
-            document.getElementById(`mole${activeMole}`).classList.add('active');
+            const el = document.getElementById(`mole${activeMole}`);
+            el.classList.add('active');
+            el.textContent = goldenMole === activeMole ? '⭐' : '🧌';
+            if (goldenMole === activeMole) el.style.filter = 'drop-shadow(0 0 8px gold)';
+            else el.style.filter = '';
         }
 
         function hideMole() {
             for (let i = 0; i < 9; i++) {
-                document.getElementById(`mole${i}`).classList.remove('active');
+                const el = document.getElementById(`mole${i}`);
+                el.classList.remove('active');
+                el.style.filter = '';
             }
         }
 
         function hitMole(index) {
-            if (!gameRunning || activeMole !== index) return;
-
-            score += 10;
+            if (!gameRunning) return;
+            if (activeMole !== index) {
+                // Miss penalty
+                score = Math.max(0, score - 5);
+                document.getElementById('score').textContent = score;
+                return;
+            }
+            const pts = goldenMole === index ? 30 : 10;
+            score += pts;
             document.getElementById('score').textContent = score;
+            // Speed up on milestones
+            const newDelay = getMoleDelay();
+            if (newDelay !== moleDelay) { moleDelay = newDelay; resetMoleInterval(); }
             hideMole();
             showRandomMole();
         }
@@ -292,7 +319,6 @@
             clearInterval(timerInterval);
             clearInterval(moleInterval);
             hideMole();
-
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOverModal').classList.add('active');
         }

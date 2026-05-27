@@ -73,7 +73,7 @@ function showWin(msg){
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
 const N=4,SZ=90;
-let tiles=[],empty,moves=0,best=Infinity,running=false;
+let tiles=[],empty,moves=0,best=+localStorage.getItem('ts_best')||Infinity,running=false;
 const COLORS=["#1a9850","#2ecc71","#27ae60","#16a085","#1abc9c","#0e6655","#148f77","#17a589","#1d8348","#239b56","#196f3d","#1e8449","#229954","#28b463","#2ecc71"];
 function mkTiles(){tiles=[];for(let i=0;i<15;i++)tiles.push(i+1);tiles.push(0);shuffle();empty=tiles.indexOf(0);}
 function shuffle(){for(let i=tiles.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[tiles[i],tiles[j]]=[tiles[j],tiles[i]];}}
@@ -95,7 +95,7 @@ cv.addEventListener("click",e=>{
   if(!running)return;
   const c=Math.floor(e.offsetX/SZ),r=Math.floor(e.offsetY/SZ),idx=r*N+c;
   const er=Math.floor(empty/N),ec=empty%N;
-  if(Math.abs(er-r)+Math.abs(ec-c)===1){[tiles[idx],tiles[empty]]=[tiles[empty],tiles[idx]];empty=idx;moves++;document.getElementById("mv").textContent=moves;draw();if(isWon()){if(moves<best){best=moves;document.getElementById("best").textContent=best;}setTimeout(()=>{window._showMod("Solved in "+moves+" moves! ");ng();},200);}}
+  if(Math.abs(er-r)+Math.abs(ec-c)===1){[tiles[idx],tiles[empty]]=[tiles[empty],tiles[idx]];empty=idx;moves++;document.getElementById("mv").textContent=moves;draw();if(isWon()){if(moves<best){best=moves;localStorage.setItem('ts_best',best);document.getElementById("best").textContent=best;}setTimeout(()=>{window._showMod("Solved in "+moves+" moves! ");ng();},200);}}
 });
 function go(){document.getElementById("ov").style.display="none";running=true;draw();}
 function ng(){do{mkTiles();}while(!isSolvable());empty=tiles.indexOf(0);moves=0;document.getElementById("mv").textContent=0;if(running)draw();}
@@ -112,6 +112,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

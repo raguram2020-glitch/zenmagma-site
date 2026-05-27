@@ -197,8 +197,10 @@
         <div class="question" id="question">What is 2 + 2?</div>
 
         <div class="options" id="options"></div>
-
-        
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:12px">
+            <button id="btn5050" onclick="use5050()" style="padding:10px 22px;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff">🎯 50:50 (1×)</button>
+            <button id="btnSkip" onclick="useSkip()" style="padding:10px 22px;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;background:linear-gradient(135deg,#43e97b,#38f9d7);color:#fff">⏭ Skip (1×)</button>
+        </div>
     </div>
 
     <div class="modal" id="finishModal">
@@ -230,14 +232,39 @@
         let currentQuestion = 0;
         let score = 0;
         let answered = false;
+        let used5050 = false, usedSkip = false;
 
         document.addEventListener('DOMContentLoaded', startQuiz);
 
         function startQuiz() {
             currentQuestion = 0;
             score = 0;
+            used5050 = false; usedSkip = false;
+            document.getElementById('btn5050').disabled = false; document.getElementById('btn5050').style.opacity = '1';
+            document.getElementById('btnSkip').disabled = false; document.getElementById('btnSkip').style.opacity = '1';
             document.getElementById('finishModal').classList.remove('active');
             showQuestion();
+        }
+
+        function use5050() {
+            if (used5050 || answered) return;
+            used5050 = true;
+            document.getElementById('btn5050').disabled = true; document.getElementById('btn5050').style.opacity = '0.4';
+            const quiz = quizzes[currentQuestion];
+            const opts = document.querySelectorAll('.option');
+            let removed = 0;
+            for (let i = 0; i < opts.length && removed < 2; i++) {
+                if (i !== quiz.answer) { opts[i].style.visibility = 'hidden'; removed++; }
+            }
+        }
+
+        function useSkip() {
+            if (usedSkip || answered) return;
+            usedSkip = true;
+            document.getElementById('btnSkip').disabled = true; document.getElementById('btnSkip').style.opacity = '0.4';
+            answered = true;
+            currentQuestion++;
+            setTimeout(showQuestion, 300);
         }
 
         function showQuestion() {

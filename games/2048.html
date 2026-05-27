@@ -291,6 +291,7 @@
             grid: [],
             score: 0,
             bestScore: localStorage.getItem('bestScore') || 0,
+            undoUsed: false,
             isGameOver: false,
             hasWon: false,
             history: [],
@@ -373,6 +374,9 @@
             game.hasWon = false;
             game.history = [];
             game.autoRunning = false;
+            game.undoUsed = false;
+            document.getElementById('undoBtn').textContent = 'Undo';
+            document.getElementById('undoBtn').style.opacity = '1';
 
             document.getElementById('gameOverModal').classList.remove('active');
             document.getElementById('winModal').classList.remove('active');
@@ -671,16 +675,20 @@
         }
 
         function undoMove() {
-            if (game.history.length === 0) {
-                console.log('No moves to undo');
+            if (game.undoUsed) {
+                document.getElementById('undoBtn').textContent = 'Undo (used)';
                 return;
             }
+            if (game.history.length === 0) return;
 
             const previous = game.history.pop();
             game.grid = previous.grid;
             game.score = previous.score;
             game.isGameOver = false;
             game.hasWon = false;
+            game.undoUsed = true;
+            document.getElementById('undoBtn').textContent = 'Undo (used)';
+            document.getElementById('undoBtn').style.opacity = '0.5';
 
             playSound('undo');
             renderBoard();
