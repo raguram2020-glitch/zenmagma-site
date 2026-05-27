@@ -45,6 +45,9 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/engagement.css">
 <link rel="stylesheet" href="css/theme-neon.css">
+<link rel="stylesheet" href="css/intro.css">
+<!-- Preload intro video for faster start -->
+<link rel="preload" href="Videos/Intro_New.mp4" as="video" type="video/mp4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" media="print" onload="this.media='all'">
@@ -232,6 +235,7 @@
 <script src="js/engagement.js"></script>
 <script src="js/post-game.js"></script>
 <script src="js/animations.js"></script>
+<script src="js/intro-manager.js"></script>
 <script>
 /* ── Fix viewport height on mobile (accounts for browser chrome) ── */
 function setVH() { document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); }
@@ -326,10 +330,16 @@ document.addEventListener('DOMContentLoaded', () => {
     frameWrap.style.borderRadius = '16px';
   }
 
-  // Frame — set src then inject responsive CSS on load
+  // Frame — play cinematic intro first, then load the game
   const iframe = document.getElementById('game-iframe');
-  iframe.src = game.src;
   iframe.addEventListener('load', () => injectResponsiveCSS(iframe), { once: false });
+
+  IntroManager.run({
+    onComplete() {
+      // Intro finished (or skipped) — now hand control to the game
+      iframe.src = game.src;
+    }
+  });
 
   // Info
   document.getElementById('game-title').textContent = game.title;
