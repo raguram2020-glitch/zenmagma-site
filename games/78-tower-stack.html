@@ -37,7 +37,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=400,H=500;
-let stack,moving,score,height,best,running=false;
+let stack,moving,score,height,best,running=false,slowUntil=0,powerMsg='';
 function init(){stack=[{x:W/2-60,w:120,y:H-40,color:"#e74c3c"}];moving={x:0,w:120,spd:4,dir:1,y:H-80};score=0;height=0;best=parseInt(localStorage.getItem("stackbest")||"0");document.getElementById("bt").textContent=best;}
 function drop(){
   const top=stack[stack.length-1];const overlap_x=Math.max(moving.x,top.x);const overlap_end=Math.min(moving.x+moving.w,top.x+top.w);const overlap=overlap_end-overlap_x;
@@ -46,19 +46,23 @@ function drop(){
   stack.push({x:overlap_x,w:overlap,y:moving.y,color:colors[stack.length%colors.length]});
   const perfect=Math.abs(overlap-top.w)<4;score+=perfect?20:Math.round(overlap/top.w*10);height++;
   document.getElementById("sc").textContent=score;document.getElementById("ht").textContent=height;
+  // Power-up every 10 blocks
+  if(height>0&&height%10===0){const pu=Math.random()<0.5?'slow':'wide';if(pu==='slow'){slowUntil=height+15;powerMsg='⏱ SLOW-MO!';}else{moving.w=Math.min(W*0.6,moving.w+20);powerMsg='📏 WIDTH BOOST!';}setTimeout(()=>powerMsg='',2000);}
   // Scroll view up
   if(stack.length>8){stack.forEach(s=>s.y+=40);moving.y+=40;}
-  moving={x:Math.random()<.5?-120:W,w:overlap,spd:Math.min(8,4+height*.15),dir:Math.random()<.5?1:-1,y:moving.y-40};
+  moving={x:Math.random()<.5?-120:W,w:overlap,spd:Math.min(6,4+height*.15),dir:Math.random()<.5?1:-1,y:moving.y-40};
 }
 cv.addEventListener("click",()=>{if(running)drop();});
 cv.addEventListener("touchstart",e=>{e.preventDefault();if(running)drop();},{passive:false});
-function update(){moving.x+=moving.spd*moving.dir;if(moving.x+moving.w>W+10||moving.x<-10)moving.dir*=-1;}
+function update(){const spd=height<slowUntil?moving.spd*0.5:moving.spd;moving.x+=spd*moving.dir;if(moving.x+moving.w>W+10||moving.x<-10)moving.dir*=-1;}
 function draw(){
   const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#0a0800");g.addColorStop(1,"#1a1400");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   stack.forEach(s=>{ctx.fillStyle=s.color;ctx.fillRect(s.x,s.y,s.w,36);ctx.fillStyle="rgba(255,255,255,.2)";ctx.fillRect(s.x,s.y,s.w,8);});
+  if(powerMsg){ctx.fillStyle="#ffd200";ctx.font="bold 18px sans-serif";ctx.textAlign="center";ctx.fillText(powerMsg,W/2,30);}
   ctx.fillStyle="#f1c40f";ctx.fillRect(moving.x,moving.y,moving.w,36);ctx.fillStyle="rgba(255,255,255,.3)";ctx.fillRect(moving.x,moving.y,moving.w,8);
-  // Danger line
-  if(!running){ctx.fillStyle="rgba(255,0,0,.5)";ctx.fillRect(0,moving.y,W,2);}
+  // Danger line — always visible so player can gauge risk
+  ctx.fillStyle="rgba(255,0,0,.4)";ctx.fillRect(0,moving.y+36,W,2);
+  ctx.fillStyle="rgba(255,0,0,.15)";ctx.fillRect(0,moving.y+36,W,H-(moving.y+36));
 }
 function go(){document.getElementById("ov").style.display="none";running=true;init();(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
 
@@ -67,6 +71,6 @@ function doRestart(){
   const w=document.getElementById('winov');if(w)w.style.display='none';
   init();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

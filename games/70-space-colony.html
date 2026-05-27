@@ -14,7 +14,18 @@
 </div>
 <div id="log" style="color:#aaa;font-size:.85em;height:24px;padding:4px;text-align:center"></div>
 </div>
-<div id="ov"><div id="ob"><h2>Space Colony</h2><p>Build and manage a colony on a distant planet! Balance energy, water, food and population. Survive 30 days!</p><button class="btn" onclick="go()">Colonize!</button></div></div>
+<div id="ov"><div id="ob"><h2>Space Colony</h2>
+<p style="text-align:left;color:#ccc;font-size:.88em;line-height:1.6">
+<b style="color:#f1c40f">Goal:</b> Survive 30 days without running out of Energy ⚡, Water 💧, or Food 🍖.<br><br>
+<b style="color:#f1c40f">Buildings:</b><br>
+☀️ Solar (+15 Energy/day, costs 50E)<br>
+💧 Water Pump (+20 Water/day, costs 60W)<br>
+🌿 Farm (+15 Food/day, costs 40F)<br>
+🏠 Habitat (+2 Population, costs 80 all)<br><br>
+<b style="color:#f1c40f">Each colonist consumes:</b> 2E · 3W · 4F per day<br>
+<b style="color:#e74c3c">⚠️ If any resource hits 0, the colony collapses!</b>
+</p>
+<button class="btn" onclick="go()">Colonize!</button></div></div>
 <script>
 
 // === Sound Engine ===
@@ -73,7 +84,20 @@ function nextDay(){
   if(day>=30)setTimeout(()=>window._showMod("Colony survived 30 days! Score: "+score),200);
   score=day*pop*10;
 }
-function upd(){document.getElementById("en").textContent=Math.round(energy);document.getElementById("wr").textContent=Math.round(water);document.getElementById("fd").textContent=Math.round(food);document.getElementById("pop").textContent=pop;}
+function upd(){
+  const en=Math.round(energy),wr=Math.round(water),fd=Math.round(food);
+  document.getElementById("en").textContent=en;document.getElementById("wr").textContent=wr;document.getElementById("fd").textContent=fd;document.getElementById("pop").textContent=pop;
+  // Flash red when critical
+  document.getElementById("en").parentElement.style.background=en<25?"rgba(231,76,60,.5)":"rgba(255,255,255,.12)";
+  document.getElementById("wr").parentElement.style.background=wr<25?"rgba(52,152,219,.5)":"rgba(255,255,255,.12)";
+  document.getElementById("fd").parentElement.style.background=fd<25?"rgba(46,204,113,.4)":"rgba(255,255,255,.12)";
+  // Building recommendation
+  const recs=[];
+  if(en<25)recs.push("⚡ Energy critical — build Solar ☀️");
+  else if(wr<25)recs.push("💧 Water critical — build Water Pump 💧");
+  else if(fd<25)recs.push("🍖 Food critical — build Farm 🌿");
+  if(recs.length)log("⚠️ "+recs[0]);
+}
 function log(m){document.getElementById("log").textContent=m;}
 function go(){document.getElementById("ov").style.display="none";running=true;draw();upd();}
 init();draw();
@@ -83,6 +107,6 @@ function doRestart(){
   const w=document.getElementById('winov');if(w)w.style.display='none';
   init();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

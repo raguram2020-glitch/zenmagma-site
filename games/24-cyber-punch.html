@@ -41,27 +41,28 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=400;
-let player,enemies,effects,score,hp,wave,frame,running;
+let player,enemies,effects,score,hp,wave,frame,running,paused=false,waveClearTimer=0;
 const keys={};
 function init(){player={x:W/2,y:H-80,r:18,spd:4};enemies=[];effects=[];score=0;hp=100;wave=1;frame=0;}
 function spawnWave(){const n=2+wave*2;for(let i=0;i<n;i++){const side=Math.random()<0.5?-30:W+30;enemies.push({x:side,y:100+Math.random()*(H-200),r:16,hp:30+wave*10,maxHp:30+wave*10,spd:1+wave*.3,attack:0,color:`hsl(${Math.floor(Math.random()*360)},70%,50%)`});}}
-document.addEventListener("keydown",e=>keys[e.key]=true);document.addEventListener("keyup",e=>keys[e.key]=false);
+document.addEventListener("keydown",e=>{if(e.key===' '&&running){e.preventDefault();paused=!paused;}keys[e.key]=true;});document.addEventListener("keyup",e=>keys[e.key]=false);
 cv.addEventListener("click",e=>{
   if(!running)return;
   const mx=e.offsetX,my=e.offsetY;
   enemies.forEach(en=>{if(Math.hypot(mx-en.x,my-en.y)<en.r+12){en.hp-=20+Math.random()*15;score+=5*wave;document.getElementById("sc").textContent=score;effects.push({x:en.x,y:en.y-20,text:"PUNCH!",life:25,color:"#f953c6"});if(en.hp<=0){effects.push({x:en.x,y:en.y,text:"KO!",life:40,color:"#f1c40f"});score+=50*wave;document.getElementById("sc").textContent=score;}}});
 });
 function update(){
+  if(paused)return;
   frame++;
   if(keys["ArrowLeft"])player.x=Math.max(player.r,player.x-player.spd);
   if(keys["ArrowRight"])player.x=Math.min(W-player.r,player.x+player.spd);
   if(keys["ArrowUp"])player.y=Math.max(50,player.y-player.spd);
   if(keys["ArrowDown"])player.y=Math.min(H-player.r,player.y+player.spd);
   enemies=enemies.filter(e=>e.hp>0);
-  enemies.forEach(e=>{const a=Math.atan2(player.y-e.y,player.x-e.x);e.x+=Math.cos(a)*e.spd;e.y+=Math.sin(a)*e.spd;e.attack++;if(e.attack>90+Math.random()*30){if(Math.hypot(e.x-player.x,e.y-player.y)<60){hp-=8;document.getElementById("hp").textContent=Math.max(0,Math.round(hp));}e.attack=0;}});
+  enemies.forEach(e=>{const a=Math.atan2(player.y-e.y,player.x-e.x);e.x+=Math.cos(a)*e.spd;e.y+=Math.sin(a)*e.spd;e.attack++;if(e.attack>90+Math.random()*30){if(Math.hypot(e.x-player.x,e.y-player.y)<60){hp-=3;document.getElementById("hp").textContent=Math.max(0,Math.round(hp));}e.attack=0;}});
   effects=effects.filter(p=>{p.life--;return p.life>0;});
   if(hp<=0){running=false;setTimeout(()=>window._showMod("Knocked out! Score: "+score),200);}
-  if(enemies.length===0){wave++;document.getElementById("wv").textContent=wave;setTimeout(spawnWave,600);}
+  if(enemies.length===0&&waveClearTimer===0){waveClearTimer=120;effects.push({x:W/2,y:H/2,text:"Wave "+(wave)+" Cleared! 🎉",life:120,color:"#f1c40f"});setTimeout(()=>{wave++;document.getElementById("wv").textContent=wave;spawnWave();waveClearTimer=0;},2000);}
 }
 function draw(){
   ctx.fillStyle="#05000f";ctx.fillRect(0,0,W,H);
@@ -76,7 +77,8 @@ function draw(){
     ctx.fillStyle="#fff";ctx.font="bold 12px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("👊",e.x,e.y);
   });
   ctx.fillStyle="#f953c6";ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#fff";ctx.font="18px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("😤",player.x,player.y);
-  effects.forEach(ef=>{ctx.globalAlpha=ef.life/40;ctx.fillStyle=ef.color;ctx.font="bold 18px sans-serif";ctx.textAlign="center";ctx.fillText(ef.text,ef.x,ef.y-((40-ef.life)*.5));ctx.globalAlpha=1;});
+  effects.forEach(ef=>{ctx.globalAlpha=ef.life/Math.max(ef.life,40);ctx.fillStyle=ef.color;ctx.font=ef.life>80?"bold 26px sans-serif":"bold 18px sans-serif";ctx.textAlign="center";ctx.fillText(ef.text,ef.x,ef.y-((40-Math.min(ef.life,40))*.5));ctx.globalAlpha=1;});
+  if(paused){ctx.fillStyle="rgba(0,0,0,.55)";ctx.fillRect(0,0,W,H);ctx.fillStyle="#fff";ctx.font="bold 32px sans-serif";ctx.textAlign="center";ctx.fillText("⏸ PAUSED",W/2,H/2);ctx.font="14px sans-serif";ctx.fillStyle="#aaa";ctx.fillText("Press Space to resume",W/2,H/2+36);}
   ctx.fillStyle="#1a001a";ctx.fillRect(10,H-18,200,12);ctx.fillStyle="#e74c3c";ctx.fillRect(10,H-18,200*(hp/100),12);
 }
 function go(){document.getElementById("ov").style.display="none";running=true;spawnWave();(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
@@ -88,6 +90,6 @@ function doRestart(){
   const w=document.getElementById('winov');if(w)w.style.display='none';
   init();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

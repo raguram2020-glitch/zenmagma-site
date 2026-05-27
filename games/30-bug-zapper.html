@@ -41,19 +41,20 @@ function showWin(msg){
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=460;
 let bugs,zapFX,score,combo,timer,timeLeft,running;
-const BUG_TYPES=[{emoji:"🦟",pts:10,good:true},{emoji:"🦗",pts:15,good:true},{emoji:"🦋",pts:5,good:true},{emoji:"🐛",pts:20,good:true},{emoji:"🐞",pts:-30,good:false}];
+const BUG_TYPES=[{emoji:"🦟",pts:10,good:true},{emoji:"🦗",pts:15,good:true},{emoji:"🦋",pts:5,good:true},{emoji:"🐛",pts:20,good:true},{emoji:"🐞",pts:-10,good:false}];
 function spawnBug(){const t=BUG_TYPES[Math.floor(Math.random()*BUG_TYPES.length)];bugs.push({x:Math.random()*W,y:Math.random()*H,dx:(Math.random()-.5)*3,dy:(Math.random()-.5)*3,r:20,type:t,wobble:Math.random()*Math.PI*2,life:0});}
 function init(){bugs=[];zapFX=[];score=0;combo=1;timeLeft=60;document.getElementById("sc").textContent=0;document.getElementById("tm").textContent=60;document.getElementById("cb").textContent="x1";}
 function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;setTimeout(()=>window._showMod("Time up! Score: "+score),100);}else{timeLeft--;}}
 cv.addEventListener("click",e=>{
   if(!running)return;
   const mx=e.offsetX,my=e.offsetY;let hit=false;
-  bugs=bugs.filter(b=>{if(Math.hypot(mx-b.x,my-b.y)<b.r+8){hit=true;if(!b.type.good){combo=1;score=Math.max(0,score+b.type.pts*combo);zapFX.push({x:b.x,y:b.y,text:"WRONG! -30",color:"#e74c3c",life:30});}else{score+=b.type.pts*combo;combo++;zapFX.push({x:b.x,y:b.y,text:"+"+b.type.pts*combo+"  x"+combo,color:"#f9d423",life:30});}document.getElementById("sc").textContent=score;document.getElementById("cb").textContent="x"+combo;return false;}return true;});
+  bugs=bugs.filter(b=>{if(Math.hypot(mx-b.x,my-b.y)<b.r+8){hit=true;if(!b.type.good){combo=1;score=Math.max(0,score+b.type.pts);zapFX.push({x:b.x,y:b.y,text:"WRONG! -10",color:"#e74c3c",life:30});}else{score+=b.type.pts*combo;combo++;zapFX.push({x:b.x,y:b.y,text:"+"+b.type.pts*combo+"  x"+combo,color:"#f9d423",life:30});if(combo>=5)zapFX.push({x:W/2,y:H/2,text:"🔥 COMBO x"+combo+"!",color:"#ff6b35",life:50});}document.getElementById("sc").textContent=score;document.getElementById("cb").textContent="x"+combo;return false;}return true;});
   if(!hit){combo=1;document.getElementById("cb").textContent="x1";}
 });
 function update(){
   bugs.forEach(b=>{b.x+=b.dx+Math.sin(b.wobble+=0.05)*.5;b.y+=b.dy+Math.cos(b.wobble)*.5;if(b.x<-30)b.x=W+30;if(b.x>W+30)b.x=-30;if(b.y<-30)b.y=H+30;if(b.y>H+30)b.y=-30;b.life++;});
-  if(bugs.length<8&&Math.random()<0.05)spawnBug();
+  const spawnChance=0.02+(60-timeLeft)/60*0.1;
+  if(bugs.length<8&&Math.random()<spawnChance)spawnBug();
   zapFX=zapFX.filter(z=>{z.life--;return z.life>0;});
 }
 function draw(){

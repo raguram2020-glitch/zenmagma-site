@@ -213,6 +213,12 @@
         <button class="mode-btn"        id="modePVP" onclick="setGameMode('pvp')">vs Player</button>
     </div>
 
+    <div class="game-mode" id="diffRow" style="margin-top:-10px;margin-bottom:14px;">
+        <button class="mode-btn" id="diffEasy"   onclick="setDiff('easy')">Easy</button>
+        <button class="mode-btn active" id="diffNormal" onclick="setDiff('normal')">Normal</button>
+        <button class="mode-btn" id="diffHard"   onclick="setDiff('hard')">Hard</button>
+    </div>
+
     <div class="game-status" id="gameStatus">Your turn</div>
 
     <!-- Board: cells 0-8, keys 1-9 -->
@@ -284,6 +290,8 @@ let gameActive   = true;
 let gameMode     = 'ai';       // 'ai' | 'pvp'
 let focusedCell  = 0;          // keyboard cursor
 let aiPending    = false;      // prevent moves while AI is thinking
+
+let aiDifficulty = 'normal'; // 'easy' | 'normal' | 'hard'
 
 let stats = {
     winsX: parseInt(localStorage.getItem('tttWinsX') || '0'),
@@ -383,10 +391,19 @@ function setFocus(idx) {
 /* ══════════════════════════════
    GAME MODE
 ══════════════════════════════ */
+function setDiff(d) {
+    aiDifficulty = d;
+    ['easy','normal','hard'].forEach(x =>
+        document.getElementById('diff'+x.charAt(0).toUpperCase()+x.slice(1))
+            .classList.toggle('active', x === d));
+    newGame();
+}
+
 function setGameMode(mode) {
     gameMode = mode;
     document.getElementById('modeAI') .classList.toggle('active', mode === 'ai');
     document.getElementById('modePVP').classList.toggle('active', mode === 'pvp');
+    document.getElementById('diffRow').style.display = mode === 'ai' ? 'flex' : 'none';
     newGame();
 }
 
@@ -424,9 +441,25 @@ function makeMove(index) {
 function makeAIMove() {
     if (!gameActive) return;
 
-    let best = -Infinity, move = -1;
-    for (let i = 0; i < 9; i++) {
-        if (board[i] === '') {
+    const empty = board.map((v,i) => v==='' ? i : -1).filter(i => i>=0);
+    let move = -1;
+
+    if (aiDifficulty === 'easy') {
+        // Random move
+        move = empty[Math.floor(Math.random() * empty.length)];
+    } else if (aiDifficulty === 'normal') {
+        // Minimax depth-limited to 3 (beatable)
+        let best = -Infinity;
+        for (const i of empty) {
+            board[i] = 'O';
+            const s = minimaxDepth(board, 0, false, 3);
+            board[i] = '';
+            if (s > best) { best = s; move = i; }
+        }
+    } else {
+        // Hard: full minimax (unbeatable)
+        let best = -Infinity;
+        for (const i of empty) {
             board[i] = 'O';
             const s = minimax(board, 0, false);
             board[i] = '';
@@ -452,6 +485,25 @@ function makeAIMove() {
 
         currentPlayer = 'X';
         updateStatus();
+    }
+}
+
+function minimaxDepth(b, depth, isMax, maxDepth) {
+    const score = evalBoard(b);
+    if (score !== 0) return score > 0 ? 10 - depth : -10 + depth;
+    if (b.every(c => c !== '') || depth >= maxDepth) return 0;
+    if (isMax) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (b[i] === '') { b[i]='O'; best=Math.max(best,minimaxDepth(b,depth+1,false,maxDepth)); b[i]=''; }
+        }
+        return best;
+    } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (b[i] === '') { b[i]='X'; best=Math.min(best,minimaxDepth(b,depth+1,true,maxDepth)); b[i]=''; }
+        }
+        return best;
     }
 }
 

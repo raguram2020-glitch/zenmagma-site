@@ -5,6 +5,7 @@
 <a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
 
 <div id="hud"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Lives:<b id="lf"> 3</b></span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<div style="width:420px;max-width:96vw;margin:2px auto 4px;height:6px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden"><div id="lvbar" style="height:100%;width:0%;background:linear-gradient(90deg,#ff4500,#ff8c00);border-radius:4px;transition:width .3s"></div></div>
 <canvas id="c" width="420" height="480"></canvas>
 <p style="text-align:center;color:#aaa;font-size:.8em">Arrow keys / tap sides to move. Dodge falling lava bombs!</p>
 <div id="ov"><div id="ob"><h2>Volcano Escape</h2><p>Lava bombs rain from above! Move left and right to dodge them. Collect the blue crystals for bonus points!</p><button class="btn" onclick="go()">Run!</button></div></div>
@@ -41,9 +42,9 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=420,H=480;
-let player,bombs,crystals,particles,score,lives,level,frame,running,timer;
+let player,bombs,crystals,particles,score,lives,level,frame,running,timer,iframes=0;
 const keys={};
-function init(){player={x:W/2,y:H-40,r:14,spd:5};bombs=[];crystals=[];particles=[];score=0;lives=3;level=1;frame=0;timer=0;}
+function init(){player={x:W/2,y:H-40,r:14,spd:5};bombs=[];crystals=[];particles=[];score=0;lives=3;level=1;frame=0;timer=0;iframes=0;}
 function spawnBomb(){const x=20+Math.random()*(W-40);bombs.push({x,y:-20,r:12+level*2,dy:3+level*.5+Math.random()*2,hot:Math.random()<0.3});}
 function spawnCrystal(){if(Math.random()<0.1)crystals.push({x:20+Math.random()*(W-40),y:-20,r:10,dy:2});}
 document.addEventListener("keydown",e=>keys[e.key]=true);document.addEventListener("keyup",e=>keys[e.key]=false);
@@ -54,10 +55,12 @@ function update(){
   if(keys["ArrowLeft"])player.x=Math.max(player.r,player.x-player.spd);
   if(keys["ArrowRight"])player.x=Math.min(W-player.r,player.x+player.spd);
   if(timer%(Math.max(10,30-level*3))===0)spawnBomb();spawnCrystal();
-  bombs=bombs.filter(b=>{b.y+=b.dy;if(b.y>H){return false;}if(Math.hypot(b.x-player.x,b.y-player.y)<b.r+player.r){lives--;document.getElementById("lf").textContent=lives;for(let i=0;i<10;i++)particles.push({x:player.x,y:player.y,dx:(Math.random()-.5)*5,dy:-Math.random()*5,life:30,color:"#ff4500"});if(lives<=0){running=false;setTimeout(()=>window._showMod("Caught by lava! Score: "+score),200);}return false;}return true;});
+  if(iframes>0)iframes--;
+  bombs=bombs.filter(b=>{b.y+=b.dy;if(b.y>H){return false;}if(iframes===0&&Math.hypot(b.x-player.x,b.y-player.y)<b.r+player.r){lives--;document.getElementById("lf").textContent=lives;iframes=60;for(let i=0;i<10;i++)particles.push({x:player.x,y:player.y,dx:(Math.random()-.5)*5,dy:-Math.random()*5,life:30,color:"#ff4500"});if(lives<=0){running=false;setTimeout(()=>window._showMod("Caught by lava! Score: "+score),200);}return false;}return true;});
   crystals=crystals.filter(cr=>{cr.y+=cr.dy;if(Math.hypot(cr.x-player.x,cr.y-player.y)<cr.r+player.r){score+=50*level;document.getElementById("sc").textContent=score;return false;}return cr.y<H;});
   particles=particles.filter(p=>{p.x+=p.dx;p.y+=p.dy;p.life--;return p.life>0;});
   score+=0.01*level;document.getElementById("sc").textContent=Math.round(score);
+  const pct=Math.min(100,Math.round(score)/(level*300)*100);document.getElementById("lvbar").style.width=pct+"%";
   if(Math.round(score)>level*300){level++;document.getElementById("lv").textContent=level;}
 }
 function draw(){
@@ -73,6 +76,7 @@ function draw(){
   crystals.forEach(cr=>{ctx.fillStyle="#00bfff";ctx.beginPath();ctx.moveTo(cr.x,cr.y-cr.r);ctx.lineTo(cr.x+cr.r,cr.y);ctx.lineTo(cr.x,cr.y+cr.r);ctx.lineTo(cr.x-cr.r,cr.y);ctx.closePath();ctx.fill();});
   ctx.fillStyle="#4a90d9";ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="18px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🧍",player.x,player.y);
   particles.forEach(p=>{ctx.globalAlpha=p.life/30;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;});
+  if(iframes>0&&Math.floor(iframes/6)%2===0){ctx.globalAlpha=0.35;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(player.x,player.y,player.r+4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
 }
 function go(){document.getElementById("ov").style.display="none";running=true;(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
 init();
@@ -82,6 +86,6 @@ function doRestart(){
   const w=document.getElementById('winov');if(w)w.style.display='none';
   init();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

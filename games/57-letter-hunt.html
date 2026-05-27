@@ -39,7 +39,7 @@ function showWin(msg){
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=380;
 const COLORS=["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6","#1abc9c","#e67e22","#1a9850"];
-let letters=[],next=0,score=0,timeLeft=60,timer,running=false;
+let letters=[],next=0,score=0,timeLeft=60,timer,running=false,glowPulse=0;
 function mkLetters(){
   letters=[];
   for(let i=0;i<26;i++){
@@ -49,19 +49,32 @@ function mkLetters(){
   }
 }
 function draw(){
+  glowPulse+=0.08;
   ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);
-  letters.forEach(l=>{if(l.found)return;ctx.fillStyle=l.color;ctx.beginPath();ctx.arc(l.x,l.y,18,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 16px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(l.ch,l.x,l.y);});
+  letters.forEach(l=>{
+    if(l.found)return;
+    const isNext=l.ch===String.fromCharCode(65+next);
+    if(isNext){
+      const glow=0.4+0.4*Math.sin(glowPulse);
+      ctx.save();ctx.shadowColor="#1abc9c";ctx.shadowBlur=18*glow+4;
+      ctx.fillStyle=l.color;ctx.beginPath();ctx.arc(l.x,l.y,22,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.fillStyle=l.color;ctx.beginPath();ctx.arc(l.x,l.y,18,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle="#fff";ctx.font=isNext?"bold 18px Segoe UI":"bold 16px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(l.ch,l.x,l.y);
+  });
 }
 cv.addEventListener("click",e=>{
   if(!running)return;
   const mx=e.offsetX,my=e.offsetY;
   const l=letters.find(l=>!l.found&&Math.hypot(l.x-mx,l.y-my)<22);
   if(!l)return;
-  if(l.ch===String.fromCharCode(65+next)){l.found=true;next++;score+=10*(next);document.getElementById("sc").textContent=score;document.getElementById("nxt").textContent=next<26?String.fromCharCode(65+next):"Done!";draw();if(next>=26){clearInterval(timer);window._showMod("All found! Score: "+score);}}
+  if(l.ch===String.fromCharCode(65+next)){l.found=true;next++;score+=10*(next);document.getElementById("sc").textContent=score;document.getElementById("nxt").textContent=next<26?String.fromCharCode(65+next):"Done!";if(next>=26){clearInterval(timer);running=false;const bonus=timeLeft>=30?50:0;if(bonus)score+=bonus;window._showMod("All letters found! Score: "+score+(bonus?" (+50 speed bonus! ⚡)":""));}}
   else{score=Math.max(0,score-5);document.getElementById("sc").textContent=score;}
 });
 function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;window._showMod("Time up! Score: "+score);}else timeLeft--;}
-function go(){document.getElementById("ov").style.display="none";running=true;draw();timer=setInterval(tick,1000);}
+function go(){document.getElementById("ov").style.display="none";running=true;timer=setInterval(tick,1000);(function lp(){draw();if(running)requestAnimationFrame(lp);})();}
 mkLetters();draw();
 
 function doRestart(){
@@ -75,6 +88,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

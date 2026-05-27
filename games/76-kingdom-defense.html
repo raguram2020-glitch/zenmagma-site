@@ -3,6 +3,7 @@
 <div style="text-align:center"><div style="padding:6px"><span class="hv">Gold:<b id="gd"> 100</b></span><span class="hv">HP:<b id="hp"> 20</b></span><span class="hv">Wave:<b id="wv"> 1</b></span><span class="hv">Score:<b id="sc"> 0</b></span></div>
 <canvas id="c" width="480" height="380"></canvas>
 <div style="padding:6px"><button class="btn" onclick="buy('archer')">🏹 Archer (30g)</button><button class="btn" onclick="buy('mage')">🔮 Mage (60g)</button><button class="btn" onclick="buy('cannon')">💣 Cannon (90g)</button></div>
+<div id="wavemsg" style="color:#f1c40f;font-size:.9em;font-weight:700;height:22px;padding:2px"></div>
 <div style="color:#aaa;font-size:.8em;padding:4px">Click path to place tower | Enemies walk red path</div></div>
 <div id="ov"><div id="ob"><h2>Kingdom Defense</h2><p>Place towers along the path to stop enemies reaching your castle! Spend gold on archer, mage, and cannon towers.</p><button class="btn" onclick="go()">Defend!</button></div></div>
 <script>
@@ -39,13 +40,20 @@ function showWin(msg){
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=380;
 const PATH=[[0,190],[80,190],[80,100],[200,100],[200,280],[360,280],[360,120],[480,120]];
-let towers=[],enemies=[],bullets=[],gold=100,hp=20,wave=1,score=0,frame=0,running=false,tool="archer";
+let towers=[],enemies=[],bullets=[],gold=100,hp=20,wave=1,score=0,frame=0,running=false,tool="archer",hoverX=-999,hoverY=-999;
 const TOWER={archer:{r:80,spd:2,dmg:10,rate:60,color:"#27ae60",e:"🏹",cost:30},mage:{r:120,spd:3,dmg:25,rate:90,color:"#9b59b6",e:"🔮",cost:60},cannon:{r:100,spd:1.5,dmg:50,rate:150,color:"#e74c3c",e:"💣",cost:90}};
 function pathLen(t){let d=0,px=PATH[0][0],py=PATH[0][1];for(let i=1;i<PATH.length;i++){d+=Math.hypot(PATH[i][0]-px,PATH[i][1]-py);px=PATH[i][0];py=PATH[i][1];}return d;}
 function posOnPath(prog){let rem=prog*pathLen(),px=PATH[0][0],py=PATH[0][1];for(let i=1;i<PATH.length;i++){const dx=PATH[i][0]-px,dy=PATH[i][1]-py,seg=Math.hypot(dx,dy);if(rem<=seg)return{x:px+dx*(rem/seg),y:py+dy*(rem/seg)};rem-=seg;px=PATH[i][0];py=PATH[i][1];}return{x:PATH[PATH.length-1][0],y:PATH[PATH.length-1][1]};}
-function spawnWave(){for(let i=0;i<4+wave*2;i++)setTimeout(()=>enemies.push({prog:0,spd:0.0008+wave*.0001,hp:wave*20,maxHp:wave*20,r:12}),i*600);}
+function spawnWave(){
+  const n=2+wave*2;
+  document.getElementById("wavemsg").textContent="⚠️ Wave "+wave+" incoming! "+n+" enemies!";
+  setTimeout(()=>document.getElementById("wavemsg").textContent="",3000);
+  for(let i=0;i<n;i++)setTimeout(()=>enemies.push({prog:0,spd:0.0008+wave*.0001,hp:wave*20,maxHp:wave*20,r:12}),i*600+3000);
+}
 function buy(t){tool=t;}
 function distToPath(x,y){let min=Infinity;for(let i=1;i<PATH.length;i++){const ax=PATH[i-1][0],ay=PATH[i-1][1],bx=PATH[i][0],by=PATH[i][1],dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/l));min=Math.min(min,Math.hypot(x-(ax+t*dx),y-(ay+t*dy)));}return min;}
+cv.addEventListener("mousemove",e=>{hoverX=e.offsetX;hoverY=e.offsetY;});
+cv.addEventListener("mouseleave",()=>{hoverX=-999;hoverY=-999;});
 cv.addEventListener("click",e=>{
   if(!running)return;
   const mx=e.offsetX,my=e.offsetY;
@@ -68,6 +76,7 @@ function draw(){
   ctx.strokeStyle="rgba(200,50,50,.3)";ctx.lineWidth=20;ctx.stroke();
   // Castle
   ctx.fillStyle="#8B0000";ctx.fillRect(W-40,90,40,60);ctx.fillStyle="#c0392b";ctx.fillRect(W-48,80,16,20);ctx.fillRect(W-24,80,16,20);
+  if(hoverX>0&&running){const tp=TOWER[tool];ctx.strokeStyle=tp.color;ctx.globalAlpha=0.25;ctx.fillStyle=tp.color;ctx.beginPath();ctx.arc(hoverX,hoverY,tp.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=0.6;ctx.lineWidth=1.5;ctx.stroke();ctx.globalAlpha=1;}
   towers.forEach(t=>{ctx.fillStyle=t.color;ctx.beginPath();ctx.arc(t.x,t.y,14,0,Math.PI*2);ctx.fill();ctx.font="18px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(t.e,t.x,t.y);});
   enemies.forEach(e=>{const p=posOnPath(e.prog);ctx.fillStyle="#8B0000";ctx.beginPath();ctx.arc(p.x,p.y,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#aaa";ctx.fillRect(p.x-e.r,p.y-e.r-8,e.r*2,4);ctx.fillStyle="#e74c3c";ctx.fillRect(p.x-e.r,p.y-e.r-8,e.r*2*(e.hp/e.maxHp),4);ctx.fillStyle="#fff";ctx.font="16px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("👹",p.x,p.y);});
   bullets.forEach(b=>{const bx=b.x+(b.tx-b.x)*b.prog,by=b.y+(b.ty-b.y)*b.prog;ctx.fillStyle=b.color;ctx.beginPath();ctx.arc(bx,by,5,0,Math.PI*2);ctx.fill();});
@@ -85,6 +94,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

@@ -44,7 +44,8 @@ const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=500,H=440;
 let ships,ball,score,cannonballs,wind,angle,frame,dragging,running;
 function init(){ships=[];ball=null;score=0;cannonballs=10;wind=(Math.random()-.5)*0.15;angle=Math.PI/4;frame=0;dragging=false;document.getElementById("wd").textContent=(wind>0?"+":"")+wind.toFixed(2);}
 function spawnShip(){ships.push({x:Math.random()<0.5?-80:W+80,y:H*.3+Math.random()*80,spd:(Math.random()*.5+0.5)*(Math.random()<0.5?1:-1),hp:2,maxHp:2,w:70,h:30});}
-let startX,startY;
+let startX,startY,curX=0,curY=0;
+cv.addEventListener("mousemove",e=>{curX=e.offsetX;curY=e.offsetY;});
 cv.addEventListener("mousedown",e=>{dragging=true;startX=e.offsetX;startY=e.offsetY;});
 cv.addEventListener("mouseup",e=>{
   if(!running||!dragging||ball)return;dragging=false;
@@ -67,6 +68,21 @@ function draw(){
   ctx.fillStyle="#8B4513";ctx.beginPath();ctx.arc(60,H-30,40,0,Math.PI*2);ctx.fill();ctx.fillStyle="#c9a84c";ctx.save();ctx.translate(60,H-60);ctx.rotate(-Math.PI/4);ctx.fillRect(0,-8,50,16);ctx.restore();
   ships.forEach(s=>{ctx.fillStyle="#8B4513";ctx.fillRect(s.x-s.w/2,s.y-s.h/2,s.w,s.h);ctx.fillStyle="#f5f5dc";ctx.fillRect(s.x-4,s.y-s.h/2-30,8,30);ctx.beginPath();ctx.moveTo(s.x-4,s.y-s.h/2-30);ctx.lineTo(s.x+20,s.y-s.h/2-15);ctx.lineTo(s.x-4,s.y-s.h/2);ctx.fill();ctx.fillStyle="#333";ctx.fillRect(s.x-s.w/2,s.y+s.h/2-5,s.w*(s.hp/s.maxHp),5);});
   if(ball){ctx.fillStyle="#555";ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();}
+  // Trajectory preview during drag
+  if(dragging&&!ball&&cannonballs>0){
+    const dx=startX-curX,dy=startY-curY;
+    const power=Math.min(Math.hypot(dx,dy),150)/150;
+    const a=Math.atan2(-dy,-dx);
+    let px=60,py=H-60,vx=Math.cos(a)*12*power,vy=Math.sin(a)*12*power;
+    ctx.strokeStyle="rgba(201,168,76,.5)";ctx.lineWidth=2;ctx.setLineDash([6,6]);ctx.beginPath();ctx.moveTo(px,py);
+    for(let i=0;i<40&&px>=0&&px<=W&&py<=H;i++){px+=vx;vy+=0.2;vx+=wind;py+=vy;ctx.lineTo(px,py);}
+    ctx.stroke();ctx.setLineDash([]);
+    // Power meter
+    ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(10,H-50,100,10);ctx.fillStyle=power>0.7?"#e74c3c":power>0.4?"#f39c12":"#2ecc71";ctx.fillRect(10,H-50,100*power,10);
+    // Wind arrow
+    const wx=W/2,wy=H-90,wlen=wind*300;ctx.strokeStyle="#00bcd4";ctx.lineWidth=2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(wx,wy);ctx.lineTo(wx+wlen,wy);ctx.stroke();ctx.fillStyle="#00bcd4";ctx.beginPath();ctx.moveTo(wx+wlen+(wind>0?6:-6),wy);ctx.lineTo(wx+wlen-(wind>0?4:-4),wy-4);ctx.lineTo(wx+wlen-(wind>0?4:-4),wy+4);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#00bcd4";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.fillText("Wind",wx,wy-8);
+  }
 }
 function go(){document.getElementById("ov").style.display="none";running=true;spawnShip();(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
 function ng(){init();if(running)running=false;setTimeout(go,100);}
@@ -77,6 +93,6 @@ function doRestart(){
   const w=document.getElementById('winov');if(w)w.style.display='none';
   init();
 }
-</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
 <script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
 </body></html>

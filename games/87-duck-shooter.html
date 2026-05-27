@@ -45,14 +45,16 @@ function draw(){
   // Grass lumps
   for(let i=0;i<W;i+=40){ctx.fillStyle="#1a6b1a";ctx.beginPath();ctx.arc(i,H*.6+8,30,Math.PI,0);ctx.fill();}
   // Ducks
-  ducks.forEach(d=>{if(d.y>d.hy+60)return;ctx.save();ctx.translate(d.hx,d.y);if(d.hit){ctx.globalAlpha=0.5;ctx.rotate(0.5);}ctx.fillStyle=d.color;ctx.beginPath();ctx.ellipse(0,0,18,12,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f39c12";ctx.beginPath();ctx.arc(20,0,10,0,Math.PI*2);ctx.fill();ctx.fillStyle="#000";ctx.font="20px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🦆",0,0);ctx.restore();});
+  ducks.forEach(d=>{if(d.y>d.hy+60)return;const sz=d.boss?3:1;ctx.save();ctx.translate(d.hx,d.y);if(d.hit){ctx.globalAlpha=0.5;ctx.rotate(0.5);}ctx.font=(d.boss?"52":"20")+"px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(d.boss?"👑🦆":"🦆",0,0);if(d.boss&&!d.hit){ctx.fillStyle="#333";ctx.fillRect(-24,-28,48,6);ctx.fillStyle="#e74c3c";ctx.fillRect(-24,-28,48*(d.hp/d.maxHp),6);ctx.fillStyle="#fff";ctx.font="10px sans-serif";ctx.fillText("BOSS",0,-22);}ctx.restore();});
   // Shots
   shots=shots.filter(s=>{s.r+=3;s.a-=0.08;ctx.globalAlpha=s.a;ctx.strokeStyle="#f1c40f";ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;return s.a>0;});
   // UI
   ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(0,H-30,W,30);ctx.fillStyle="#fff";ctx.font="14px Segoe UI";ctx.textAlign="left";ctx.fillText("🔫 Ammo: "+ammo+"  Round: "+round,10,H-10);ctx.textAlign="right";ctx.fillText("Score: "+score,W-10,H-10);
 }
 function update(){
-  frame++;if(frame%80===0)spawnDuck();
+  frame++;if(frame%Math.max(40,80-round*8)===0)spawnDuck();
+  // Boss duck every 5th round (once per round)
+  if(round%5===0&&frame===1){ducks.push({hx:W/2,hy:220,y:300,vy:-1.2,visible:0,hit:false,color:"#e74c3c",boss:true,hp:3,maxHp:3});}
   ducks.forEach(d=>{if(d.hit){d.y+=3;return;}d.y+=d.vy;if(d.y<=d.hy-40){d.vy=1.2;}if(d.y>=d.hy+60)ducks.splice(ducks.indexOf(d),1);});
   ducks=ducks.filter(d=>!d.hit||d.y<H+50);
   if(ammo<=0&&ducks.filter(d=>!d.hit).length===0){round++;document.getElementById("rnd").textContent=round;ammo=15;document.getElementById("am").textContent=ammo;spawnDuck();spawnDuck();}
@@ -61,7 +63,7 @@ cv.addEventListener("click",e=>{
   if(!running||ammo<=0)return;
   ammo--;document.getElementById("am").textContent=ammo;
   const mx=e.offsetX,my=e.offsetY;shots.push({x:mx,y:my,r:5,a:1});
-  ducks.forEach(d=>{if(!d.hit&&Math.abs(mx-d.hx)<22&&Math.abs(my-d.y)<15){d.hit=true;score+=20*round;document.getElementById("sc").textContent=score;}});
+  ducks.forEach(d=>{if(!d.hit&&Math.abs(mx-d.hx)<(d.boss?40:22)&&Math.abs(my-d.y)<(d.boss?30:15)){if(d.boss){d.hp--;shots.push({x:mx,y:my,r:8,a:1});if(d.hp<=0){d.hit=true;score+=20*round*3;}}else{d.hit=true;score+=20*round;}document.getElementById("sc").textContent=score;}});
 });
 function go(){document.getElementById("ov").style.display="none";running=true;spawnDuck();spawnDuck();(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
 
