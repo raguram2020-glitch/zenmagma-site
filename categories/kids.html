@@ -71,8 +71,8 @@
 <script>window.ZM_BASE = '../';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap"></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap"></noscript>
 </head>
 <body>
 
@@ -96,16 +96,16 @@
 </section>
 
 <!-- Safety banner -->
-<div style="background:rgba(16,185,129,.08);border-top:1px solid rgba(16,185,129,.2);border-bottom:1px solid rgba(16,185,129,.2);padding:12px 24px;display:flex;align-items:center;gap:12px;font-size:13px;color:rgba(255,255,255,.65);justify-content:center">
+<div style="background:rgba(16,185,129,.08);border-top:1px solid rgba(16,185,129,.2);border-bottom:1px solid rgba(16,185,129,.2);padding:12px 24px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--c-text);justify-content:center">
   <span style="font-size:20px">🛡️</span>
-  All Kids games are <strong style="color:#fff">manually reviewed</strong> for safety and age-appropriateness.
+  All Kids games are <strong style="color:var(--c-text)">manually reviewed</strong> for safety and age-appropriateness.
   No violence, no adult content.
-  <a href="../about.html#values" style="color:var(--c-neon,#b388ff);font-weight:700;margin-left:6px">Learn more →</a>
+  <a href="../about.html#values" style="color:var(--c-accent);font-weight:700;margin-left:6px">Learn more →</a>
 </div>
 
 <div class="cat-page-wrap">
   <div class="related-cats">
-    <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.3);align-self:center;white-space:nowrap">Browse also:</span>
+    <span style="font-size:12px;font-weight:700;color:var(--c-muted);align-self:center;white-space:nowrap">Browse also:</span>
     <a class="related-cat-chip" href="action.html">⚡ Action</a>
     <a class="related-cat-chip" href="puzzle.html">🧩 Puzzle</a>
     <a class="related-cat-chip" href="runner.html">🏃 Runner</a>
@@ -119,10 +119,10 @@
     <button class="cat-sort-btn" onclick="sortGames('az', this)">🔤 A–Z</button>
   </div>
   <div class="games-grid wide" id="cat-grid"></div>
-  <div id="no-games" style="display:none;text-align:center;padding:60px 20px;color:rgba(255,255,255,.3)">
+  <div id="no-games" style="display:none;text-align:center;padding:60px 20px;color:var(--c-muted)">
     <div style="font-size:48px;margin-bottom:12px">🌈</div>
     <div>No kids games found yet.</div>
-    <a href="../index.html" style="color:var(--c-neon,#b388ff);font-weight:700;display:block;margin-top:12px">← Browse all games</a>
+    <a href="../index.html" style="color:var(--c-accent);font-weight:700;display:block;margin-top:12px">← Browse all games</a>
   </div>
 </div>
 

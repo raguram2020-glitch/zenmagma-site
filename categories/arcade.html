@@ -70,8 +70,8 @@
 <script>window.ZM_BASE = '../';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap"></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap"></noscript>
 </head>
 <body>
 
@@ -96,7 +96,7 @@
 
 <div class="cat-page-wrap">
   <div class="related-cats">
-    <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.3);align-self:center;white-space:nowrap">Browse also:</span>
+    <span style="font-size:12px;font-weight:700;color:var(--c-muted);align-self:center;white-space:nowrap">Browse also:</span>
     <a class="related-cat-chip" href="action.html">⚡ Action</a>
     <a class="related-cat-chip" href="puzzle.html">🧩 Puzzle</a>
     <a class="related-cat-chip" href="kids.html">🌈 Kids</a>
@@ -110,10 +110,10 @@
     <button class="cat-sort-btn" onclick="sortGames('az', this)">🔤 A–Z</button>
   </div>
   <div class="games-grid wide" id="cat-grid"></div>
-  <div id="no-games" style="display:none;text-align:center;padding:60px 20px;color:rgba(255,255,255,.3)">
+  <div id="no-games" style="display:none;text-align:center;padding:60px 20px;color:var(--c-muted)">
     <div style="font-size:48px;margin-bottom:12px">🕹️</div>
     <div>No arcade games found yet.</div>
-    <a href="../index.html" style="color:var(--c-neon,#b388ff);font-weight:700;display:block;margin-top:12px">← Browse all games</a>
+    <a href="../index.html" style="color:var(--c-accent);font-weight:700;display:block;margin-top:12px">← Browse all games</a>
   </div>
 </div>
 

@@ -1,77 +1,10 @@
 /* ═══════════════════════════════════════════════════
    ZENMAGMA — animations.js
-   All micro-interactions, animations & retention logic
-   Pure vanilla JS · No libraries · 60fps safe
+   Micro-interactions — pure vanilla JS, 60fps safe
 ═══════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────
-   1. GAME CARD 3D TILT
-   Uses transform only — zero layout cost
-───────────────────────────────────────────────────*/
-const CardTilt = (() => {
-  const STRENGTH   = 10;   // max tilt degrees
-  const SCALE      = 1.04;
-  const isMobile   = () => window.matchMedia('(max-width:768px)').matches;
-  let   active     = null;
-
-  function onMove(e) {
-    const card = e.currentTarget;
-    const { left, top, width, height } = card.getBoundingClientRect();
-    const x = ((e.clientX - left) / width  - 0.5) * STRENGTH * 2;
-    const y = ((e.clientY - top)  / height - 0.5) * STRENGTH * -2;
-    card.style.transform =
-      `perspective(700px) rotateX(${y}deg) rotateY(${x}deg) scale(${SCALE})`;
-    // Dynamic glow follows cursor
-    const px = ((e.clientX - left) / width)  * 100;
-    const py = ((e.clientY - top)  / height) * 100;
-    card.style.setProperty('--glow-x', px + '%');
-    card.style.setProperty('--glow-y', py + '%');
-  }
-
-  function onLeave(card) {
-    card.style.transform = '';
-    card.style.setProperty('--glow-x', '50%');
-    card.style.setProperty('--glow-y', '50%');
-  }
-
-  function attach(card) {
-    if (isMobile()) {
-      // Mobile: simple scale only on touch
-      card.addEventListener('touchstart', () => {
-        card.style.transform = `scale(${SCALE})`;
-        card.style.transition = 'transform .2s ease';
-      }, { passive: true });
-      card.addEventListener('touchend', () => {
-        card.style.transform = '';
-      }, { passive: true });
-      return;
-    }
-    card.style.transition =
-      'transform .12s ease-out, box-shadow .2s ease, border-color .2s ease';
-    card.addEventListener('mousemove',  onMove);
-    card.addEventListener('mouseleave', () => onLeave(card));
-  }
-
-  // Observe DOM for dynamically added cards
-  function init() {
-    const observer = new MutationObserver(muts => {
-      muts.forEach(m => m.addedNodes.forEach(n => {
-        if (n.nodeType !== 1) return;
-        if (n.classList && n.classList.contains('game-card')) attach(n);
-        if (n.querySelectorAll) n.querySelectorAll('.game-card').forEach(attach);
-      }));
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    // Attach to existing cards
-    document.querySelectorAll('.game-card').forEach(attach);
-  }
-
-  return { init, attach };
-})();
-
-
-/* ─────────────────────────────────────────────────
-   2. BUTTON RIPPLE + GLOW
+   1. BUTTON RIPPLE
    Reusable — works on any element with class .btn-ripple
 ───────────────────────────────────────────────────*/
 const ButtonFX = (() => {
@@ -93,9 +26,7 @@ const ButtonFX = (() => {
   function init() {
     // Delegate — catches dynamically added buttons too
     document.addEventListener('click', e => {
-      const btn = e.target.closest(
-        '.btn-play, .btn-pill, .dc-action, .sc-btn, .cat-pill'
-      );
+      const btn = e.target.closest('.btn-play, .btn-pill, .cat-pill');
       if (btn) createRipple({ currentTarget: btn, clientX: e.clientX, clientY: e.clientY });
     });
   }
@@ -105,75 +36,7 @@ const ButtonFX = (() => {
 
 
 /* ─────────────────────────────────────────────────
-   3. XP POPUP  —  showXpPopup(points, x, y)
-   Floats up from click point and fades out
-───────────────────────────────────────────────────*/
-function showXpPopup(points, x, y) {
-  const popup = document.createElement('div');
-  popup.className = 'xp-popup';
-  popup.innerHTML = `⚡ +${points} XP`;
-
-  // Position near click or center-top of viewport
-  var px = (x !== undefined && x !== null) ? x : window.innerWidth / 2;
-  var py = (y !== undefined && y !== null) ? y : 120;
-  popup.style.left = px + 'px';
-  popup.style.top  = py + 'px';
-
-  document.body.appendChild(popup);
-  // Remove after animation completes
-  popup.addEventListener('animationend', () => popup.remove());
-}
-
-// Convenience: show popup at element centre
-function showXpAt(points, el) {
-  if (!el) { showXpPopup(points); return; }
-  const r = el.getBoundingClientRect();
-  showXpPopup(points, r.left + r.width / 2, r.top + window.scrollY - 20);
-}
-
-
-/* ─────────────────────────────────────────────────
-   4. DAILY CHALLENGE COUNTDOWN  HH:MM:SS
-───────────────────────────────────────────────────*/
-const DailyTimer = (() => {
-  function getRemaining() {
-    const now      = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const diff = midnight - now;
-    var h  = String(Math.floor(diff / 3600000)).padStart(2, '0');
-    var m  = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-    var s  = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-    return `${h}:${m}:${s}`;
-  }
-
-  function tick() {
-    const time = getRemaining();
-    document.querySelectorAll('.dc-timer, #dc-timer').forEach(el => {
-      el.textContent = `⏰ Resets in  ${time}`;
-    });
-  }
-
-  function init() {
-    tick();
-    setInterval(tick, 1000);
-  }
-
-  return { init, getRemaining };
-})();
-
-
-/* ─────────────────────────────────────────────────
-   5. HERO EMOJI FLOAT (CSS-driven, JS sets class)
-───────────────────────────────────────────────────*/
-function initHeroFloat() {
-  const el = document.getElementById('hero-emoji');
-  if (el) el.classList.add('hero-emoji-float');
-}
-
-
-/* ─────────────────────────────────────────────────
-   6. PAGE TRANSITION — fade + slide up on load
+   2. PAGE TRANSITION — fade + slide up on load
 ───────────────────────────────────────────────────*/
 const PageTransition = (() => {
   function init() {
@@ -203,7 +66,7 @@ const PageTransition = (() => {
 
 
 /* ─────────────────────────────────────────────────
-   7. LOADING ANIMATION — dots (CSS-driven)
+   3. LOADING ANIMATION — dots (CSS-driven)
    The loader HTML lives in index.html;
    this just enhances the text
 ───────────────────────────────────────────────────*/
@@ -223,7 +86,7 @@ function initLoader() {
 
 
 /* ─────────────────────────────────────────────────
-   8. CONTINUE PLAYING  — localStorage helpers
+   4. CONTINUE PLAYING  — localStorage helpers
    Also used by app.js via addRecent / getRecent
 ───────────────────────────────────────────────────*/
 const RecentGames = (() => {
@@ -253,7 +116,7 @@ window.getRecentGames = RecentGames.getRecentGames;
 
 
 /* ─────────────────────────────────────────────────
-   9. SCROLL-TRIGGERED CARD REVEAL
+   5. SCROLL-TRIGGERED CARD REVEAL
    Cards fade + slide up when they enter viewport
 ───────────────────────────────────────────────────*/
 const ScrollReveal = (() => {
@@ -289,43 +152,11 @@ const ScrollReveal = (() => {
 
 
 /* ─────────────────────────────────────────────────
-   10. LIVE PLAYER COUNTER — subtle fake social proof
-───────────────────────────────────────────────────*/
-function initLiveCounter() {
-  const seeds = [1247, 983, 1531, 742, 2108, 890, 1376];
-  let   i     = 0;
-
-  function update() {
-    const base = seeds[i % seeds.length];
-    const jitter = Math.floor(Math.random() * 80) - 40;
-    const count  = base + jitter;
-    const el     = document.getElementById('hero-player-count');
-    if (el) {
-      el.style.transition = 'opacity .3s';
-      el.style.opacity = '0';
-      setTimeout(() => {
-        el.textContent = count.toLocaleString();
-        el.style.opacity = '1';
-      }, 300);
-    }
-    i++;
-  }
-
-  update();
-  setInterval(update, 8000);
-}
-
-
-/* ─────────────────────────────────────────────────
    BOOT — initialise everything on DOMContentLoaded
 ───────────────────────────────────────────────────*/
 document.addEventListener('DOMContentLoaded', () => {
   PageTransition.init();
   ButtonFX.init();
-  CardTilt.init();
-  DailyTimer.init();
   ScrollReveal.init();
-  initHeroFloat();
-  initLiveCounter();
   initLoader();
 });

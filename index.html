@@ -38,7 +38,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
-<meta name="theme-color" content="#7c3aed">
+<meta name="theme-color" content="#6c5ce7">
 
 <!-- ── Structured Data: WebSite + SearchAction + Organization ── -->
 <script type="application/ld+json">
@@ -92,37 +92,22 @@
 <!-- Non-blocking Google Fonts (replaces the @import in style.css) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap"></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap"></noscript>
 
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/animations.css">
-<link rel="stylesheet" href="css/theme-neon.css">
 </head>
 <body>
 
-<!-- ── NEON COSMIC BACKGROUND LAYERS ── -->
-<div id="neon-particles">
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-</div>
-<div class="noise-overlay"></div>
-<div class="vignette"></div>
-
-<!-- ── STAR CANVAS BACKGROUND ── -->
-<canvas id="stars-canvas"></canvas>
-
 <!-- ── PAGE LOADER ── -->
 <style>
-  #zm-loader{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at center,#0f0828 0%,#050510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .7s ease,visibility .7s ease;}
+  #zm-loader{position:fixed;inset:0;z-index:9999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .5s ease,visibility .5s ease;}
   #zm-loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
-  .zm-loader-logo{font-size:72px;animation:lPulse 1.6s ease-in-out infinite;filter:drop-shadow(0 0 32px #ff6b35cc) drop-shadow(0 0 60px #ff6b3566);}
-  .zm-loader-bar-wrap{width:200px;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
-  .zm-loader-bar{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#ff6b35,#ffcd3c,#a855f7);animation:lBar 1.2s ease-in-out forwards;box-shadow:0 0 12px #ff6b35;}
-  .zm-loader-text{font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;color:#7986cb;letter-spacing:3px;animation:lFade 1.4s ease-in-out infinite;}
+  .zm-loader-logo{font-size:64px;animation:lPulse 1.6s ease-in-out infinite;}
+  .zm-loader-bar-wrap{width:200px;height:4px;background:#e6e7ec;border-radius:4px;overflow:hidden;}
+  .zm-loader-bar{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#ff6b35,#6c5ce7);animation:lBar 1.2s ease-in-out forwards;}
+  .zm-loader-text{font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;color:#6b7280;letter-spacing:3px;animation:lFade 1.4s ease-in-out infinite;}
   @keyframes lPulse{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.1) rotate(2deg)}}
   @keyframes lBar{0%{width:0}60%{width:80%}100%{width:100%}}
   @keyframes lFade{0%,100%{opacity:.4}50%{opacity:1}}
@@ -151,17 +136,6 @@
     <input type="text" id="search-input" placeholder="Search 100+ games..." autocomplete="off">
   </div>
 
-  <!-- XP Bar -->
-  <div id="header-xp" title="Your XP Progress">
-    ⚡ <span id="hdr-pts">0</span> XP
-    <div class="xp-bar-wrap"><div class="xp-bar-fill" id="hdr-xp-fill" style="width:0%"></div></div>
-  </div>
-
-  <!-- Streak -->
-  <div id="header-streak" title="Daily Streak">
-    🔥 <span id="hdr-streak">0</span> day streak
-  </div>
-
   <div class="header-actions">
     <a class="btn-pill outline" href="game.html?id=quizblaze">🧠 QuizBlaze</a>
     <button class="btn-pill primary" onclick="showToast('🚀 Sign-in coming soon!')">Sign In</button>
@@ -182,24 +156,6 @@
   <!-- ── SIDEBAR ── -->
   <aside id="sidebar">
 
-    <!-- Points -->
-    <div class="sidebar-points">
-      <div class="sp-icon">🏆</div>
-      <div class="sp-info">
-        <div class="sp-pts" id="sb-pts">0 XP</div>
-        <div class="sp-label">Your Points</div>
-      </div>
-    </div>
-
-    <!-- Daily Challenge mini -->
-    <div class="sidebar-challenge" id="sb-challenge" onclick="launchDailyChallenge()">
-      <div class="sc-label">🎯 Daily Challenge</div>
-      <div class="sc-title" id="sb-challenge-title">Loading...</div>
-      <button class="sc-btn">Play Now →</button>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
     <div class="sidebar-section">
       <div class="sidebar-label">Browse Games</div>
       <div id="cat-list"></div>
@@ -218,81 +174,11 @@
   <!-- ── MAIN ── -->
   <main id="main">
 
-    <!-- ── HERO CAROUSEL ── -->
-    <div class="hero" id="hero">
-      <div class="hero-bg" id="hero-bg"></div>
-      <span id="hero-emoji" style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:flex-end;padding-right:60px;font-size:120px;line-height:1;filter:drop-shadow(0 4px 40px rgba(0,0,0,.7));pointer-events:none;opacity:.6;"></span>
-      <div class="hero-overlay"></div>
-
-      <div class="hero-content" id="hero-content">
-        <div class="hero-badge">🔥 Featured Game</div>
-        <div class="hero-title" id="hero-title">Loading...</div>
-        <div class="hero-desc" id="hero-desc"></div>
-        <div class="hero-actions">
-          <button class="btn-play" id="hero-play" onclick="heroPlay()">
-            <span class="play-icon">▶</span> Play Now
-          </button>
-          <button class="btn-pill outline" onclick="heroMore()" style="color:#fff;border-color:rgba(255,255,255,.25)">More Info</button>
-        </div>
-      </div>
-      <div class="hero-dots" id="hero-dots"></div>
-    </div>
-
-    <!-- ── GAMIFICATION BAR ── -->
-    <div id="gamification-bar">
-      <div class="gam-item">
-        <span class="gam-icon">⚡</span>
-        <div class="gam-info">
-          <div class="gam-val" id="gam-pts">0</div>
-          <div class="gam-label">XP Points</div>
-        </div>
-      </div>
-      <div class="gam-divider"></div>
-      <div class="gam-item">
-        <span class="gam-icon">🔥</span>
-        <div class="gam-info">
-          <div class="gam-val" id="gam-streak">0</div>
-          <div class="gam-label">Day Streak</div>
-        </div>
-      </div>
-      <div class="gam-divider"></div>
-      <div class="gam-item">
-        <span class="gam-icon">🎮</span>
-        <div class="gam-info">
-          <div class="gam-val" id="gam-played">0</div>
-          <div class="gam-label">Games Played</div>
-        </div>
-      </div>
-      <div class="gam-divider"></div>
-      <div class="gam-xp-wrap">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:11px;color:var(--c-muted)">Level <span id="gam-level">1</span></span>
-          <span class="gam-badge" id="gam-badge">🥉 Newcomer</span>
-        </div>
-        <div class="gam-xp-bar"><div class="gam-xp-fill" id="gam-xp-fill" style="width:0%"></div></div>
-      </div>
-    </div>
-
-    <!-- ── DAILY CHALLENGE ── -->
-    <div id="daily-challenge" onclick="launchDailyChallenge()">
-      <div class="dc-badge">
-        <div class="dc-icon">🎯</div>
-        <div class="dc-label">Daily</div>
-      </div>
-      <div class="dc-info">
-        <div class="dc-tag">⚡ Daily Challenge</div>
-        <div class="dc-title" id="dc-title">Mystery Game</div>
-        <div class="dc-sub">Complete today's challenge to earn <b style="color:var(--c-fire2)">+50 bonus XP</b></div>
-        <div class="dc-timer" id="dc-timer">Resets in: calculating...</div>
-      </div>
-      <button class="dc-action">Play Challenge →</button>
-    </div>
-
     <!-- ── CATEGORY PILLS ── -->
     <div class="cat-pills" id="cat-pills"></div>
 
     <!-- ── TRENDING NOW ── -->
-    <div class="sec-header section-glow">
+    <div class="sec-header">
       <h2 class="sec-title"><span>🔥</span> Trending Now</h2>
       <a href="#" class="see-all" onclick="filterCat('all');return false">See All →</a>
     </div>
@@ -300,8 +186,7 @@
 
     <!-- ── QUIZBLAZE SPOTLIGHT ── -->
     <div id="quizblaze-spotlight" onclick="window.location.href='game.html?id=quizblaze'" style="
-      background: linear-gradient(135deg, #1a0533 0%, #2d0a5e 40%, #0f1a3d 100%);
-      border: 1px solid rgba(168,85,247,0.35);
+      background: linear-gradient(135deg, #6c5ce7 0%, #8b7cf6 100%);
       border-radius: 20px;
       padding: 0;
       margin: 28px 0;
@@ -311,78 +196,51 @@
       display: flex;
       align-items: stretch;
       min-height: 140px;
-      box-shadow: 0 8px 40px rgba(168,85,247,0.25);
-      transition: transform 0.2s, box-shadow 0.2s;
-    " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 60px rgba(168,85,247,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 40px rgba(168,85,247,0.25)'">
-
-      <!-- animated background pulses -->
-      <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
-        <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.18) 0%,transparent 70%);top:-80px;right:60px;animation:qbPulse 3s ease-in-out infinite"></div>
-        <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%);bottom:-40px;right:200px;animation:qbPulse 4s ease-in-out infinite 1s"></div>
-      </div>
-      <style>
-        @keyframes qbPulse { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.15)} }
-        @keyframes qbFloat { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(3deg)} }
-        @keyframes qbBadge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-      </style>
+      box-shadow: var(--shadow-card-hover);
+      transition: transform 0.15s;
+    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
 
       <!-- left: content -->
       <div style="flex:1;padding:28px 32px;position:relative;z-index:1">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;font-size:11px;font-weight:800;padding:3px 12px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;animation:qbBadge 2s ease-in-out infinite">🆕 New Game</span>
-          <span style="background:rgba(168,85,247,0.2);color:#c084fc;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🧠 Quiz</span>
-          <span style="background:rgba(99,102,241,0.2);color:#818cf8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">👥 Multiplayer</span>
+          <span style="background:rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:800;padding:3px 12px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase">🆕 New Game</span>
+          <span style="background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🧠 Quiz</span>
+          <span style="background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">👥 Multiplayer</span>
         </div>
-        <div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:-.02em">
+        <div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.02em">
           🧠 QuizBlaze
         </div>
-        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.5;max-width:480px;margin-bottom:18px">
-          Multiplayer trivia battles across 8 categories. Fastest answer wins — compete live with friends or bot opponents, earn XP &amp; climb the leaderboard!
+        <div style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.5;max-width:480px;margin-bottom:18px">
+          Multiplayer trivia battles across 8 categories. Fastest answer wins — compete live with friends or bot opponents and climb the leaderboard!
         </div>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <button onclick="event.stopPropagation();window.location.href='game.html?id=quizblaze'" style="
-            background:linear-gradient(135deg,#a855f7,#6366f1);
-            border:none;color:#fff;font-size:14px;font-weight:800;
+            background:#fff;
+            border:none;color:#6c5ce7;font-size:14px;font-weight:800;
             padding:10px 24px;border-radius:12px;cursor:pointer;
-            box-shadow:0 4px 20px rgba(168,85,247,0.5);
-            transition:transform 0.15s,box-shadow 0.15s;
-          " onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 30px rgba(168,85,247,0.7)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(168,85,247,0.5)'">
+          ">
             ▶ Play Now — Free
           </button>
           <div style="display:flex;gap:20px">
             <div style="text-align:center">
-              <div style="font-size:16px;font-weight:900;color:#c084fc">8</div>
-              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Categories</div>
+              <div style="font-size:16px;font-weight:900;color:#fff">8</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600">Categories</div>
             </div>
             <div style="text-align:center">
-              <div style="font-size:16px;font-weight:900;color:#818cf8">11</div>
-              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Screens</div>
+              <div style="font-size:16px;font-weight:900;color:#fff">11</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600">Screens</div>
             </div>
             <div style="text-align:center">
-              <div style="font-size:16px;font-weight:900;color:#34d399">XP+</div>
-              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Rewards</div>
-            </div>
-            <div style="text-align:center">
-              <div style="font-size:16px;font-weight:900;color:#fb923c">Live</div>
-              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">Leaderboard</div>
+              <div style="font-size:16px;font-weight:900;color:#fff">Live</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600">Leaderboard</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- right: floating emoji -->
+      <!-- right: emoji -->
       <div style="width:140px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;flex-shrink:0">
-        <span style="font-size:80px;animation:qbFloat 3.5s ease-in-out infinite;filter:drop-shadow(0 4px 30px rgba(168,85,247,0.8))">🧠</span>
-      </div>
-    </div>
-
-    <!-- ── MYSTERY GAME ── -->
-    <div class="mystery-box" onclick="launchMystery()">
-      <div class="mb-icon">🎲</div>
-      <div class="mb-info">
-        <div class="mb-tag">🌟 Surprise Me</div>
-        <div class="mb-title">Mystery Game of the Day</div>
-        <div class="mb-sub">Click to reveal a random game — you might discover your new favourite!</div>
+        <span style="font-size:80px">🧠</span>
       </div>
     </div>
 
@@ -393,23 +251,15 @@
 
     <!-- ── RECENTLY PLAYED ── -->
     <div id="recent-section" style="display:none">
-      <div class="sec-header section-glow">
+      <div class="sec-header">
         <h2 class="sec-title"><span>🕐</span> Continue Playing</h2>
         <a href="#" class="see-all" onclick="clearRecent();return false">Clear</a>
       </div>
       <div class="scroll-row" id="recent-row"></div>
     </div>
 
-    <!-- ── MINI LEADERBOARD ── -->
-    <div class="sec-header section-glow" style="margin-bottom:14px">
-      <h2 class="sec-title"><span>🏆</span> Top Players This Week</h2>
-    </div>
-    <div id="mini-leaderboard" style="margin-bottom:36px">
-      <!-- filled by JS -->
-    </div>
-
     <!-- ── ALL GAMES ── -->
-    <div class="sec-header section-glow">
+    <div class="sec-header">
       <h2 class="sec-title" id="grid-title"><span>🎮</span> All Games</h2>
       <span id="game-count" style="color:var(--c-muted);font-size:13px;font-weight:700;"></span>
     </div>
@@ -428,7 +278,7 @@
   <div class="footer-grid">
     <div class="footer-col">
       <div class="logo" style="margin-bottom:12px;font-size:18px">🌋 ZenMagma</div>
-      <p style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.7">Free online games for kids and adults. No downloads, no sign-ups — just fun!</p>
+      <p style="font-size:12px;color:var(--c-muted);line-height:1.7">Free online games for kids and adults. No downloads, no sign-ups — just fun!</p>
     </div>
     <div class="footer-col">
       <h4>Categories</h4>
@@ -449,7 +299,6 @@
     </div>
     <div class="footer-col">
       <h4>Community</h4>
-      <a href="#mini-leaderboard" onclick="document.getElementById('mini-leaderboard').scrollIntoView({behavior:'smooth'});return false">🏆 Leaderboard</a>
       <a href="game.html?id=quizblaze">🧠 Play QuizBlaze</a>
       <a href="quizblaze-architecture.html">📐 Architecture Docs</a>
       <a href="contact.html?subject=submit">📤 Submit a Game</a>
@@ -458,11 +307,11 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 <a href="https://zenmagma.com" style="color:var(--c-neon)">ZenMagma.com</a>. All rights reserved.</span>
+    <span>© 2026 <a href="https://zenmagma.com" style="color:var(--c-accent)">ZenMagma.com</a>. All rights reserved.</span>
     <span style="display:flex;align-items:center;gap:12px">
-      <a href="privacy-policy.html" style="color:rgba(255,255,255,.35);font-size:12px">Privacy Policy</a>
-      <span style="color:rgba(255,255,255,.2)">·</span>
-      <span style="color:rgba(255,255,255,.35);font-size:12px">Made with ❤️ for players</span>
+      <a href="privacy-policy.html" style="color:var(--c-muted);font-size:12px">Privacy Policy</a>
+      <span style="color:var(--c-border-h)">·</span>
+      <span style="color:var(--c-muted);font-size:12px">Made with ❤️ for players</span>
     </span>
   </div>
 </footer>
@@ -528,47 +377,12 @@
 <!-- ── TOAST ── -->
 <div id="toast"></div>
 
-<script src="js/games-data.js?v=20260520"></script>
-<script src="js/engagement.js"></script>
+<script src="js/games-data.js?v=20260713"></script>
 <script src="js/app.js"></script>
 <script src="js/animations.js"></script>
 <script src="js/page-shared.js"></script>
 <script src="js/video-preview.js" defer></script>
-<script src="js/premium.js" defer></script>
 <script>
-/* ── STARS BACKGROUND ── */
-(function(){
-  const c=document.getElementById('stars-canvas');
-  if(!c)return;
-  const ctx=c.getContext('2d');
-  let W,H,stars=[];
-  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
-  function init(){
-    resize();stars=[];
-    for(let i=0;i<140;i++) stars.push({
-      x:Math.random()*W, y:Math.random()*H,
-      r:Math.random()*1.4+.3,
-      a:Math.random(), da:(Math.random()-.5)*.006,
-      dx:(Math.random()-.5)*.06, dy:(Math.random()-.5)*.03
-    });
-  }
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    stars.forEach(s=>{
-      s.x+=s.dx; s.y+=s.dy; s.a+=s.da;
-      if(s.x<0)s.x=W; if(s.x>W)s.x=0;
-      if(s.y<0)s.y=H; if(s.y>H)s.y=0;
-      if(s.a<0||s.a>1) s.da*=-1;
-      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(180,160,255,${s.a*.65})`;
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  window.addEventListener('resize',init);
-  init(); draw();
-})();
-
 /* ── LOADER hide — with hard 3s fallback for mobile ── */
 const _ls=Date.now();
 function _hideLoader(){
@@ -580,13 +394,6 @@ function _hideLoader(){
 window.addEventListener('load',_hideLoader);
 // Hard fallback: always hide after 3s regardless of resource load status
 setTimeout(_hideLoader, 3000);
-
-/* ── XP POPUP on card click ── */
-document.addEventListener('click', e => {
-  const card = e.target.closest('.game-card');
-  if (!card) return;
-  showXpPopup(10, e.clientX, e.clientY + window.scrollY - 40);
-});
 </script>
 
 <script>
@@ -636,13 +443,8 @@ const GameModal = (() => {
     var _m = modal(); if (_m) _m.classList.add('gm-open');
     document.body.style.overflow = 'hidden';
 
-    // XP flash
-    _showXPFlash(10);
-
     // Track
     addRecent(gameId);
-    if (window.GS) GS.addPoints(10);
-    if (typeof buildLeaderboard === 'function') buildLeaderboard();
   }
 
   function _onIframeLoad() {
@@ -669,7 +471,7 @@ const GameModal = (() => {
           onerror="this.outerHTML='<div id=&quot;gm-thumb-mini&quot; class=&quot;gm-thumb-mini-fallback&quot; style=&quot;background:${game.color}44&quot;>${game.emoji}</div>'">`;
       } else {
         thumbEl.className  = 'gm-thumb-mini-fallback';
-        thumbEl.style.background = (game.color || '#7c3aed') + '44';
+        thumbEl.style.background = (game.color || '#6c5ce7') + '44';
         thumbEl.textContent = game.emoji || '🎮';
       }
     }
@@ -684,14 +486,6 @@ const GameModal = (() => {
     // Page link
     const pageLink = document.getElementById('gm-page-link');
     if (pageLink) pageLink.href = `game.html?id=${game.slug}`;
-  }
-
-  function _showXPFlash(pts) {
-    const el = document.createElement('div');
-    el.className = 'gm-xp-flash';
-    el.textContent = `⚡ +${pts} XP`;
-    var _fw = document.getElementById('gm-frame-wrap'); if (_fw) _fw.appendChild(el);
-    el.addEventListener('animationend', () => el.remove());
   }
 
   /* ── Close ── */

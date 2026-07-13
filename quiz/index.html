@@ -7,12 +7,12 @@
 <meta name="description" content="1000+ free quizzes for kids — Maths, Science, GK, English, Logic and more. Download worksheets. Daily quiz challenge. No sign-up needed.">
 <meta name="theme-color" content="#ec4899">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0d0d14;--surface:#16161f;--card:#1e1e2e;
-  --border:rgba(255,255,255,0.08);--text:#e2e8f0;--muted:#94a3b8;
+  --bg:#f4f5f8;--surface:#ffffff;--card:#ffffff;
+  --border:#e6e7ec;--text:#1a1a2e;--muted:#6b7280;
   --pink:#ec4899;--purple:#8b5cf6;--accent:#ec4899;
   --green:#10b981;--blue:#3b82f6;--orange:#f97316;--yellow:#f59e0b;
   --sidebar:240px; --header:60px; --radius:14px;
@@ -27,11 +27,11 @@ button{cursor:pointer;font-family:inherit}
 /* ── HEADER ── */
 header{
   position:sticky;top:0;z-index:100;height:var(--header);
-  background:rgba(13,13,20,0.92);backdrop-filter:blur(12px);
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;padding:0 20px;gap:16px;
 }
-.logo{font-family:'Fredoka One',cursive;font-size:22px;
+.logo{font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;
   background:linear-gradient(135deg,#ec4899,#8b5cf6,#f59e0b);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -65,12 +65,12 @@ header{
   font-size:14px;font-weight:700;cursor:pointer;transition:0.2s;
   color:var(--text);border:none;background:transparent;width:100%;text-align:left;
 }
-.sb-item:hover{background:rgba(255,255,255,0.06)}
+.sb-item:hover{background:var(--card)}
 .sb-item.active{background:rgba(236,72,153,0.15);color:var(--pink)}
 .sb-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pink)}
 .sb-item{position:relative}
 .sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.sb-count{margin-left:auto;font-size:11px;background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:10px;color:var(--muted)}
+.sb-count{margin-left:auto;font-size:11px;background:var(--bg);padding:2px 7px;border-radius:10px;color:var(--muted)}
 .sidebar-ad{margin:16px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(236,72,153,0.12),rgba(139,92,246,0.12));border:1px dashed rgba(236,72,153,0.3);padding:16px;text-align:center;font-size:11px;color:var(--muted);min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 
 /* ── MAIN ── */
@@ -79,7 +79,7 @@ header{
 /* ── HERO BANNER ── */
 .hero-banner{
   border-radius:20px;overflow:hidden;padding:36px 40px;margin-bottom:28px;
-  background:linear-gradient(135deg,#1a0533,#3b1060,#1a0a3d);
+  background:linear-gradient(135deg,#ec4899,#8b5cf6);
   border:1px solid rgba(236,72,153,0.2);
   display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
   position:relative;
@@ -88,23 +88,23 @@ header{
   content:'📚';position:absolute;right:40px;top:50%;transform:translateY(-50%);
   font-size:120px;opacity:0.08;pointer-events:none;
 }
-.hero-text h1{font-family:'Fredoka One',cursive;font-size:clamp(24px,4vw,38px);margin-bottom:8px}
+.hero-text h1{font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(24px,4vw,38px);margin-bottom:8px}
 .hero-text h1 span{background:linear-gradient(135deg,#ec4899,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero-text p{color:rgba(255,255,255,0.65);font-size:14px;line-height:1.6;max-width:460px}
+.hero-text p{color:rgba(255,255,255,0.85);font-size:14px;line-height:1.6;max-width:460px}
 .hero-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
 .btn-hero{
-  padding:12px 24px;border-radius:14px;border:none;font-family:'Fredoka One',cursive;
+  padding:12px 24px;border-radius:14px;border:none;font-family:'Nunito',sans-serif;font-weight:900;
   font-size:16px;color:#fff;cursor:pointer;transition:0.2s;
 }
 .btn-hero.main{background:linear-gradient(135deg,#ec4899,#8b5cf6);box-shadow:0 4px 18px rgba(236,72,153,0.4)}
 .btn-hero.main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(236,72,153,0.5)}
-.btn-hero.sec{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15)}
+.btn-hero.sec{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:#fff}
 
 /* ── AD BANNER ── */
 .ad-banner{
   border-radius:var(--radius);
   background:linear-gradient(135deg,rgba(236,72,153,0.07),rgba(139,92,246,0.07));
-  border:1px dashed rgba(255,255,255,0.08);
+  border:1px dashed rgba(236,72,153,0.25);
   display:flex;align-items:center;justify-content:center;
   color:var(--muted);font-size:12px;margin-bottom:24px;position:relative;
 }
@@ -123,16 +123,16 @@ header{
   display:flex;align-items:center;justify-content:center;font-size:34px;
   box-shadow:0 6px 24px rgba(245,158,11,0.4);
 }
-.daily-info h3{font-family:'Fredoka One',cursive;font-size:20px;margin-bottom:4px}
+.daily-info h3{font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;margin-bottom:4px}
 .daily-info p{font-size:13px;color:var(--muted);margin-bottom:12px}
 .daily-meta{display:flex;gap:10px;flex-wrap:wrap}
 .daily-tag{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)}
-.daily-start{padding:10px 22px;border-radius:25px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-family:'Fredoka One',cursive;font-size:15px;border:none;box-shadow:0 4px 16px rgba(245,158,11,0.4);transition:0.2s}
+.daily-start{padding:10px 22px;border-radius:25px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:15px;border:none;box-shadow:0 4px 16px rgba(245,158,11,0.4);transition:0.2s}
 .daily-start:hover{transform:translateY(-2px)}
 
 /* ── SECTION HEADER ── */
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.sec-title{font-family:'Fredoka One',cursive;font-size:22px;display:flex;align-items:center;gap:8px}
+.sec-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;display:flex;align-items:center;gap:8px}
 .see-all{font-size:13px;font-weight:700;color:var(--pink);padding:6px 14px;border-radius:20px;border:1px solid rgba(236,72,153,0.3);transition:0.2s}
 .see-all:hover{background:rgba(236,72,153,0.1)}
 
@@ -159,10 +159,10 @@ header{
 .quiz-card:hover{transform:translateY(-5px);box-shadow:0 8px 30px rgba(236,72,153,0.25);border-color:rgba(236,72,153,0.3)}
 .qcard-top{padding:22px;position:relative}
 .qcard-emoji{font-size:40px;margin-bottom:12px;display:block}
-.qcard-title{font-family:'Fredoka One',cursive;font-size:17px;margin-bottom:6px}
+.qcard-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:17px;margin-bottom:6px}
 .qcard-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px}
 .qcard-tags{display:flex;gap:5px;flex-wrap:wrap}
-.qtag{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:800;background:rgba(255,255,255,0.08);color:var(--muted)}
+.qtag{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:800;background:var(--bg);color:var(--muted)}
 .qcard-bar{height:3px}
 .qcard-bottom{padding:12px 22px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}
 .qcard-meta{font-size:12px;color:var(--muted);display:flex;gap:12px}

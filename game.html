@@ -40,31 +40,15 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
-<meta name="theme-color" content="#ff6b35">
+<meta name="theme-color" content="#6c5ce7">
 
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/engagement.css">
-<link rel="stylesheet" href="css/theme-neon.css">
-<link rel="stylesheet" href="css/intro.css">
-<!-- Preload intro video for faster start -->
-<link rel="preload" href="Videos/Intro_New.mp4" as="video" type="video/mp4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&family=Orbitron:wght@700;900&display=swap"></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap"></noscript>
 </head>
 <body>
-
-<!-- ── NEON COSMIC BACKGROUND LAYERS ── -->
-<div id="neon-particles">
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-  <div class="neon-streak"></div>
-</div>
-<div class="noise-overlay"></div>
-<div class="vignette"></div>
 
 <!-- HEADER -->
 <header id="header">
@@ -114,20 +98,10 @@
         <button class="action-btn" onclick="shareGame()">
           <span>📤</span> Share
         </button>
-        <button class="action-btn" onclick="triggerPostGame()">
-          <span>🏆</span> Results
-        </button>
         <button class="action-btn" onclick="window.location.href='index.html'">
           <span>🌋</span> More Games
         </button>
       </div>
-    </div>
-
-    <!-- XP Mini-Bar -->
-    <div id="gp-xp-bar">
-      <span id="gp-xp-label">⚡ 0 XP · Lvl 1</span>
-      <div id="gp-xp-track"><div id="gp-xp-fill"></div></div>
-      <button id="claim-reward-btn" onclick="handleClaimReward()">🎁 Daily Reward</button>
     </div>
 
     <!-- Stats Bar -->
@@ -206,9 +180,6 @@
 <!-- TOAST -->
 <div id="toast">✅ Done!</div>
 
-<!-- DAILY REWARD POPUP -->
-<div id="reward-popup">🎁 Daily Reward Claimed!</div>
-
 <!-- MOBILE BOTTOM NAV -->
 <nav id="mobile-nav">
   <button class="mob-nav-item" onclick="window.history.back()"><span class="mn-icon">←</span>Back</button>
@@ -219,23 +190,20 @@
 </nav>
 
 <!-- Minimal footer for game page -->
-<footer style="padding:20px 28px;background:var(--c-surface);border-top:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.3)">
-  <span>© 2026 <a href="https://zenmagma.com" style="color:var(--c-neon,#b388ff)">ZenMagma.com</a> — Free Online Games</span>
+<footer style="padding:20px 28px;background:var(--c-surface);border-top:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--c-muted)">
+  <span>© 2026 <a href="https://zenmagma.com" style="color:var(--c-accent)">ZenMagma.com</a> — Free Online Games</span>
   <div style="display:flex;gap:16px;flex-wrap:wrap">
-    <a href="index.html" style="color:rgba(255,255,255,.4);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.4)'">🏠 Home</a>
-    <a href="categories/action.html" style="color:rgba(255,255,255,.4);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.4)'">⚡ Action</a>
-    <a href="categories/puzzle.html" style="color:rgba(255,255,255,.4);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.4)'">🧩 Puzzle</a>
-    <a href="categories/kids.html" style="color:rgba(255,255,255,.4);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.4)'">🌈 Kids</a>
-    <a href="about.html" style="color:rgba(255,255,255,.4);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.4)'">About</a>
-    <a href="privacy-policy.html" style="color:rgba(255,255,255,.4);transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.4)'">Privacy</a>
+    <a href="index.html" style="color:var(--c-muted);transition:color .2s" onmouseover="this.style.color='var(--c-accent)'" onmouseout="this.style.color='var(--c-muted)'">🏠 Home</a>
+    <a href="categories/action.html" style="color:var(--c-muted);transition:color .2s" onmouseover="this.style.color='var(--c-accent)'" onmouseout="this.style.color='var(--c-muted)'">⚡ Action</a>
+    <a href="categories/puzzle.html" style="color:var(--c-muted);transition:color .2s" onmouseover="this.style.color='var(--c-accent)'" onmouseout="this.style.color='var(--c-muted)'">🧩 Puzzle</a>
+    <a href="categories/kids.html" style="color:var(--c-muted);transition:color .2s" onmouseover="this.style.color='var(--c-accent)'" onmouseout="this.style.color='var(--c-muted)'">🌈 Kids</a>
+    <a href="about.html" style="color:var(--c-muted);transition:color .2s" onmouseover="this.style.color='var(--c-accent)'" onmouseout="this.style.color='var(--c-muted)'">About</a>
+    <a href="privacy-policy.html" style="color:var(--c-muted);transition:color .2s" onmouseover="this.style.color='var(--c-accent)'" onmouseout="this.style.color='var(--c-muted)'">Privacy</a>
   </div>
 </footer>
 
-<script src="js/games-data.js?v=20260520"></script>
-<script src="js/engagement.js"></script>
-<script src="js/post-game.js"></script>
+<script src="js/games-data.js?v=20260713"></script>
 <script src="js/animations.js"></script>
-<script src="js/intro-manager.js"></script>
 <script>
 /* ── Fix viewport height on mobile (accounts for browser chrome) ── */
 function setVH() { document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); }
@@ -330,21 +298,15 @@ document.addEventListener('DOMContentLoaded', () => {
     frameWrap.style.borderRadius = '16px';
   }
 
-  // Frame — play cinematic intro first, then load the game
+  // Frame — load the game directly, no intro ceremony
   const iframe = document.getElementById('game-iframe');
   iframe.addEventListener('load', () => injectResponsiveCSS(iframe), { once: false });
-
-  IntroManager.run({
-    onComplete() {
-      // Intro finished (or skipped) — now hand control to the game
-      iframe.src = game.src;
-    }
-  });
+  iframe.src = game.src;
 
   // Info
   document.getElementById('game-title').textContent = game.title;
   document.getElementById('game-cat-badge').innerHTML =
-    `<span style="background:rgba(99,102,241,0.2);color:var(--c-accent);padding:2px 10px;border-radius:12px;font-weight:800;">${cat?.label || game.category}</span>`;
+    `<span style="background:rgba(108,92,231,0.12);color:var(--c-accent);padding:2px 10px;border-radius:12px;font-weight:800;">${cat?.label || game.category}</span>`;
   document.getElementById('game-desc').textContent = game.desc;
   document.getElementById('game-controls-text').textContent = game.controls;
 
@@ -360,18 +322,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('like-btn').classList.add('liked');
   }
 
-  // Recently played + engagement
+  // Recently played
   addRecent(game.id);
-  if (window.Engagement) {
-    Engagement.addRecentGame(game.slug);
-    Engagement.updateStreak();
-    const xpResult = Engagement.addXP(10);
-    if (xpResult.unlocked) {
-      showToast(`${xpResult.unlocked.icon} Badge unlocked: ${xpResult.unlocked.label}!`, 3500);
-    }
-    // XP popup near top of page
-    if (window.showXpPopup) showXpPopup(10, window.innerWidth / 2, 140);
-  }
 
   // Related games
   renderRelated(getRelated(game, 6));
@@ -478,9 +430,6 @@ function injectResponsiveCSS(iframe) {
     const doc = iframe.contentDocument || iframe.contentWindow?.document;
     if (!doc || !doc.head) return;
 
-    // Skip if game is already fully responsive (uses resize listener / fixed canvas)
-    const bodyStyle = doc.body ? getComputedStyle(doc.body) : null;
-
     doc.getElementById('gz-resp')?.remove();
     const s = doc.createElement('style');
     s.id = 'gz-resp';
@@ -543,35 +492,6 @@ function injectResponsiveCSS(iframe) {
   } catch(e) {
     // Cross-origin or iframe not ready — silently ignore
   }
-}
-
-/* ── DAILY REWARD ── */
-function handleClaimReward() {
-  if (!window.Engagement || !Engagement.canClaimDailyReward()) return;
-  const res = Engagement.claimDailyReward();
-  if (!res) return;
-
-  const popup = document.getElementById('reward-popup');
-  if (popup) {
-    popup.textContent = `🎁 +${res.xp} XP! 🔥 ${res.streak}-day streak!`;
-    popup.classList.add('show');
-    setTimeout(() => popup.classList.remove('show'), 3000);
-  }
-  if (window.showXpPopup) showXpPopup(res.xp, window.innerWidth / 2, 200);
-
-  // Update button state
-  const btn = document.getElementById('claim-reward-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '✅ Reward Claimed'; }
-
-  if (res.badge) showToast(`${res.badge.icon} Badge: ${res.badge.label}!`, 3500);
-}
-
-/* ── POST-GAME MODAL TRIGGER (manual button) ── */
-function triggerPostGame() {
-  const params = new URLSearchParams(window.location.search);
-  const id     = params.get('id') || params.get('slug');
-  const game   = getGameById(id);
-  if (game && window.showPostGameModal) showPostGameModal({ ...game, xpEarned: 25 });
 }
 
 /* ── TOAST ── */
