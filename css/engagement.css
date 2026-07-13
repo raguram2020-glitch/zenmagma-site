@@ -1,0 +1,455 @@
+/* ═══════════════════════════════════════════════════
+   ZENMAGMA — engagement.css
+   Post-game modal, daily reward, leaderboard
+   transform + opacity only → 60fps safe
+═══════════════════════════════════════════════════ */
+
+
+/* ─────────────────────────────────────────────────
+   POST-GAME MODAL OVERLAY
+───────────────────────────────────────────────────*/
+#pgm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 18, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+#pgm-overlay.pgm-visible {
+  opacity: 1;
+}
+
+
+/* ─────────────────────────────────────────────────
+   MODAL CARD
+───────────────────────────────────────────────────*/
+.pgm-card {
+  background: linear-gradient(160deg, #13131f 0%, #0f0f1e 100%);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(124, 58, 237, 0.2),
+    0 0 60px rgba(124, 58, 237, 0.12);
+
+  transform: translateY(30px) scale(0.96);
+  opacity: 0;
+  transition: transform .38s cubic-bezier(.23,1,.32,1), opacity .38s ease;
+}
+.pgm-card.pgm-card-in {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Scrollbar inside modal */
+.pgm-card::-webkit-scrollbar { width: 4px; }
+.pgm-card::-webkit-scrollbar-track { background: transparent; }
+.pgm-card::-webkit-scrollbar-thumb { background: rgba(124,58,237,.4); border-radius: 4px; }
+
+
+/* ─────────────────────────────────────────────────
+   MODAL HEADER
+───────────────────────────────────────────────────*/
+.pgm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.pgm-emoji {
+  font-size: 42px;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(124,58,237,.6));
+}
+
+.pgm-header-text {
+  flex: 1;
+}
+
+.pgm-round-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c-accent2, #a855f7);
+  margin-bottom: 3px;
+}
+
+.pgm-game-name {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: 'Orbitron', 'Nunito', sans-serif;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.pgm-close {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.5);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, color .2s;
+  flex-shrink: 0;
+}
+.pgm-close:hover {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+}
+
+
+/* ─────────────────────────────────────────────────
+   BADGE UNLOCK BANNER
+───────────────────────────────────────────────────*/
+.pgm-badge-unlock {
+  background: linear-gradient(90deg, #ff6b35, #ffcd3c, #ff6b35);
+  background-size: 200% 100%;
+  animation: badgeShimmer 2.5s linear infinite;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  letter-spacing: .5px;
+}
+
+
+/* ─────────────────────────────────────────────────
+   XP AWARD
+───────────────────────────────────────────────────*/
+.pgm-xp-award {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.pgm-xp-glow {
+  font-family: 'Orbitron', 'Nunito', sans-serif;
+  font-size: 36px;
+  font-weight: 900;
+  color: #a855f7;
+  text-shadow: 0 0 30px rgba(168,85,247,.7), 0 0 60px rgba(168,85,247,.3);
+  animation: xpPop .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes xpPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.pgm-xp-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,.55);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+
+/* ─────────────────────────────────────────────────
+   XP PROGRESS BAR
+───────────────────────────────────────────────────*/
+.pgm-progress-wrap {
+  margin-bottom: 14px;
+}
+
+.pgm-progress-bar {
+  background: rgba(255,255,255,.08);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.pgm-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #a855f7);
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(.23,1,.32,1);
+  position: relative;
+  overflow: hidden;
+}
+.pgm-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 16px; height: 100%;
+  background: rgba(255,255,255,.4);
+  animation: xpShine 1.8s ease-in-out infinite;
+}
+
+.pgm-progress-label {
+  font-size: 11px;
+  color: rgba(255,255,255,.4);
+  text-align: right;
+  font-weight: 600;
+}
+
+
+/* ─────────────────────────────────────────────────
+   STREAK
+───────────────────────────────────────────────────*/
+.pgm-streak {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff6b35;
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 8px 14px;
+  background: rgba(255,107,53,.08);
+  border: 1px solid rgba(255,107,53,.2);
+  border-radius: 10px;
+}
+
+
+/* ─────────────────────────────────────────────────
+   RECOMMENDED GAMES
+───────────────────────────────────────────────────*/
+.pgm-rec-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.4);
+  margin-bottom: 10px;
+}
+
+.pgm-rec-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.pgm-rec-row::-webkit-scrollbar { display: none; }
+
+.pgm-rec-card {
+  flex-shrink: 0;
+  width: 100px;
+  text-decoration: none;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.pgm-rec-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(124,58,237,.5);
+}
+
+.pgm-rec-thumb {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.pgm-rec-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pgm-rec-name {
+  padding: 6px 6px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,.8);
+  text-align: center;
+  line-height: 1.2;
+}
+
+
+/* ─────────────────────────────────────────────────
+   ACTION BUTTONS
+───────────────────────────────────────────────────*/
+.pgm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pgm-btn {
+  display: block;
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: 'Orbitron', 'Nunito', sans-serif;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: transform .12s ease, box-shadow .2s ease, opacity .2s;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: .5px;
+}
+.pgm-btn:hover { transform: translateY(-2px); }
+.pgm-btn:active { transform: translateY(0); }
+
+.pgm-btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(124,58,237,.5);
+}
+.pgm-btn-primary:hover {
+  box-shadow: 0 6px 30px rgba(124,58,237,.75);
+}
+
+.pgm-btn-outline {
+  background: transparent;
+  color: rgba(255,255,255,.8);
+  border: 1px solid rgba(255,255,255,.18);
+}
+.pgm-btn-outline:hover {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.35);
+}
+
+.pgm-btn-ghost {
+  background: transparent;
+  color: rgba(255,255,255,.45);
+  font-size: 13px;
+  padding: 10px;
+}
+.pgm-btn-ghost:hover { color: rgba(255,255,255,.8); }
+
+
+/* ─────────────────────────────────────────────────
+   AUTO-SUGGEST COUNTDOWN
+───────────────────────────────────────────────────*/
+.pgm-auto-label {
+  margin-top: 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,.35);
+  text-align: center;
+  font-weight: 600;
+}
+.pgm-auto-label strong {
+  color: #a855f7;
+}
+
+
+/* ─────────────────────────────────────────────────
+   GAME PAGE — XP MINI-BAR  (inside game.html)
+───────────────────────────────────────────────────*/
+#gp-xp-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(124,58,237,.08);
+  border: 1px solid rgba(124,58,237,.2);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+#gp-xp-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--c-accent2, #a855f7);
+  white-space: nowrap;
+  font-family: 'Orbitron', 'Nunito', sans-serif;
+}
+
+#gp-xp-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+#gp-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #a855f7);
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(.23,1,.32,1);
+  width: 0%;
+}
+
+#claim-reward-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ff6b35, #ffcd3c);
+  color: #fff;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity .2s, transform .15s;
+}
+#claim-reward-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+#claim-reward-btn:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+
+/* ─────────────────────────────────────────────────
+   DAILY REWARD POPUP  (toast-style)
+───────────────────────────────────────────────────*/
+#reward-popup {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: linear-gradient(135deg, #ff6b35, #ffcd3c);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 12px 24px;
+  border-radius: 999px;
+  box-shadow: 0 8px 32px rgba(255,107,53,.5);
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s ease, transform .3s ease;
+  white-space: nowrap;
+}
+#reward-popup.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+/* ─────────────────────────────────────────────────
+   MOBILE RESPONSIVE
+───────────────────────────────────────────────────*/
+@media (max-width: 500px) {
+  .pgm-card { padding: 20px 16px 20px; border-radius: 16px; }
+  .pgm-xp-glow { font-size: 28px; }
+  .pgm-game-name { font-size: 17px; }
+  .pgm-rec-card { width: 86px; }
+}
+
+/* ─────────────────────────────────────────────────
+   REDUCED MOTION
+───────────────────────────────────────────────────*/
+@media (prefers-reduced-motion: reduce) {
+  .pgm-card, #pgm-overlay, .pgm-xp-glow, .pgm-progress-fill::after,
+  .pgm-badge-unlock { animation: none !important; transition-duration: .01ms !important; }
+}

@@ -1,0 +1,1073 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ZENMAGMA — NEON COSMIC ARCADE THEME
+   "Kahoot × Cyberpunk 2077 × Poki × Esports Platform"
+   ═══════════════════════════════════════════════════════════════════
+   Load this AFTER style.css. Overrides tokens, backgrounds, and
+   component visuals. All animations are GPU-safe (transform/opacity).
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── GOOGLE FONTS — Futuristic Stack ── */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@700;900&family=Sora:wght@400;600;700;800&display=swap');
+
+/* ══════════════════════════════════════════════════════
+   1. GLOBAL DESIGN TOKENS — override :root in style.css
+══════════════════════════════════════════════════════ */
+:root {
+  /* ── Core Background Layers ── */
+  --c-bg:         #05010F;
+  --c-surface:    #090014;
+  --c-deep:       #0D001A;
+  --c-card:       #110022;
+  --c-card-h:     #170030;
+  --c-raised:     #1A0035;
+
+  /* ── Neon Palette ── */
+  --c-accent:     #7C3AED;
+  --c-accent2:    #A855F7;
+  --c-neon:       #C084FC;
+  --c-cyan:       #06B6D4;
+  --c-cyan2:      #67E8F9;
+  --c-pink:       #EC4899;
+  --c-pink2:      #F472B6;
+  --c-fire:       #F97316;
+  --c-fire2:      #FB923C;
+  --c-green:      #10B981;
+  --c-green2:     #34D399;
+  --c-yellow:     #EAB308;
+  --c-red:        #EF4444;
+
+  /* ── Borders ── */
+  --c-border:     rgba(168,85,247,0.12);
+  --c-border-h:   rgba(168,85,247,0.55);
+  --c-border-glow:rgba(168,85,247,0.35);
+
+  /* ── Text ── */
+  --c-text:       #EDE9FE;
+  --c-muted:      #9575CD;
+
+  /* ── Typography — futuristic ── */
+  --font-main:    'Sora', 'Space Grotesk', system-ui, sans-serif;
+  --font-title:   'Space Grotesk', 'Sora', sans-serif;
+  --font-game:    'Orbitron', sans-serif;
+
+  /* ── Gradients ── */
+  --grad-primary: linear-gradient(135deg, #7C3AED, #A855F7);
+  --grad-hero:    linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #06B6D4 100%);
+  --grad-fire:    linear-gradient(135deg, #F97316, #FB923C);
+  --grad-aurora:  linear-gradient(135deg, #7C3AED, #06B6D4, #EC4899, #A855F7);
+  --grad-card:    linear-gradient(145deg, rgba(26,0,53,0.9), rgba(13,0,26,0.7));
+  --grad-glass:   linear-gradient(145deg, rgba(168,85,247,0.07), rgba(6,182,212,0.04));
+
+  /* ── Shadows / Glows ── */
+  --shadow-card:  0 4px 32px rgba(0,0,0,0.7);
+  --shadow-neon:  0 0 20px rgba(168,85,247,0.35), 0 0 50px rgba(124,58,237,0.15);
+  --shadow-cyan:  0 0 20px rgba(6,182,212,0.35),  0 0 50px rgba(6,182,212,0.12);
+  --shadow-fire:  0 0 20px rgba(249,115,22,0.4),   0 0 40px rgba(249,115,22,0.15);
+  --glow-purple:  0 0 40px rgba(168,85,247,0.4), 0 0 80px rgba(124,58,237,0.2);
+  --glow-cyan:    0 0 40px rgba(6,182,212,0.4),  0 0 80px rgba(6,182,212,0.15);
+  --glow-pink:    0 0 40px rgba(236,72,153,0.4), 0 0 80px rgba(236,72,153,0.15);
+
+  /* ── Transitions ── */
+  --trans:       0.22s cubic-bezier(0.16,1,0.3,1);
+  --trans-slow:  0.45s cubic-bezier(0.16,1,0.3,1);
+  --spring:      cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ══════════════════════════════════════════════════════
+   2. GLOBAL BASE — body background system
+══════════════════════════════════════════════════════ */
+html, body {
+  font-family: var(--font-main);
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+/* ── Layered animated background ── */
+body {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Layer 1: Deep void base */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 55% at 15% -5%,  rgba(124,58,237,0.18)  0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 85%  95%,  rgba(236,72,153,0.13)  0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 75%  10%,  rgba(6,182,212,0.10)   0%, transparent 50%),
+    radial-gradient(ellipse 40% 35% at 25%  75%,  rgba(168,85,247,0.10)  0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50%  50%,  rgba(13,0,26,0.8)      0%, transparent 100%),
+    linear-gradient(180deg, #05010F 0%, #090014 40%, #0D0020 80%, #05010F 100%);
+  animation: auroraShift 18s ease-in-out infinite alternate;
+}
+
+@keyframes auroraShift {
+  0%   { background-position: 0% 0%, 100% 100%, 80% 10%, 20% 80%, 50% 50%, 0% 0%; }
+  33%  { background-position: 5% 8%, 95% 92%, 75% 15%, 25% 75%, 52% 48%, 0% 0%; }
+  66%  { background-position: 3% 4%, 97% 96%, 78% 12%, 22% 78%, 51% 51%, 0% 0%; }
+  100% { background-position: 8% 5%, 92% 95%, 82% 8%,  18% 82%, 48% 52%, 0% 0%; }
+}
+
+/* Layer 2: Moving neon orbs */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle 380px at 10%  20%,  rgba(124,58,237,0.09) 0%, transparent 70%),
+    radial-gradient(circle 280px at 90%  15%,  rgba(6,182,212,0.08)  0%, transparent 70%),
+    radial-gradient(circle 320px at 50%  85%,  rgba(236,72,153,0.07) 0%, transparent 70%),
+    radial-gradient(circle 200px at 80%  60%,  rgba(168,85,247,0.06) 0%, transparent 70%);
+  animation: orbDrift 24s ease-in-out infinite alternate;
+}
+
+@keyframes orbDrift {
+  0%   { transform: translate(0,    0);    }
+  25%  { transform: translate(15px, -20px); }
+  50%  { transform: translate(-10px, 15px); }
+  75%  { transform: translate(20px,  10px); }
+  100% { transform: translate(-15px,-10px); }
+}
+
+/* ── Stars canvas stays ── */
+#stars-canvas { opacity: 0.7; }
+
+/* ══════════════════════════════════════════════════════
+   3. ANIMATED PARTICLE CANVAS — injected by JS
+      (we also add CSS fallback floating stars)
+══════════════════════════════════════════════════════ */
+#neon-particles {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  overflow: hidden;
+}
+
+/* CSS particle stars (fallback + supplement) */
+#neon-particles::before,
+#neon-particles::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10%  20%, rgba(192,132,252,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30%  55%, rgba(103,232,249,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55%  15%, rgba(244,114,182,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75%  70%, rgba(192,132,252,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90%  35%, rgba(103,232,249,0.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 20% 80%, rgba(192,132,252,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45%  90%, rgba(244,114,182,0.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 65%  45%, rgba(103,232,249,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80%  85%, rgba(192,132,252,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 5%   60%, rgba(103,232,249,0.4) 0%, transparent 100%);
+  animation: starTwinkle 4s ease-in-out infinite alternate;
+}
+#neon-particles::after {
+  background-image:
+    radial-gradient(1px 1px at 15%  40%, rgba(244,114,182,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35%  10%, rgba(192,132,252,0.6) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 60%  75%, rgba(103,232,249,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85%  25%, rgba(244,114,182,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 95%  65%, rgba(192,132,252,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25%  95%, rgba(103,232,249,0.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 50%  30%, rgba(192,132,252,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70%  10%, rgba(244,114,182,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40%  65%, rgba(103,232,249,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 8%   30%, rgba(192,132,252,0.4) 0%, transparent 100%);
+  animation: starTwinkle 6s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes starTwinkle {
+  0%   { opacity: 0.4; transform: scale(1);   }
+  50%  { opacity: 0.9; transform: scale(1.02); }
+  100% { opacity: 0.5; transform: scale(0.99); }
+}
+
+/* Neon light streaks */
+.neon-streak {
+  position: fixed; pointer-events: none; z-index: 0;
+  height: 1px; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(168,85,247,0.6), rgba(6,182,212,0.4), transparent);
+  animation: streakFly 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.neon-streak:nth-child(2) { animation-delay: 3s; animation-duration: 11s;
+  background: linear-gradient(90deg, transparent, rgba(236,72,153,0.5), rgba(168,85,247,0.3), transparent); }
+.neon-streak:nth-child(3) { animation-delay: 6s; animation-duration: 9s;
+  background: linear-gradient(90deg, transparent, rgba(6,182,212,0.5), rgba(103,232,249,0.3), transparent); }
+
+@keyframes streakFly {
+  0%   { opacity:0; transform:translateX(-20%) scaleX(0.3); }
+  10%  { opacity:0.6; }
+  80%  { opacity:0.4; }
+  100% { opacity:0; transform:translateX(120%) scaleX(0.5); }
+}
+
+/* Noise texture overlay (subtle film grain) */
+.noise-overlay {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+/* Vignette edges */
+.vignette {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%,
+    transparent 40%,
+    rgba(5,1,15,0.4) 75%,
+    rgba(5,1,15,0.8) 100%);
+}
+
+/* ══════════════════════════════════════════════════════
+   4. HEADER — neon glass premium
+══════════════════════════════════════════════════════ */
+#header {
+  background: rgba(9,0,20,0.82);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-bottom: 1px solid var(--c-border);
+  box-shadow:
+    0 1px 0 rgba(168,85,247,0.15),
+    0 4px 32px rgba(0,0,0,0.6),
+    0 0 80px rgba(124,58,237,0.05);
+}
+
+/* Animated rainbow line under header */
+#header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(124,58,237,0.8) 20%,
+    rgba(6,182,212,0.9) 40%,
+    rgba(236,72,153,0.8) 60%,
+    rgba(168,85,247,0.8) 80%,
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: headerLineSlide 4s linear infinite;
+  opacity: 0.6;
+}
+@keyframes headerLineSlide {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+/* Logo upgrade */
+.logo {
+  font-family: var(--font-game);
+  font-size: 22px;
+  background: linear-gradient(135deg, #F97316 0%, #FB923C 30%, #C084FC 70%, #06B6D4 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 12px rgba(249,115,22,0.4));
+  letter-spacing: 1px;
+}
+.logo-icon {
+  filter:
+    drop-shadow(0 0 10px rgba(249,115,22,0.8))
+    drop-shadow(0 0 25px rgba(249,115,22,0.4));
+}
+
+/* Search bar */
+.search-bar input {
+  background: rgba(168,85,247,0.06);
+  border: 1px solid rgba(168,85,247,0.18);
+  color: var(--c-text);
+  border-radius: 12px;
+}
+.search-bar input:focus {
+  border-color: rgba(168,85,247,0.5);
+  background: rgba(168,85,247,0.1);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15), inset 0 1px 0 rgba(168,85,247,0.1);
+}
+
+/* XP bar in header */
+#header-xp {
+  background: rgba(168,85,247,0.08);
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: 10px;
+}
+
+/* ══════════════════════════════════════════════════════
+   5. BUTTONS — alive neon style
+══════════════════════════════════════════════════════ */
+
+/* Primary button */
+.btn-pill.primary {
+  background: linear-gradient(135deg, #7C3AED, #A855F7, #6D28D9);
+  background-size: 200% 200%;
+  border: none;
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  animation: primaryPulse 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+.btn-pill.primary::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0s;
+}
+.btn-pill.primary:hover::before {
+  transform: translateX(200%);
+  transition: transform 0.6s ease;
+}
+.btn-pill.primary:hover {
+  animation: none;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 32px rgba(124,58,237,0.7), 0 0 60px rgba(168,85,247,0.3), var(--shadow-neon);
+}
+@keyframes primaryPulse {
+  0%,100% { box-shadow: 0 4px 20px rgba(124,58,237,0.5); }
+  50%     { box-shadow: 0 4px 30px rgba(124,58,237,0.75), 0 0 50px rgba(168,85,247,0.2); }
+}
+
+/* Outline button */
+.btn-pill.outline {
+  background: rgba(168,85,247,0.05);
+  border: 1px solid rgba(168,85,247,0.25);
+  color: rgba(220,200,255,0.8);
+  border-radius: 10px;
+  font-family: var(--font-game);
+  font-size: 12px;
+}
+.btn-pill.outline:hover {
+  background: rgba(168,85,247,0.12);
+  border-color: rgba(168,85,247,0.6);
+  color: #C084FC;
+  box-shadow: 0 0 20px rgba(168,85,247,0.2);
+}
+
+/* Play Now button */
+.btn-play {
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  background-size: 200% 200%;
+  font-family: var(--font-game);
+  letter-spacing: 0.5px;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.1);
+  position: relative; overflow: hidden;
+}
+.btn-play::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0s;
+  z-index: 1;
+}
+.btn-play:hover::before {
+  transform: translateX(200%);
+  transition: transform 0.6s ease;
+}
+.btn-play:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 36px rgba(124,58,237,0.75), var(--shadow-neon);
+  animation: none;
+}
+@keyframes btnPulse {
+  0%,100% { box-shadow: 0 4px 24px rgba(124,58,237,0.5); }
+  50%     { box-shadow: 0 6px 36px rgba(124,58,237,0.8), 0 0 60px rgba(168,85,247,0.25); }
+}
+
+/* ══════════════════════════════════════════════════════
+   6. SIDEBAR — deep glass
+══════════════════════════════════════════════════════ */
+#sidebar {
+  background:
+    linear-gradient(180deg, rgba(13,0,26,0.97) 0%, rgba(9,0,20,0.99) 100%);
+  border-right: 1px solid rgba(168,85,247,0.12);
+  backdrop-filter: blur(20px);
+}
+#sidebar.sidebar-open {
+  box-shadow:
+    8px 0 60px rgba(0,0,0,0.8),
+    2px 0 0 rgba(168,85,247,0.2),
+    0 0 80px rgba(124,58,237,0.06);
+}
+.cat-item.active {
+  color: #C084FC;
+  background: rgba(168,85,247,0.08);
+}
+.cat-item.active::before { opacity: 1; background: linear-gradient(90deg,rgba(168,85,247,0.2),transparent); }
+.cat-item.active::after  {
+  background: linear-gradient(to bottom, #A855F7, #06B6D4);
+  box-shadow: 0 0 12px #A855F7, 0 0 24px rgba(168,85,247,0.4);
+}
+.cat-dot { box-shadow: 0 0 8px currentColor; }
+
+/* ══════════════════════════════════════════════════════
+   7. HERO BANNER — cinematic spotlight
+══════════════════════════════════════════════════════ */
+.hero {
+  background: linear-gradient(135deg, #0D0020 0%, #1A0035 40%, #0A001F 100%);
+  border: 1px solid rgba(168,85,247,0.2);
+  box-shadow:
+    0 8px 80px rgba(0,0,0,0.8),
+    0 0 0 1px rgba(168,85,247,0.1),
+    inset 0 1px 0 rgba(168,85,247,0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Ambient spotlight behind hero */
+.hero::before {
+  background:
+    radial-gradient(ellipse 70% 90% at 70% 40%, rgba(168,85,247,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 60% at 20% 80%, rgba(6,182,212,0.10) 0%, transparent 60%);
+}
+
+/* Animated border glow */
+.hero::after {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 21px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.4), rgba(6,182,212,0.3), rgba(236,72,153,0.3));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.hero:hover::after { opacity: 1; }
+
+.hero-badge {
+  background: linear-gradient(135deg, #F97316, #FB923C);
+  font-family: var(--font-game);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(249,115,22,0.5), 0 0 40px rgba(249,115,22,0.2);
+}
+
+.hero-title {
+  font-family: var(--font-title);
+  font-size: clamp(26px, 3.5vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* ══════════════════════════════════════════════════════
+   8. GAMIFICATION BAR — neon glass panel
+══════════════════════════════════════════════════════ */
+#gamification-bar {
+  background:
+    linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05));
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 rgba(168,85,247,0.1),
+    0 4px 24px rgba(124,58,237,0.1);
+  padding: 14px 20px;
+  position: relative;
+  overflow: hidden;
+}
+#gamification-bar::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(168,85,247,0.6), rgba(6,182,212,0.5), transparent);
+  animation: barTopGlow 3s ease-in-out infinite;
+}
+@keyframes barTopGlow {
+  0%,100% { opacity: 0.4; }
+  50%     { opacity: 1; }
+}
+
+.gam-xp-fill {
+  background: linear-gradient(90deg, #7C3AED, #A855F7, #06B6D4);
+  background-size: 200% 100%;
+  animation: xpShine 2.5s linear infinite;
+  box-shadow: 0 0 12px rgba(168,85,247,0.6), 0 0 24px rgba(6,182,212,0.2);
+}
+@keyframes xpShine {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+.gam-badge {
+  background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(249,115,22,0.1));
+  border: 1px solid rgba(234,179,8,0.3);
+  color: #FCD34D;
+  font-family: var(--font-game);
+}
+
+/* ══════════════════════════════════════════════════════
+   9. DAILY CHALLENGE — fire glow card
+══════════════════════════════════════════════════════ */
+#daily-challenge {
+  background:
+    linear-gradient(135deg, rgba(249,115,22,0.12), rgba(168,85,247,0.08));
+  border: 1px solid rgba(249,115,22,0.3);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 4px 32px rgba(249,115,22,0.15),
+    inset 0 1px 0 rgba(249,115,22,0.1);
+  transition: var(--trans);
+}
+#daily-challenge:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 48px rgba(249,115,22,0.28), var(--shadow-fire);
+  border-color: rgba(249,115,22,0.55);
+}
+
+/* ══════════════════════════════════════════════════════
+   10. MYSTERY BOX — cyan glow
+══════════════════════════════════════════════════════ */
+.mystery-box {
+  background:
+    linear-gradient(135deg, rgba(6,182,212,0.08), rgba(168,85,247,0.06));
+  border: 1px solid rgba(6,182,212,0.22);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 4px 24px rgba(6,182,212,0.08),
+    inset 0 1px 0 rgba(6,182,212,0.08);
+}
+.mystery-box:hover {
+  border-color: rgba(6,182,212,0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 48px rgba(6,182,212,0.15), var(--shadow-cyan);
+}
+
+/* ══════════════════════════════════════════════════════
+   11. CATEGORY PILLS
+══════════════════════════════════════════════════════ */
+.cat-pill {
+  background: rgba(168,85,247,0.06);
+  border: 1px solid rgba(168,85,247,0.15);
+  border-radius: 10px;
+  font-family: var(--font-game);
+  font-size: 11px;
+  color: rgba(220,200,255,0.7);
+  letter-spacing: 0.3px;
+  transition: var(--trans);
+}
+.cat-pill:hover {
+  background: rgba(168,85,247,0.12);
+  border-color: rgba(168,85,247,0.4);
+  color: #C084FC;
+  box-shadow: 0 0 16px rgba(168,85,247,0.15);
+}
+.cat-pill.active {
+  background: linear-gradient(135deg, var(--pill-color, #7C3AED), color-mix(in srgb, var(--pill-color, #7C3AED) 70%, #06B6D4));
+  border-color: transparent;
+  color: #fff;
+  font-family: var(--font-game);
+  box-shadow:
+    0 4px 16px color-mix(in srgb, var(--pill-color, #7C3AED) 50%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* ══════════════════════════════════════════════════════
+   12. GAME CARDS — deep glass with neon glow
+══════════════════════════════════════════════════════ */
+.game-card {
+  background: linear-gradient(145deg, rgba(26,0,53,0.85), rgba(13,0,26,0.7));
+  border: 1px solid rgba(168,85,247,0.12);
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  transition:
+    transform 0.22s cubic-bezier(0.16,1,0.3,1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Ambient glow ring on hover — per-card color */
+.game-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: color-mix(in srgb, var(--card-color, #7C3AED) 80%, transparent);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.75),
+    0 0 0 1px color-mix(in srgb, var(--card-color, #7C3AED) 60%, transparent),
+    0 0 30px color-mix(in srgb, var(--card-color, #7C3AED) 30%, transparent),
+    0 0 60px color-mix(in srgb, var(--card-color, #7C3AED) 15%, transparent);
+}
+
+/* Cursor-tracking spotlight (from animations.css — enhanced) */
+.game-card::after {
+  background: radial-gradient(
+    circle 100px at var(--glow-x,50%) var(--glow-y,50%),
+    rgba(200,150,255,0.2) 0%,
+    transparent 70%
+  );
+}
+
+/* Card info area */
+.card-info {
+  background: linear-gradient(to bottom,
+    rgba(26,0,53,0.0),
+    rgba(13,0,26,0.7) 60%,
+    color-mix(in srgb, var(--card-color, #7C3AED) 6%, rgba(13,0,26,0.9)) 100%
+  );
+  padding: 12px 14px 14px;
+}
+.card-title {
+  font-family: var(--font-title);
+  font-weight: 700;
+  color: rgba(240,230,255,0.95);
+}
+.card-meta { color: rgba(148,117,205,0.8); }
+
+/* Poki card glow */
+.game-card.poki-card:hover {
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.75),
+    0 0 0 2px color-mix(in srgb, var(--card-color, #7C3AED) 70%, transparent),
+    0 0 30px color-mix(in srgb, var(--card-color, #7C3AED) 35%, transparent);
+}
+
+/* Hot card fire overlay */
+.game-card.hot-card {
+  border-color: rgba(249,115,22,0.25);
+}
+.game-card.hot-card:hover {
+  border-color: rgba(249,115,22,0.6);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.75),
+    0 0 0 1px rgba(249,115,22,0.5),
+    0 0 30px rgba(249,115,22,0.25),
+    var(--shadow-fire);
+}
+
+/* Featured card glow ring */
+.game-card.featured-card::before {
+  background: linear-gradient(135deg, rgba(234,179,8,0.3), rgba(168,85,247,0.25), rgba(249,115,22,0.25));
+}
+
+/* Section header */
+.sec-title {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.3px;
+}
+.sec-title::after {
+  background: linear-gradient(90deg, #F97316, #A855F7, #06B6D4);
+  box-shadow: 0 0 12px rgba(249,115,22,0.5), 0 0 24px rgba(168,85,247,0.3);
+}
+
+/* ══════════════════════════════════════════════════════
+   13. LEADERBOARD — glass panel
+══════════════════════════════════════════════════════ */
+#mini-leaderboard {
+  background: linear-gradient(145deg, rgba(26,0,53,0.8), rgba(13,0,26,0.6));
+  border: 1px solid rgba(168,85,247,0.18);
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 4px 32px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(168,85,247,0.08);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+#mini-leaderboard::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #A855F7, #06B6D4, transparent);
+  opacity: 0.7;
+  animation: lbTopGlow 2.5s ease-in-out infinite;
+}
+@keyframes lbTopGlow {
+  0%,100% { opacity: 0.5; }
+  50%     { opacity: 1; box-shadow: 0 0 12px rgba(168,85,247,0.6); }
+}
+
+.lb-row { border-bottom: 1px solid rgba(168,85,247,0.08); }
+.lb-rank.top { color: #FCD34D; text-shadow: 0 0 10px rgba(234,179,8,0.6); }
+.lb-avatar {
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  box-shadow: 0 0 12px rgba(168,85,247,0.4);
+}
+.lb-pts {
+  font-family: var(--font-game);
+  color: #FCD34D;
+  text-shadow: 0 0 10px rgba(234,179,8,0.4);
+}
+
+/* ══════════════════════════════════════════════════════
+   14. GAME PAGE — spotlight frame
+══════════════════════════════════════════════════════ */
+.game-frame-wrap {
+  background: #000;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(168,85,247,0.2),
+    0 16px 80px rgba(0,0,0,0.85),
+    0 0 60px rgba(124,58,237,0.12),
+    0 0 120px rgba(124,58,237,0.06);
+  position: relative;
+}
+
+/* Animated border for game frame */
+.game-frame-wrap::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 19px;
+  background: linear-gradient(135deg,
+    rgba(124,58,237,0.5) 0%,
+    rgba(6,182,212,0.4) 33%,
+    rgba(236,72,153,0.4) 66%,
+    rgba(168,85,247,0.5) 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background-size: 200% 200%;
+  animation: frameGlow 6s linear infinite;
+}
+.game-frame-wrap:hover::before { opacity: 1; }
+@keyframes frameGlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Hot Right Now sidebar */
+.sidebar-card {
+  background: linear-gradient(145deg, rgba(26,0,53,0.85), rgba(13,0,26,0.7));
+  border: 1px solid rgba(168,85,247,0.15);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+.sidebar-card-title {
+  background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.06));
+  border-bottom: 1px solid rgba(168,85,247,0.12);
+  font-family: var(--font-game);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #C084FC;
+}
+.sidebar-game-item:hover {
+  background: rgba(168,85,247,0.1);
+  border-radius: 10px;
+}
+.sidebar-game-title { font-family: var(--font-title); }
+.sidebar-game-plays { font-family: var(--font-game); font-size: 10px; }
+
+/* ══════════════════════════════════════════════════════
+   15. GAME MODAL — immersive dark
+══════════════════════════════════════════════════════ */
+#game-modal {
+  background: linear-gradient(180deg, #07000F 0%, #05010F 100%);
+}
+#gm-bar {
+  background: rgba(9,0,20,0.98);
+  border-bottom: 1px solid rgba(168,85,247,0.2);
+  box-shadow: 0 1px 0 rgba(168,85,247,0.08), 0 4px 24px rgba(0,0,0,0.5);
+}
+.gm-btn {
+  background: rgba(168,85,247,0.07);
+  border: 1px solid rgba(168,85,247,0.15);
+  color: rgba(200,170,255,0.8);
+  border-radius: 8px;
+}
+.gm-btn:hover {
+  background: rgba(168,85,247,0.18);
+  border-color: rgba(168,85,247,0.45);
+  color: #C084FC;
+  box-shadow: 0 0 16px rgba(168,85,247,0.15);
+}
+#gm-loading { background: #07000F; }
+.gm-spinner {
+  border-color: rgba(168,85,247,0.15);
+  border-top-color: #A855F7;
+  box-shadow: 0 0 16px rgba(168,85,247,0.3);
+}
+
+/* ══════════════════════════════════════════════════════
+   16. TOAST — neon glass
+══════════════════════════════════════════════════════ */
+#toast {
+  background: linear-gradient(135deg, rgba(26,0,53,0.98), rgba(13,0,26,0.98));
+  border: 1px solid rgba(168,85,247,0.35);
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 8px 48px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(168,85,247,0.1),
+    var(--shadow-neon);
+}
+#toast-bar {
+  background: linear-gradient(90deg, #7C3AED, #A855F7, #06B6D4);
+}
+
+/* ══════════════════════════════════════════════════════
+   17. FOOTER — deep space
+══════════════════════════════════════════════════════ */
+footer {
+  background: linear-gradient(180deg, rgba(9,0,20,0.8), rgba(5,1,15,0.98));
+  border-top: 1px solid rgba(168,85,247,0.12);
+  backdrop-filter: blur(12px);
+  position: relative;
+}
+footer::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(168,85,247,0.5), rgba(6,182,212,0.4), transparent);
+  opacity: 0.6;
+}
+.footer-col h4 {
+  font-family: var(--font-game);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(168,85,247,0.6);
+}
+.footer-col a { color: rgba(200,170,255,0.35); }
+.footer-col a:hover { color: #C084FC; }
+
+/* ══════════════════════════════════════════════════════
+   18. SCROLLBAR — neon thin
+══════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #7C3AED, #06B6D4);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(168,85,247,0.5);
+}
+
+/* ══════════════════════════════════════════════════════
+   19. MOBILE NAV — glass bottom bar
+══════════════════════════════════════════════════════ */
+#mobile-nav {
+  background: rgba(9,0,20,0.95);
+  border-top: 1px solid rgba(168,85,247,0.15);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.6), 0 -1px 0 rgba(168,85,247,0.1);
+}
+.mob-nav-item.active,
+.mob-nav-item:hover { color: #C084FC; }
+.mob-nav-item.active .mn-icon {
+  filter: drop-shadow(0 0 8px #A855F7) drop-shadow(0 0 16px rgba(168,85,247,0.5));
+}
+
+/* ══════════════════════════════════════════════════════
+   20. PAGE LOADER — neon
+══════════════════════════════════════════════════════ */
+#zm-loader {
+  background: radial-gradient(ellipse at center, #0D0020 0%, #05010F 60%, #03000A 100%);
+}
+.zm-loader-bar {
+  background: linear-gradient(90deg, #7C3AED, #A855F7, #06B6D4, #EC4899);
+  background-size: 300% 100%;
+  animation: lBar 1.2s ease-in-out forwards, loaderShift 2s linear infinite;
+  box-shadow: 0 0 16px rgba(168,85,247,0.7), 0 0 32px rgba(6,182,212,0.3);
+}
+@keyframes loaderShift {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 300% 0; }
+}
+.zm-loader-text {
+  font-family: var(--font-game);
+  color: rgba(192,132,252,0.6);
+  letter-spacing: 4px;
+}
+.zm-loader-logo {
+  filter:
+    drop-shadow(0 0 24px rgba(249,115,22,0.9))
+    drop-shadow(0 0 60px rgba(249,115,22,0.4))
+    drop-shadow(0 0 100px rgba(168,85,247,0.3));
+}
+
+/* ══════════════════════════════════════════════════════
+   21. AD BANNER — styled glass
+══════════════════════════════════════════════════════ */
+.ad-banner {
+  background: rgba(168,85,247,0.03);
+  border: 1px dashed rgba(168,85,247,0.1);
+  border-radius: 14px;
+}
+
+/* ══════════════════════════════════════════════════════
+   22. SECTION GLOW BAR
+══════════════════════════════════════════════════════ */
+.section-glow::before {
+  background: linear-gradient(90deg, #A855F7, #06B6D4, transparent);
+  box-shadow: 0 0 12px rgba(168,85,247,0.6), 0 0 24px rgba(6,182,212,0.3);
+  height: 2px;
+  width: 50px;
+}
+
+/* ══════════════════════════════════════════════════════
+   23. SIDEBAR POINTS & CHALLENGE
+══════════════════════════════════════════════════════ */
+.sidebar-points {
+  background: rgba(234,179,8,0.06);
+  border: 1px solid rgba(234,179,8,0.15);
+  border-radius: 12px;
+}
+.sidebar-challenge {
+  background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(168,85,247,0.1));
+  border: 1px solid rgba(249,115,22,0.2);
+  border-radius: 12px;
+}
+.sidebar-challenge .sc-btn {
+  background: linear-gradient(135deg, #F97316, #FB923C);
+  border-radius: 10px;
+  font-family: var(--font-game);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+/* ══════════════════════════════════════════════════════
+   24. CARD BADGES
+══════════════════════════════════════════════════════ */
+.badge.new  {
+  background: linear-gradient(135deg, #10B981, #34D399);
+  box-shadow: 0 2px 10px rgba(16,185,129,0.5), 0 0 20px rgba(16,185,129,0.2);
+}
+.badge.hot  {
+  background: linear-gradient(135deg, #EF4444, #F97316);
+  box-shadow: 0 2px 10px rgba(239,68,68,0.5), 0 0 20px rgba(239,68,68,0.2);
+}
+.badge.trend {
+  background: linear-gradient(135deg, #F97316, #EAB308);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(249,115,22,0.4);
+}
+
+/* ══════════════════════════════════════════════════════
+   25. LIVE PLAYS DOT
+══════════════════════════════════════════════════════ */
+.card-players .dot {
+  background: #34D399;
+  box-shadow: 0 0 8px #34D399, 0 0 16px rgba(52,211,153,0.4);
+}
+.card-players {
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(52,211,153,0.15);
+}
+
+/* ══════════════════════════════════════════════════════
+   26. QUIZBLAZE SPOTLIGHT BANNER — already inline but
+       ensure consistent with new theme tokens
+══════════════════════════════════════════════════════ */
+#quizblaze-spotlight {
+  background: linear-gradient(135deg, #0E0020 0%, #1A0040 40%, #080020 100%) !important;
+  border-color: rgba(168,85,247,0.4) !important;
+  box-shadow: 0 8px 60px rgba(168,85,247,0.3) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   27. SEARCH RESULTS & SKELETON
+══════════════════════════════════════════════════════ */
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(26,0,53,0.6) 25%,
+    rgba(168,85,247,0.06) 50%,
+    rgba(26,0,53,0.6) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+}
+
+/* ══════════════════════════════════════════════════════
+   28. GAME STATS PANEL (game.html)
+══════════════════════════════════════════════════════ */
+.game-stats {
+  background: linear-gradient(145deg, rgba(26,0,53,0.8), rgba(13,0,26,0.6));
+  border: 1px solid rgba(168,85,247,0.15);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+}
+.stat-value { font-family: var(--font-game); color: #C084FC; }
+.game-controls {
+  background: linear-gradient(145deg, rgba(26,0,53,0.6), rgba(13,0,26,0.5));
+  border: 1px solid rgba(168,85,247,0.12);
+  border-radius: 12px;
+}
+
+/* ══════════════════════════════════════════════════════
+   29. ACTION BUTTONS (like, share on game page)
+══════════════════════════════════════════════════════ */
+.action-btn {
+  background: rgba(168,85,247,0.06);
+  border: 1px solid rgba(168,85,247,0.15);
+  color: rgba(200,170,255,0.8);
+  border-radius: 10px;
+  font-family: var(--font-game);
+  font-size: 11px;
+}
+.action-btn:hover {
+  background: rgba(168,85,247,0.15);
+  border-color: rgba(168,85,247,0.45);
+  color: #C084FC;
+  box-shadow: 0 0 20px rgba(168,85,247,0.15);
+}
+
+/* ══════════════════════════════════════════════════════
+   30. GLOBAL UTILITY — reusable glass card
+══════════════════════════════════════════════════════ */
+.glass-card {
+  background: linear-gradient(145deg, rgba(26,0,53,0.8), rgba(13,0,26,0.65));
+  border: 1px solid rgba(168,85,247,0.18);
+  border-radius: 16px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 4px 32px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(168,85,247,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+  transition: var(--trans);
+}
+.glass-card:hover {
+  border-color: rgba(168,85,247,0.35);
+  box-shadow:
+    0 12px 48px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(168,85,247,0.2),
+    var(--shadow-neon);
+}
+
+/* Neon text utility */
+.neon-text-purple { color: #C084FC; text-shadow: 0 0 20px rgba(192,132,252,0.6); }
+.neon-text-cyan   { color: #67E8F9; text-shadow: 0 0 20px rgba(103,232,249,0.6); }
+.neon-text-pink   { color: #F472B6; text-shadow: 0 0 20px rgba(244,114,182,0.6); }
+
+/* ══════════════════════════════════════════════════════
+   31. TRENDING SECTION GLOW
+══════════════════════════════════════════════════════ */
+.scroll-row .game-card {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(168,85,247,0.08);
+}
+.scroll-row .game-card:hover {
+  box-shadow:
+    0 16px 48px rgba(0,0,0,0.75),
+    0 0 0 1px color-mix(in srgb, var(--card-color, #7C3AED) 60%, transparent),
+    0 0 30px color-mix(in srgb, var(--card-color, #7C3AED) 30%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════
+   32. MOBILE RESPONSIVE — keep dark premium
+══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body::before {
+    background:
+      radial-gradient(ellipse 120% 40% at 50% -5%, rgba(124,58,237,0.15) 0%, transparent 55%),
+      radial-gradient(ellipse 80% 30% at 80% 100%, rgba(236,72,153,0.1) 0%, transparent 50%),
+      linear-gradient(180deg, #05010F 0%, #090014 100%);
+  }
+  body::after { display: none; } /* remove orbDrift on mobile for perf */
+  .game-card:hover {
+    transform: translateY(-3px) scale(1.01); /* less movement on mobile */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  #neon-particles::before,
+  #neon-particles::after,
+  .neon-streak { animation: none !important; }
+  .btn-play, .btn-pill.primary { animation: none !important; }
+}

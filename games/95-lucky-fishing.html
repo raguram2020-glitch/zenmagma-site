@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Lucky Fishing - ZenMagma</title>    <meta name="description" content="Cast your line and reel in fish! Relax and enjoy a peaceful fishing game.">
+    <link rel="canonical" href="https://zenmagma.com/games/95-lucky-fishing">
+    <meta property="og:title" content="Lucky Fishing - ZenMagma">
+    <meta property="og:description" content="Cast your line and reel in fish! Relax and enjoy a peaceful fishing game.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/95-lucky-fishing">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/lucky-fishing.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000a14;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:8px;overflow:hidden}canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#00bcd4,#006064);color:#fff;transition:.2s;margin:3px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #00bcd4}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#00bcd4,#006064);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center"><div style="padding:6px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Catches:<b id="ct"> 0</b>/20</span><span class="hv">Lives:<b id="lf"> ❤️❤️❤️</b></span><span class="hv">Time:<b id="tm"> 5:00</b></span></div>
+<canvas id="c" width="480" height="420" style="cursor:pointer"></canvas>
+<div id="result" style="font-size:1.2em;height:32px;padding:4px;text-align:center"></div></div>
+<div id="ov"><div id="ob"><h2>Lucky Fishing</h2><p>Click to cast your line! Then click again when a fish bites to reel it in. Rare fish = more points!</p><button class="btn" onclick="go()">Fish!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=420;
+const FISH=[{name:"Boot",e:"👢",pts:-5,rarity:0.05},{name:"Seaweed",e:"🌿",pts:1,rarity:0.1},{name:"Clam",e:"🦪",pts:5,rarity:0.15},{name:"Sardine",e:"🐟",pts:10,rarity:0.25},{name:"Bass",e:"🐠",pts:20,rarity:0.2},{name:"Tuna",e:"🐡",pts:35,rarity:0.12},{name:"Salmon",e:"🦈",pts:50,rarity:0.07},{name:"Swordfish",e:"⚔️",pts:75,rarity:0.04},{name:"Dolphin",e:"🐬",pts:100,rarity:0.015},{name:"Whale",e:"🐳",pts:200,rarity:0.005}];
+let state="idle",line,fish_on,score=0,catches=0,level=1,frame=0,bobbing=0,running=false,lives=3,timeLeft=300,gameTimer=null;
+function pickFish(){let r=Math.random(),acc=0;for(const f of FISH){acc+=f.rarity;if(r<acc)return f;}return FISH[4];}
+function cast(mx,my){if(state!=="idle")return;state="cast";line={x:W/2,y:60,tx:mx,ty:my,prog:0};document.getElementById("result").textContent="🎣 Casting...";}
+function draw(){
+  // Sky + water
+  const sg=ctx.createLinearGradient(0,0,0,H*.4);sg.addColorStop(0,"#001428");sg.addColorStop(1,"#003366");ctx.fillStyle=sg;ctx.fillRect(0,0,W,H*.4);
+  const wg=ctx.createLinearGradient(0,H*.4,0,H);wg.addColorStop(0,"#006994");wg.addColorStop(1,"#001440");ctx.fillStyle=wg;ctx.fillRect(0,H*.4,W,H*.6);
+  for(let i=0;i<W;i+=60){ctx.strokeStyle="rgba(0,188,212,.2)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(i,H*.4);ctx.bezierCurveTo(i+20,H*.4+8,i+40,H*.4-8,i+60,H*.4);ctx.stroke();}
+  // Fisherman
+  ctx.fillStyle="#8B4513";ctx.fillRect(W/2-20,20,40,50);ctx.fillStyle="#f1c40f";ctx.font="40px sans-serif";ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText("🎣",W/2,70);
+  // Line
+  if(state!=="idle"&&line){const bx=line.x+(line.tx-line.x)*Math.min(1,line.prog),by=line.y+(line.ty-line.y)*Math.min(1,line.prog)+Math.sin(line.prog*Math.PI)*30;ctx.strokeStyle="#aaa";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(W/2,65);ctx.lineTo(bx,by);ctx.stroke();if(state==="waiting"){bobbing+=0.1;const bd=Math.sin(bobbing)*4;ctx.fillStyle="#e74c3c";ctx.beginPath();ctx.arc(bx,by+bd,6,0,Math.PI*2);ctx.fill();}if(state==="bite"){ctx.font="30px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("💫",bx,by);}}
+  // Fish in water
+  for(let i=0;i<15;i++){const t=(i*137+frame*.5)%W;ctx.font="20px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.globalAlpha=0.3;ctx.fillText(FISH[i%FISH.length].e,t,H*.4+30+i*20);ctx.globalAlpha=1;}
+}
+function update(){
+  frame++;
+  if(state==="cast"){line.prog+=0.04;if(line.prog>=1){state="waiting";setTimeout(()=>{if(state==="waiting"){state="bite";fish_on=pickFish();document.getElementById("result").textContent="🐟 Something's biting! Click to reel!";const biteWindow=2000+Math.random()*2000;setTimeout(()=>{if(state==="bite"){document.getElementById("result").textContent="⚠️ 2s left! Click now!"}},Math.max(0,biteWindow-2000));setTimeout(()=>{if(state==="bite"){state="idle";line=null;document.getElementById("result").textContent="🐟 Fish got away!";fish_on=null;lives=Math.max(0,lives-1);document.getElementById("lf").textContent=" "+"❤️".repeat(lives);if(lives<=0){running=false;clearInterval(gameTimer);window._showMod("No more lives! Final Score: "+score);}}},biteWindow);}},1500+Math.random()*3000);}}
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  if(state==="idle")cast(e.offsetX,Math.max(H*.4,e.offsetY));
+  else if(state==="bite"){const f=fish_on;state="idle";line=null;fish_on=null;score+=f.pts;catches++;document.getElementById("sc").textContent=score;document.getElementById("ct").textContent=catches;document.getElementById("result").innerHTML=`<span style="color:#2ecc71">${f.e} Caught ${f.name}! +${f.pts} pts</span>`;level=Math.floor(catches/5)+1;document.getElementById("lv").textContent=level;if(catches>=20){running=false;clearInterval(gameTimer);sndWin();window._showMod("🏆 20 catches! Final Score: "+score);}}
+});
+function go(){document.getElementById("ov").style.display="none";running=true;
+  gameTimer=setInterval(()=>{if(!running)return;timeLeft--;const m=Math.floor(timeLeft/60),s=timeLeft%60;document.getElementById("tm").textContent=m+":"+(s<10?"0":"")+s;if(timeLeft<=0){running=false;clearInterval(gameTimer);window._showMod("Time's up! Final Score: "+score);}},1000);
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  state="idle";line=null;fish_on=null;score=0;catches=0;level=1;frame=0;bobbing=0;lives=3;timeLeft=300;
+  document.getElementById("sc").textContent=0;document.getElementById("ct").textContent=0;
+  document.getElementById("lf").textContent=" ❤️❤️❤️";document.getElementById("tm").textContent="5:00";
+  clearInterval(gameTimer);
+  running=true;go();
+}
+</script>
+<div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid #00bcd4"><div style="font-size:52px;margin-bottom:10px">🎣</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#00bcd4;margin-bottom:10px">Fishing Done!</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none';doRestart();" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#00bcd4,#006064);color:#fff;font-size:1em;font-weight:700;cursor:pointer;margin-right:8px">Play Again</button><a href="../index.html" style="padding:12px 28px;border-radius:14px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:1em;font-weight:700;cursor:pointer;text-decoration:none">Home</a></div></div>
+<script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

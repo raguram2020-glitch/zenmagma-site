@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Count Stars - ZenMagma</title>    <meta name="description" content="Count the stars on screen and choose the right number! Fun counting practice.">
+    <link rel="canonical" href="https://zenmagma.com/games/62-count-stars">
+    <meta property="og:title" content="Count the Stars - ZenMagma">
+    <meta property="og:description" content="Count the stars on screen and choose the right number! Fun counting practice.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/62-count-stars">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/count-stars.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000510;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f9d423,#ff4e50);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #f9d423}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#f9d423,#ff4e50);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span><span class="hv">Streak:<b id="st"> 0</b></span></div>
+<canvas id="c" width="440" height="280"></canvas>
+<div style="padding:12px;font-size:1em;color:#aaa">How many ⭐ stars do you see?</div>
+<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="opts"></div>
+<div id="fb" style="font-size:1.1em;height:30px;margin:8px"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Count Stars</h2><p>Count the stars on screen and choose the right number! Stars move faster each level.</p><button class="btn" onclick="go()">Count!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=440,H=280;
+let stars=[],count,score=0,level=1,streak=0,frame=0,running=false,anim;
+function mkQ(){
+  count=3+Math.floor(Math.random()*(4+level*2));stars=[];
+  for(let i=0;i<count;i++)stars.push({x:20+Math.random()*(W-40),y:20+Math.random()*(H-40),vx:(Math.random()-.5)*(1+level*.3),vy:(Math.random()-.5)*(1+level*.3),size:14+Math.random()*10});
+  const opts=[count];while(opts.length<4){const r=count+Math.floor(Math.random()*6)-3;if(r>0&&!opts.includes(r))opts.push(r);}
+  opts.sort(()=>Math.random()-.5);
+  document.getElementById("opts").innerHTML=opts.map(o=>`<button class="btn" onclick="check(${o})" style="font-size:1.3em;min-width:60px">${o}</button>`).join("");
+}
+function draw(){
+  ctx.fillStyle="#000510";ctx.fillRect(0,0,W,H);
+  stars.forEach(s=>{s.x+=s.vx;s.y+=s.vy;if(s.x<0||s.x>W)s.vx*=-1;if(s.y<0||s.y>H)s.vy*=-1;ctx.fillStyle="#f9d423";ctx.font=`${s.size*2}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("⭐",s.x,s.y);});
+}
+function check(n){
+  if(n===count){streak++;score+=count*10*streak;document.getElementById("fb").innerHTML=`<span style="color:#2ecc71">✓ Yes! ${count} stars</span>`;}
+  else{streak=0;document.getElementById("fb").innerHTML=`<span style="color:#e74c3c">✗ There were ${count}</span>`;}
+  document.getElementById("sc").textContent=score;document.getElementById("st").textContent=streak;document.getElementById("lv").textContent=level=Math.floor(score/200)+1;
+  setTimeout(mkQ,900);
+}
+function go(){document.getElementById("ov").style.display="none";running=true;mkQ();(function lp(){if(!running)return;frame++;draw();requestAnimationFrame(lp);})();}
+mkQ();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

@@ -1,0 +1,673 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe Game</title>
+        <meta name="description" content="Classic Tic Tac Toe for 2 players or vs computer. Who gets 3 in a row?">
+    <link rel="canonical" href="https://zenmagma.com/games/tictactoe">
+    <meta property="og:title" content="Tic Tac Toe - ZenMagma">
+    <meta property="og:description" content="Classic Tic Tac Toe for 2 players or vs computer. Who gets 3 in a row?">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/tictactoe">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/tictactoe.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --bg-dark: #0f0f1e;
+            --bg-light: #1a1a2e;
+            --text: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { text-align: center; max-width: 520px; width: 100%; }
+
+        h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-mode {
+            display: flex; gap: 15px; justify-content: center;
+            margin-bottom: 24px; flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 10px 20px; border: 2px solid var(--primary);
+            background: rgba(102, 126, 234, 0.1); color: var(--primary);
+            border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white; box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .mode-btn:hover { transform: translateY(-2px); }
+
+        .game-status {
+            font-size: 20px; margin-bottom: 20px; height: 30px;
+            color: var(--accent); font-weight: bold;
+        }
+
+        .board {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 24px; padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid var(--primary); border-radius: 15px;
+            width: fit-content; margin-left: auto; margin-right: auto;
+        }
+
+        .cell {
+            width: 100px; height: 100px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border: 2px solid var(--primary); border-radius: 10px;
+            font-size: 36px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s ease;
+            color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; user-select: none;
+        }
+
+        /* keyboard-focus highlight */
+        .cell.focused {
+            outline: 3px solid #facc15;
+            outline-offset: 2px;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+        }
+
+        /* key hint label */
+        .cell .hint {
+            position: absolute; top: 5px; right: 7px;
+            font-size: 11px; font-weight: 600;
+            color: rgba(255,255,255,0.25);
+            line-height: 1;
+        }
+
+        .cell:hover:not(.taken) {
+            background: rgba(102, 126, 234, 0.35);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .cell.taken { cursor: not-allowed; }
+
+        .cell.x { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+        .cell.o { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+
+        /* winning cells flash */
+        .cell.win-flash {
+            animation: winFlash 0.6s ease infinite alternate;
+        }
+        @keyframes winFlash {
+            from { background: rgba(102, 126, 234, 0.2); }
+            to   { background: rgba(250, 204, 21, 0.25); border-color: #facc15; }
+        }
+
+        .controls {
+            display: flex; gap: 12px; justify-content: center;
+            flex-wrap: wrap; margin-bottom: 24px;
+        }
+
+        button {
+            padding: 11px 26px; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white; box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6); }
+
+        .btn-secondary {
+            background: rgba(240, 147, 251, 0.15);
+            color: var(--accent); border: 2px solid var(--accent);
+        }
+        .btn-secondary:hover { background: rgba(240, 147, 251, 0.28); transform: translateY(-2px); }
+
+        .stats {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; margin-top: 24px;
+        }
+
+        .stat-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            padding: 14px; border-radius: 10px;
+        }
+        .stat-label { font-size: 11px; text-transform: uppercase; opacity: 0.7; letter-spacing: 1px; margin-bottom: 6px; }
+        .stat-value { font-size: 28px; font-weight: bold; color: var(--accent); }
+
+        /* keyboard shortcut guide */
+        .kb-guide {
+            background: rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.25);
+            border-radius: 10px; padding: 14px 18px;
+            margin-top: 20px; text-align: left;
+        }
+        .kb-guide h3 { color: var(--accent); margin-bottom: 10px; font-size: 14px; }
+        .kb-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 6px 20px;
+        }
+        .kb-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .kb-key {
+            background: rgba(102, 126, 234, 0.25);
+            border: 1px solid var(--primary); border-radius: 5px;
+            padding: 2px 8px; font-size: 12px; font-weight: bold;
+            color: var(--primary); min-width: 28px; text-align: center;
+        }
+
+        /* modal */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.72); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--bg-light) 0%, #2a2a3e 100%);
+            padding: 40px; border-radius: 15px;
+            border: 2px solid var(--primary); text-align: center;
+            max-width: 380px; width: 90%;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-emoji  { font-size: 52px; margin-bottom: 10px; }
+        .modal-title  { font-size: 30px; margin-bottom: 10px; color: var(--accent); font-weight: 800; }
+        .modal-msg    { font-size: 16px; margin-bottom: 28px; color: var(--text); opacity: 0.85; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 30px; }
+            .cell { width: 78px; height: 78px; font-size: 28px; }
+            .board { gap: 8px; padding: 14px; }
+            button { padding: 9px 18px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div class="container">
+    <h1>⭕ TIC TAC TOE</h1>
+
+    <div class="game-mode">
+        <button class="mode-btn active" id="modeAI"  onclick="setGameMode('ai')">vs AI</button>
+        <button class="mode-btn"        id="modePVP" onclick="setGameMode('pvp')">vs Player</button>
+    </div>
+
+    <div class="game-mode" id="diffRow" style="margin-top:-10px;margin-bottom:14px;">
+        <button class="mode-btn" id="diffEasy"   onclick="setDiff('easy')">Easy</button>
+        <button class="mode-btn active" id="diffNormal" onclick="setDiff('normal')">Normal</button>
+        <button class="mode-btn" id="diffHard"   onclick="setDiff('hard')">Hard</button>
+    </div>
+
+    <div class="game-status" id="gameStatus">Your turn</div>
+
+    <!-- Board: cells 0-8, keys 1-9 -->
+    <div class="board" id="board">
+        <div class="cell" id="c0" onclick="makeMove(0)"><span class="hint">1</span></div>
+        <div class="cell" id="c1" onclick="makeMove(1)"><span class="hint">2</span></div>
+        <div class="cell" id="c2" onclick="makeMove(2)"><span class="hint">3</span></div>
+        <div class="cell" id="c3" onclick="makeMove(3)"><span class="hint">4</span></div>
+        <div class="cell" id="c4" onclick="makeMove(4)"><span class="hint">5</span></div>
+        <div class="cell" id="c5" onclick="makeMove(5)"><span class="hint">6</span></div>
+        <div class="cell" id="c6" onclick="makeMove(6)"><span class="hint">7</span></div>
+        <div class="cell" id="c7" onclick="makeMove(7)"><span class="hint">8</span></div>
+        <div class="cell" id="c8" onclick="makeMove(8)"><span class="hint">9</span></div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-primary"   onclick="newGame()">🔄 New Game</button>
+        <button class="btn-secondary" onclick="resetStats()">Reset Stats</button>
+        
+    </div>
+
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-label">Wins (X)</div>
+            <div class="stat-value" id="winsX">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Draws</div>
+            <div class="stat-value" id="draws">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Wins (O / AI)</div>
+            <div class="stat-value" id="winsO">0</div>
+        </div>
+    </div>
+
+    <!-- Keyboard guide -->
+    <div class="kb-guide">
+        <h3>⌨️ Keyboard Controls</h3>
+        <div class="kb-grid">
+            <div class="kb-row"><span class="kb-key">1–9</span> Pick cell (matches board position)</div>
+            <div class="kb-row"><span class="kb-key">↑↓←→</span> Navigate cells</div>
+            <div class="kb-row"><span class="kb-key">Enter / Space</span> Confirm move</div>
+            <div class="kb-row"><span class="kb-key">N</span> New game</div>
+            <div class="kb-row"><span class="kb-key">A</span> Switch to vs AI</div>
+            <div class="kb-row"><span class="kb-key">P</span> Switch to vs Player</div>
+        </div>
+    </div>
+</div>
+
+<!-- Game Over Modal -->
+<div class="modal" id="gameOverModal">
+    <div class="modal-content">
+        <div class="modal-emoji" id="resultEmoji">🏆</div>
+        <div class="modal-title"  id="resultTitle">You Won!</div>
+        <div class="modal-msg"    id="resultMsg">Congratulations!</div>
+        <div class="modal-buttons">
+            <button class="btn-primary"   onclick="newGame()">▶ Play Again</button>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+/* ── State ── */
+let board        = Array(9).fill('');
+let currentPlayer = 'X';
+let gameActive   = true;
+let gameMode     = 'ai';       // 'ai' | 'pvp'
+let focusedCell  = 0;          // keyboard cursor
+let aiPending    = false;      // prevent moves while AI is thinking
+
+let aiDifficulty = 'normal'; // 'easy' | 'normal' | 'hard'
+
+let stats = {
+    winsX: parseInt(localStorage.getItem('tttWinsX') || '0'),
+    winsO: parseInt(localStorage.getItem('tttWinsO') || '0'),
+    draws: parseInt(localStorage.getItem('tttDraws')  || '0'),
+};
+
+const WIN_LINES = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+];
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => {
+    updateDisplay();
+    renderBoard();
+    setFocus(0);
+    document.addEventListener('keydown', handleKey);
+});
+
+/* ══════════════════════════════
+   KEYBOARD HANDLER
+══════════════════════════════ */
+function handleKey(e) {
+    // Close modal with Escape or Enter
+    if (document.getElementById('gameOverModal').classList.contains('active')) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'n' || e.key === 'N') {
+            e.preventDefault();
+            newGame();
+        }
+        return;
+    }
+
+    switch (e.key) {
+        // Number keys 1-9 → cells 0-8
+        case '1': case '2': case '3':
+        case '4': case '5': case '6':
+        case '7': case '8': case '9': {
+            e.preventDefault();
+            const idx = parseInt(e.key) - 1;
+            setFocus(idx);
+            makeMove(idx);
+            break;
+        }
+        // Numpad 1-9
+        case 'Numpad1': case 'Numpad2': case 'Numpad3':
+        case 'Numpad4': case 'Numpad5': case 'Numpad6':
+        case 'Numpad7': case 'Numpad8': case 'Numpad9': {
+            e.preventDefault();
+            const idx = parseInt(e.key.replace('Numpad','')) - 1;
+            setFocus(idx);
+            makeMove(idx);
+            break;
+        }
+        // Arrow navigation
+        case 'ArrowRight': e.preventDefault(); moveFocus(1);  break;
+        case 'ArrowLeft':  e.preventDefault(); moveFocus(-1); break;
+        case 'ArrowDown':  e.preventDefault(); moveFocus(3);  break;
+        case 'ArrowUp':    e.preventDefault(); moveFocus(-3); break;
+        // Confirm selection
+        case 'Enter':
+        case ' ':
+            e.preventDefault();
+            makeMove(focusedCell);
+            break;
+        // New game
+        case 'n': case 'N':
+            e.preventDefault();
+            newGame();
+            break;
+        // Switch mode
+        case 'a': case 'A':
+            e.preventDefault();
+            setGameMode('ai');
+            break;
+        case 'p': case 'P':
+            e.preventDefault();
+            setGameMode('pvp');
+            break;
+    }
+}
+
+function moveFocus(delta) {
+    let next = focusedCell + delta;
+    if (next < 0) next = 0;
+    if (next > 8) next = 8;
+    setFocus(next);
+}
+
+function setFocus(idx) {
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('focused'));
+    focusedCell = idx;
+    document.getElementById('c' + idx)?.classList.add('focused');
+}
+
+/* ══════════════════════════════
+   GAME MODE
+══════════════════════════════ */
+function setDiff(d) {
+    aiDifficulty = d;
+    ['easy','normal','hard'].forEach(x =>
+        document.getElementById('diff'+x.charAt(0).toUpperCase()+x.slice(1))
+            .classList.toggle('active', x === d));
+    newGame();
+}
+
+function setGameMode(mode) {
+    gameMode = mode;
+    document.getElementById('modeAI') .classList.toggle('active', mode === 'ai');
+    document.getElementById('modePVP').classList.toggle('active', mode === 'pvp');
+    document.getElementById('diffRow').style.display = mode === 'ai' ? 'flex' : 'none';
+    newGame();
+}
+
+/* ══════════════════════════════
+   MOVES
+══════════════════════════════ */
+function makeMove(index) {
+    if (!gameActive || board[index] !== '' || aiPending) return;
+
+    board[index] = currentPlayer;
+    renderBoard();
+
+    const winLine = getWinLine();
+    if (winLine) {
+        highlightWin(winLine);
+        endGame(currentPlayer === 'X' ? 'X wins!' : 'O wins!');
+        return;
+    }
+    if (board.every(c => c !== '')) {
+        endGame('draw');
+        return;
+    }
+
+    if (gameMode === 'ai' && currentPlayer === 'X') {
+        currentPlayer = 'O';
+        updateStatus();
+        aiPending = true;
+        setTimeout(() => { makeAIMove(); aiPending = false; }, 500);
+    } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateStatus();
+    }
+}
+
+function makeAIMove() {
+    if (!gameActive) return;
+
+    const empty = board.map((v,i) => v==='' ? i : -1).filter(i => i>=0);
+    let move = -1;
+
+    if (aiDifficulty === 'easy') {
+        // Random move
+        move = empty[Math.floor(Math.random() * empty.length)];
+    } else if (aiDifficulty === 'normal') {
+        // Minimax depth-limited to 3 (beatable)
+        let best = -Infinity;
+        for (const i of empty) {
+            board[i] = 'O';
+            const s = minimaxDepth(board, 0, false, 3);
+            board[i] = '';
+            if (s > best) { best = s; move = i; }
+        }
+    } else {
+        // Hard: full minimax (unbeatable)
+        let best = -Infinity;
+        for (const i of empty) {
+            board[i] = 'O';
+            const s = minimax(board, 0, false);
+            board[i] = '';
+            if (s > best) { best = s; move = i; }
+        }
+    }
+
+    if (move !== -1) {
+        board[move] = 'O';
+        renderBoard();
+        setFocus(move);
+
+        const winLine = getWinLine();
+        if (winLine) {
+            highlightWin(winLine);
+            endGame('O wins!');
+            return;
+        }
+        if (board.every(c => c !== '')) {
+            endGame('draw');
+            return;
+        }
+
+        currentPlayer = 'X';
+        updateStatus();
+    }
+}
+
+function minimaxDepth(b, depth, isMax, maxDepth) {
+    const score = evalBoard(b);
+    if (score !== 0) return score > 0 ? 10 - depth : -10 + depth;
+    if (b.every(c => c !== '') || depth >= maxDepth) return 0;
+    if (isMax) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (b[i] === '') { b[i]='O'; best=Math.max(best,minimaxDepth(b,depth+1,false,maxDepth)); b[i]=''; }
+        }
+        return best;
+    } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (b[i] === '') { b[i]='X'; best=Math.min(best,minimaxDepth(b,depth+1,true,maxDepth)); b[i]=''; }
+        }
+        return best;
+    }
+}
+
+function minimax(b, depth, isMax) {
+    const score = evalBoard(b);
+    if (score !== 0) return score > 0 ? 10 - depth : -10 + depth;
+    if (b.every(c => c !== '')) return 0;
+
+    if (isMax) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (b[i] === '') {
+                b[i] = 'O';
+                best = Math.max(best, minimax(b, depth+1, false));
+                b[i] = '';
+            }
+        }
+        return best;
+    } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (b[i] === '') {
+                b[i] = 'X';
+                best = Math.min(best, minimax(b, depth+1, true));
+                b[i] = '';
+            }
+        }
+        return best;
+    }
+}
+
+function evalBoard(b) {
+    for (const [a,c1,c2] of WIN_LINES) {
+        if (b[a] && b[a] === b[c1] && b[a] === b[c2])
+            return b[a] === 'O' ? 10 : -10;
+    }
+    return 0;
+}
+
+function getWinLine() {
+    for (const line of WIN_LINES) {
+        const [a,b,c] = line;
+        if (board[a] && board[a] === board[b] && board[a] === board[c])
+            return line;
+    }
+    return null;
+}
+
+function highlightWin(line) {
+    line.forEach(i => document.getElementById('c'+i)?.classList.add('win-flash'));
+}
+
+/* ══════════════════════════════
+   GAME LIFECYCLE
+══════════════════════════════ */
+function endGame(result) {
+    gameActive = false;
+    aiPending  = false;
+
+    const isXWin    = result === 'X wins!';
+    const isOWin    = result === 'O wins!';
+    const isDraw    = result === 'draw';
+
+    if (isXWin) { stats.winsX++; localStorage.setItem('tttWinsX', stats.winsX); }
+    if (isOWin) { stats.winsO++; localStorage.setItem('tttWinsO', stats.winsO); }
+    if (isDraw) { stats.draws++; localStorage.setItem('tttDraws',  stats.draws); }
+
+    updateDisplay();
+
+    let emoji, title, msg;
+    if (isDraw) {
+        emoji = '🤝'; title = "It's a Draw!"; msg = 'Well played by both!';
+    } else if (isXWin && gameMode === 'ai') {
+        emoji = '🏆'; title = 'You Won!'; msg = 'You beat the AI! 🎉';
+    } else if (isOWin && gameMode === 'ai') {
+        emoji = '🤖'; title = 'AI Wins!'; msg = 'Better luck next time!';
+    } else {
+        emoji = '🏆'; title = `Player ${isXWin ? 'X' : 'O'} Wins!`; msg = 'Congratulations!';
+    }
+
+    document.getElementById('resultEmoji').textContent = emoji;
+    document.getElementById('resultTitle').textContent  = title;
+    document.getElementById('resultMsg').textContent    = msg;
+
+    setTimeout(() => {
+        document.getElementById('gameOverModal').classList.add('active');
+    }, 500);
+}
+
+function newGame() {
+    // ── FIX 1: reset all cell pointer-events & styles ──
+    board        = Array(9).fill('');
+    currentPlayer = 'X';
+    gameActive   = true;
+    aiPending    = false;
+
+    // Close modal
+    document.getElementById('gameOverModal').classList.remove('active');
+
+    // Re-render clears taken/win-flash classes AND resets pointer-events
+    renderBoard();
+    updateStatus();
+    setFocus(0);
+}
+
+function resetStats() {
+    if (!confirm('Reset all statistics?')) return;
+    stats = { winsX: 0, winsO: 0, draws: 0 };
+    localStorage.setItem('tttWinsX', '0');
+    localStorage.setItem('tttWinsO', '0');
+    localStorage.setItem('tttDraws',  '0');
+    updateDisplay();
+}
+
+/* ══════════════════════════════
+   RENDER
+══════════════════════════════ */
+function renderBoard() {
+    for (let i = 0; i < 9; i++) {
+        const cell = document.getElementById('c' + i);
+        if (!cell) continue;
+
+        // ── FIX 2: always reset pointer-events and classes on every render ──
+        cell.style.pointerEvents = (board[i] !== '' || !gameActive) ? 'none' : 'auto';
+        cell.classList.remove('x', 'o', 'taken', 'win-flash');
+
+        // Restore key hint (textContent would wipe it, so manage separately)
+        const val = board[i];
+        if (val === 'X') {
+            cell.classList.add('x', 'taken');
+            cell.innerHTML = '<span class="hint">' + (i+1) + '</span>✕';
+        } else if (val === 'O') {
+            cell.classList.add('o', 'taken');
+            cell.innerHTML = '<span class="hint">' + (i+1) + '</span>◯';
+        } else {
+            cell.innerHTML = '<span class="hint">' + (i+1) + '</span>';
+        }
+    }
+}
+
+function updateStatus() {
+    if (!gameActive) return;
+    const el = document.getElementById('gameStatus');
+    if (gameMode === 'ai') {
+        el.textContent = currentPlayer === 'X' ? '🎮 Your turn (X)' : '🤖 AI thinking…';
+    } else {
+        el.textContent = `Player ${currentPlayer}'s turn`;
+    }
+}
+
+function updateDisplay() {
+    document.getElementById('winsX').textContent = stats.winsX;
+    document.getElementById('winsO').textContent = stats.winsO;
+    document.getElementById('draws').textContent = stats.draws;
+}
+</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body>
+</html>

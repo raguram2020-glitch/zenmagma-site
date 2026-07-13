@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Space Colony - ZenMagma</title>    <meta name="description" content="Build a colony on another planet! Manage resources and expand your base.">
+    <link rel="canonical" href="https://zenmagma.com/games/70-space-colony">
+    <meta property="og:title" content="Space Colony - ZenMagma">
+    <meta property="og:description" content="Build a colony on another planet! Manage resources and expand your base.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/70-space-colony">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/space-colony.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000010;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #667eea}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center;max-width:600px;margin:0 auto">
+<div style="padding:8px;flex-wrap:wrap;display:flex;gap:8px;justify-content:center">
+<span class="hv">⚡<b id="en"> 100</b></span><span class="hv">💧<b id="wr"> 100</b></span><span class="hv">🍖<b id="fd"> 100</b></span><span class="hv">👨‍🚀<b id="pop"> 3</b></span><span class="hv">Day:<b id="dy"> 1</b></span>
+</div>
+<canvas id="c" width="480" height="300"></canvas>
+<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px">
+<button class="btn" onclick="build('solar')">☀️ Solar (50E)</button>
+<button class="btn" onclick="build('water')">💧 Water Pump (60W)</button>
+<button class="btn" onclick="build('farm')">🌿 Farm (40F)</button>
+<button class="btn" onclick="build('dome')">🏠 Habitat (80 all)</button>
+<button class="btn" onclick="nextDay()">Next Day ⏭</button>
+</div>
+<div id="log" style="color:#aaa;font-size:.85em;height:24px;padding:4px;text-align:center"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Space Colony</h2>
+<p style="text-align:left;color:#ccc;font-size:.88em;line-height:1.6">
+<b style="color:#f1c40f">Goal:</b> Survive 30 days without running out of Energy ⚡, Water 💧, or Food 🍖.<br><br>
+<b style="color:#f1c40f">Buildings:</b><br>
+☀️ Solar (+15 Energy/day, costs 50E)<br>
+💧 Water Pump (+20 Water/day, costs 60W)<br>
+🌿 Farm (+15 Food/day, costs 40F)<br>
+🏠 Habitat (+2 Population, costs 80 all)<br><br>
+<b style="color:#f1c40f">Each colonist consumes:</b> 2E · 3W · 4F per day<br>
+<b style="color:#e74c3c">⚠️ If any resource hits 0, the colony collapses!</b>
+</p>
+<button class="btn" onclick="go()">Colonize!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=300;
+const TILES=12*7;let grid=[],energy=100,water=100,food=100,pop=3,day=1,score=0,running=false;
+const BUILDINGS={empty:{e:"",ep:0,wp:0,fp:0},solar:{e:"☀️",ep:15,wp:0,fp:0},water:{e:"💧",ep:-5,wp:20,fp:0},farm:{e:"🌿",ep:-5,wp:-5,fp:15},dome:{e:"🏠",ep:-10,wp:-10,fp:-10,pp:2}};
+function init(){grid=Array(84).fill("empty");}
+function draw(){
+  ctx.fillStyle="#000010";ctx.fillRect(0,0,W,H);
+  for(let i=0;i<7;i++)for(let j=0;j<12;j++){const b=grid[i*12+j];const x=j*40,y=i*43;ctx.fillStyle="#0a0a1a";ctx.fillRect(x+1,y+1,38,41);ctx.strokeStyle="rgba(102,126,234,.2)";ctx.lineWidth=1;ctx.strokeRect(x,y,40,43);if(b!=="empty"){ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(BUILDINGS[b].e,x+20,y+21);}}
+}
+function build(type){
+  const costs={solar:{ep:50},water:{wp:60},farm:{fp:40},dome:{ep:80,wp:80,fp:80}};
+  const c=costs[type];
+  if(c.ep&&energy<c.ep){log("Not enough energy!");return;}
+  if(c.wp&&water<c.wp){log("Not enough water!");return;}
+  if(c.fp&&food<c.fp){log("Not enough food!");return;}
+  const empty=grid.indexOf("empty");if(empty<0){log("No space!");return;}
+  grid[empty]=type;if(c.ep)energy-=c.ep;if(c.wp)water-=c.wp;if(c.fp)food-=c.fp;draw();upd();log(type+" built!");
+}
+function nextDay(){
+  day++;let ep=0,wp=0,fp=0,pp=0;
+  grid.forEach(b=>{const bd=BUILDINGS[b];ep+=bd.ep||0;wp+=bd.wp||0;fp+=bd.fp||0;pp+=bd.pp||0;});
+  energy=Math.max(0,Math.min(200,energy+ep-pop*2));water=Math.max(0,Math.min(200,water+wp-pop*3));food=Math.max(0,Math.min(200,food+fp-pop*4));pop+=pp;
+  document.getElementById("dy").textContent=day;upd();log(`Day ${day} - Resources updated`);
+  if(energy<=0||water<=0||food<=0){running=false;setTimeout(()=>window._showMod("Colony failed! Survived "+day+" days"),200);}
+  if(day>=30)setTimeout(()=>window._showMod("Colony survived 30 days! Score: "+score),200);
+  score=day*pop*10;
+}
+function upd(){
+  const en=Math.round(energy),wr=Math.round(water),fd=Math.round(food);
+  document.getElementById("en").textContent=en;document.getElementById("wr").textContent=wr;document.getElementById("fd").textContent=fd;document.getElementById("pop").textContent=pop;
+  // Flash red when critical
+  document.getElementById("en").parentElement.style.background=en<25?"rgba(231,76,60,.5)":"rgba(255,255,255,.12)";
+  document.getElementById("wr").parentElement.style.background=wr<25?"rgba(52,152,219,.5)":"rgba(255,255,255,.12)";
+  document.getElementById("fd").parentElement.style.background=fd<25?"rgba(46,204,113,.4)":"rgba(255,255,255,.12)";
+  // Building recommendation
+  const recs=[];
+  if(en<25)recs.push("⚡ Energy critical — build Solar ☀️");
+  else if(wr<25)recs.push("💧 Water critical — build Water Pump 💧");
+  else if(fd<25)recs.push("🍖 Food critical — build Farm 🌿");
+  if(recs.length)log("⚠️ "+recs[0]);
+}
+function log(m){document.getElementById("log").textContent=m;}
+function go(){document.getElementById("ov").style.display="none";running=true;draw();upd();}
+init();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  init();
+}
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+<script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

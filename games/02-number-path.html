@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Number Path - ZenMagma</title>
+    <meta name="description" content="Connect numbers in the correct order to complete each path puzzle.">
+    <link rel="canonical" href="https://zenmagma.com/games/02-number-path">
+    <meta property="og:title" content="Number Path - ZenMagma">
+    <meta property="og:description" content="Connect numbers in the correct order to complete each path puzzle.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/02-number-path">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/number-path.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a1a1a;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);touch-action:none}
+#hud{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hval{background:rgba(255,255,255,.12);padding:5px 16px;border-radius:20px;font-weight:700;font-size:.9em}
+.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05);opacity:.9}
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}
+#obox{background:#16213e;border-radius:20px;padding:40px;text-align:center;max-width:380px;width:90%;border:2px solid #11998e}
+#obox h2{font-size:2.2em;margin-bottom:8px;background:linear-gradient(135deg,#11998e,#38ef7d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#obox p{color:#aaa;margin-bottom:22px;line-height:1.5}
+#home{position:fixed;top:10px;left:10px;padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8em;z-index:100}
+</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+
+
+<div id="hud"><span class="hval">Score: <b id="sc">0</b></span><span class="hval">Level: <b id="lv">1</b></span><span class="hval">Next: <b id="nx">1</b></span><button class="btn" onclick="newGame()">New Game</button></div>
+<canvas id="c" width="360" height="360"></canvas>
+<div id="overlay"><div id="obox"><h2>Number Path</h2><p>Connect numbers 1, 2, 3... in order by clicking them.<br>Clear the board to advance!</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const COLS=6,SZ=60;let nums=[],next=1,score=0,level=1,running=false;
+function mkBoard(){
+  nums=[];const count=level*3+9;
+  for(let i=0;i<count;i++){
+    let x,y,ok;
+    do{x=Math.floor(Math.random()*COLS);y=Math.floor(Math.random()*COLS);ok=!nums.find(n=>n.x===x&&n.y===y);}while(!ok);
+    nums.push({x,y,v:i+1,hit:false});
+  }
+  next=1;document.getElementById("nx").textContent=1;
+}
+function draw(){
+  ctx.fillStyle="#0a1a1a";ctx.fillRect(0,0,360,360);
+  ctx.strokeStyle="#1a3a2a";ctx.lineWidth=1;
+  for(let i=0;i<=COLS;i++){ctx.beginPath();ctx.moveTo(i*SZ,0);ctx.lineTo(i*SZ,360);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*SZ);ctx.lineTo(360,i*SZ);ctx.stroke();}
+  nums.forEach(n=>{
+    if(n.hit)return;
+    const x=n.x*SZ+SZ/2,y=n.y*SZ+SZ/2;
+    const hue=n.v===next?"#38ef7d":"#11998e";
+    ctx.fillStyle=hue;ctx.beginPath();ctx.arc(x,y,22,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#000";ctx.font="bold 16px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(n.v,x,y);
+    if(n.v===next){ctx.strokeStyle="#fff";ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,24,0,Math.PI*2);ctx.stroke();}
+  });
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const mx=e.offsetX,my=e.offsetY;
+  nums.forEach(n=>{
+    if(n.hit)return;
+    const x=n.x*SZ+SZ/2,y=n.y*SZ+SZ/2;
+    if(Math.hypot(mx-x,my-y)<24&&n.v===next){
+      n.hit=true;next++;score+=next*level;
+      document.getElementById("sc").textContent=score;
+      document.getElementById("nx").textContent=next;
+      if(nums.every(n=>n.hit)){level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkBoard();draw();},600);}
+    }
+  });
+  draw();
+});
+function go(){document.getElementById("overlay").style.display="none";running=true;draw();}
+function newGame(){score=0;level=1;document.getElementById("sc").textContent=0;document.getElementById("lv").textContent=1;mkBoard();go();}
+mkBoard();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

@@ -1,0 +1,472 @@
+/* ═══════════════════════════════════════════════════
+   ZENMAGMA — animations.css
+   All micro-interaction & animation styles
+   Uses transform + opacity only → 60fps safe
+═══════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────
+   1. GAME CARD — 3D tilt + cursor glow
+───────────────────────────────────────────────────*/
+.game-card {
+  --glow-x: 50%;
+  --glow-y: 50%;
+  transition:
+    transform   .12s ease-out,
+    box-shadow  .2s  ease,
+    border-color .2s ease;
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cursor-tracking spotlight */
+.game-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle 80px at var(--glow-x) var(--glow-y),
+    rgba(180,130,255,.18) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+}
+.game-card:hover::after { opacity: 1; }
+
+.game-card:hover {
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.7),
+    0 0 0 1px rgba(124,58,237,.35),
+    0 0 30px rgba(124,58,237,.2);
+}
+
+
+/* ─────────────────────────────────────────────────
+   2. BUTTON EFFECTS
+───────────────────────────────────────────────────*/
+
+/* Ripple span injected by JS */
+.zm-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,.28);
+  transform: scale(0);
+  animation: zmRipple .55s ease-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+@keyframes zmRipple {
+  to { transform: scale(1); opacity: 0; }
+}
+
+/* Play Now button — continuous subtle pulse */
+.btn-play {
+  animation: btnPulse 2.8s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+@keyframes btnPulse {
+  0%,100% { box-shadow: 0 4px 24px rgba(124,58,237,.45); }
+  50%     { box-shadow: 0 4px 40px rgba(124,58,237,.75), 0 0 60px rgba(124,58,237,.25); }
+}
+.btn-play:hover {
+  animation: none; /* stop pulse on hover, glow takes over */
+}
+
+/* All pill buttons — glow on hover */
+.btn-pill.primary:hover,
+.dc-action:hover,
+.sc-btn:hover {
+  box-shadow: 0 0 0 3px rgba(124,58,237,.25), 0 8px 28px rgba(124,58,237,.55);
+}
+
+
+/* ─────────────────────────────────────────────────
+   3. XP POPUP
+───────────────────────────────────────────────────*/
+.xp-popup {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 9000;
+  pointer-events: none;
+
+  /* Pill look */
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  font-family: 'Orbitron', 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 8px 20px;
+  border-radius: 30px;
+  box-shadow: 0 4px 24px rgba(124,58,237,.55), 0 0 40px rgba(124,58,237,.25);
+  white-space: nowrap;
+
+  animation: xpFloat 1.8s cubic-bezier(.23,1,.32,1) forwards;
+}
+@keyframes xpFloat {
+  0%   { opacity:0;   transform: translateX(-50%) translateY(0)   scale(.6); }
+  15%  { opacity:1;   transform: translateX(-50%) translateY(-8px) scale(1.1); }
+  40%  { opacity:1;   transform: translateX(-50%) translateY(-20px) scale(1); }
+  100% { opacity:0;   transform: translateX(-50%) translateY(-60px) scale(.9); }
+}
+
+
+/* ─────────────────────────────────────────────────
+   5. HERO EMOJI FLOAT
+───────────────────────────────────────────────────*/
+.hero-emoji-float {
+  animation: heroFloat 3.5s ease-in-out infinite;
+  display: inline-block;
+}
+@keyframes heroFloat {
+  0%,100% { transform: translateY(0px)   rotate(-3deg) scale(1);    }
+  33%     { transform: translateY(-14px) rotate(2deg)  scale(1.04); }
+  66%     { transform: translateY(-6px)  rotate(-1deg) scale(1.02); }
+}
+
+
+/* ─────────────────────────────────────────────────
+   6. PAGE TRANSITIONS
+───────────────────────────────────────────────────*/
+.page-enter {
+  opacity: 0;
+  transform: translateY(18px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity .5s ease, transform .5s cubic-bezier(.23,1,.32,1);
+}
+.page-exit {
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity .28s ease, transform .28s ease;
+  pointer-events: none;
+}
+
+
+/* ─────────────────────────────────────────────────
+   7. LOADER — dot bounce
+───────────────────────────────────────────────────*/
+.zm-loader-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.zm-loader-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff6b35;
+  animation: dotBounce 1.1s ease-in-out infinite;
+}
+.zm-loader-dots span:nth-child(2) {
+  background: #ffcd3c;
+  animation-delay: .18s;
+}
+.zm-loader-dots span:nth-child(3) {
+  background: #a855f7;
+  animation-delay: .36s;
+}
+@keyframes dotBounce {
+  0%,100% { transform: translateY(0)    scale(1);   opacity: .5; }
+  50%     { transform: translateY(-14px) scale(1.2); opacity: 1;  }
+}
+
+
+/* ─────────────────────────────────────────────────
+   9. SCROLL REVEAL  (ScrollReveal module)
+───────────────────────────────────────────────────*/
+.will-reveal {
+  opacity: 0;
+  transform: translateY(22px) scale(.97);
+  transition:
+    opacity .42s ease,
+    transform .42s cubic-bezier(.23,1,.32,1);
+}
+.will-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Stagger children inside grid */
+.games-grid .will-reveal:nth-child(2)  { transition-delay: .04s; }
+.games-grid .will-reveal:nth-child(3)  { transition-delay: .08s; }
+.games-grid .will-reveal:nth-child(4)  { transition-delay: .12s; }
+.games-grid .will-reveal:nth-child(5)  { transition-delay: .16s; }
+.games-grid .will-reveal:nth-child(6)  { transition-delay: .20s; }
+.games-grid .will-reveal:nth-child(7)  { transition-delay: .24s; }
+.games-grid .will-reveal:nth-child(8)  { transition-delay: .28s; }
+.games-grid .will-reveal:nth-child(n+9){ transition-delay: .32s; }
+
+
+/* ─────────────────────────────────────────────────
+   DAILY CHALLENGE — pulse border
+───────────────────────────────────────────────────*/
+#daily-challenge {
+  animation: dcBorder 3s ease-in-out infinite;
+}
+@keyframes dcBorder {
+  0%,100% { border-color: rgba(255,107,53,.3); }
+  50%     { border-color: rgba(255,107,53,.65); }
+}
+
+
+/* ─────────────────────────────────────────────────
+   HERO BADGE — fire shimmer
+───────────────────────────────────────────────────*/
+.hero-badge {
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    #ff6b35 0%, #ffcd3c 40%, #ff6b35 60%, #ffcd3c 100%
+  );
+  animation: badgeShimmer 2.5s linear infinite, heroBadgePulse 2s ease-in-out infinite;
+}
+@keyframes badgeShimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+
+/* ─────────────────────────────────────────────────
+   SIDEBAR CHALLENGE — glow pulse
+───────────────────────────────────────────────────*/
+#sb-challenge {
+  animation: sbGlow 2.5s ease-in-out infinite;
+}
+@keyframes sbGlow {
+  0%,100% { box-shadow: 0 0 0px rgba(255,107,53,0);   }
+  50%     { box-shadow: 0 0 18px rgba(255,107,53,.35); }
+}
+
+
+/* ─────────────────────────────────────────────────
+   MYSTERY BOX — shimmer sweep
+───────────────────────────────────────────────────*/
+.mystery-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, transparent, rgba(0,229,255,.07), transparent
+  );
+  animation: mbSweep 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes mbSweep {
+  0%   { left: -60%; }
+  100% { left: 160%; }
+}
+
+
+/* ─────────────────────────────────────────────────
+   GAMIFICATION BAR — XP fill animate
+───────────────────────────────────────────────────*/
+.gam-xp-fill {
+  transition: width .9s cubic-bezier(.23,1,.32,1);
+  position: relative;
+  overflow: hidden;
+}
+.gam-xp-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 20px; height: 100%;
+  background: rgba(255,255,255,.4);
+  animation: xpShine 1.8s ease-in-out infinite;
+}
+@keyframes xpShine {
+  0%,100% { opacity: 0; transform: translateX(10px); }
+  50%     { opacity: 1; transform: translateX(-4px); }
+}
+
+
+/* ─────────────────────────────────────────────────
+   LIVE DOT in hero
+───────────────────────────────────────────────────*/
+.dot-live {
+  animation: livePulse 1.4s ease-in-out infinite !important;
+}
+@keyframes livePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,230,118,.6); transform: scale(1);   }
+  50%     { box-shadow: 0 0 0 5px rgba(0,230,118,0); transform: scale(1.2); }
+}
+
+
+/* ─────────────────────────────────────────────────
+   CATEGORY PILL active indicator
+───────────────────────────────────────────────────*/
+.cat-pill.active {
+  animation: pillActive 2s ease-in-out infinite;
+}
+@keyframes pillActive {
+  0%,100% { box-shadow: 0 4px 14px rgba(124,58,237,.4); }
+  50%     { box-shadow: 0 4px 24px rgba(124,58,237,.7); }
+}
+
+
+/* ─────────────────────────────────────────────────
+   SCROLL ROW — fade edges
+───────────────────────────────────────────────────*/
+.scroll-row-wrap {
+  position: relative;
+}
+.scroll-row-wrap::before,
+.scroll-row-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 8px; width: 40px;
+  z-index: 2; pointer-events: none;
+}
+.scroll-row-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--c-bg), transparent);
+}
+.scroll-row-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--c-bg), transparent);
+}
+
+
+/* ─────────────────────────────────────────────────
+   BADGE in gamification bar — pop in
+───────────────────────────────────────────────────*/
+.gam-badge {
+  animation: badgePop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes badgePop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+
+/* ─────────────────────────────────────────────────
+   MOBILE — disable tilt, keep scale
+───────────────────────────────────────────────────*/
+@media (max-width: 768px) {
+  .game-card:hover,
+  .game-card:active {
+    transform: scale(1.03) !important;
+  }
+  .game-card::after { display: none; }
+  .btn-play { animation: btnPulse 3.5s ease-in-out infinite; }
+}
+
+
+/* ─────────────────────────────────────────────────
+   REDUCED MOTION — respect user preference
+───────────────────────────────────────────────────*/
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ── PREMIUM CARD HOVER GLOW PULSE ── */
+@keyframes cardGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--card-color,#7c3aed) 40%, transparent), 0 8px 32px rgba(0,0,0,.5); }
+  50%       { box-shadow: 0 0 0 1px color-mix(in srgb, var(--card-color,#7c3aed) 70%, transparent), 0 0 28px color-mix(in srgb, var(--card-color,#7c3aed) 25%, transparent), 0 12px 40px rgba(0,0,0,.65); }
+}
+.game-card:focus-visible { animation: cardGlowPulse 2s ease-in-out infinite; outline: none; }
+
+/* ── HERO TITLE SHIMMER ── */
+@keyframes titleShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.hero-title {
+  background: linear-gradient(90deg, #fff 20%, #a855f7 40%, #fff 60%, #ff6b35 80%, #fff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleShimmer 6s linear infinite;
+}
+
+/* ── CARD BADGE ANIMATION ── */
+@keyframes badgePop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.badge { animation: badgePop .35s cubic-bezier(.34,1.56,.64,1) both; }
+.badge.new  { animation-delay: .05s; }
+.badge.hot  { animation-delay: .1s; }
+
+/* ── SCROLL ROW FADE EDGES ── */
+.trending-section { position: relative; }
+.trending-section::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 60px;
+  background: linear-gradient(to left, var(--c-bg), transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── SECTION APPEAR ── */
+@keyframes sectionFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── GAME CARD FLOAT ON FEATURED ── */
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+/* ── DAILY CHALLENGE PULSE ── */
+@keyframes dcPulse {
+  0%, 100% { border-color: rgba(255,107,53,.3); }
+  50%       { border-color: rgba(255,107,53,.7); box-shadow: 0 4px 40px rgba(255,107,53,.2); }
+}
+#daily-challenge { animation: dcPulse 3s ease-in-out infinite; }
+
+/* ── MYSTERY BOX SHIMMER ── */
+@keyframes mbShimmer {
+  0%   { opacity: .06; }
+  50%  { opacity: .14; }
+  100% { opacity: .06; }
+}
+.mystery-box::after { animation: mbShimmer 2.5s ease-in-out infinite; }
+
+/* ── POKI CARD LIFT SHADOW ── */
+@keyframes pokiLift {
+  to { box-shadow: 0 20px 60px rgba(0,0,0,.8), 0 0 0 2px color-mix(in srgb, var(--card-color,#7c3aed) 60%, transparent); }
+}
+
+/* ── HEADER XP BAR FILL ── */
+@keyframes xpBarFill {
+  from { width: 0; }
+}
+.hdr-xp-fill { animation: xpBarFill 1.2s cubic-bezier(.23,1,.32,1) both; }
+
+/* ── GLOW RING ── */
+@keyframes glowRing {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-accent) 40%, transparent); }
+  50%       { box-shadow: 0 0 0 8px color-mix(in srgb, var(--c-accent) 0%, transparent); }
+}
+
+/* ── CARD RATING STARS ── */
+@keyframes starsPop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ── LIVE BADGE BLINK ── */
+@keyframes liveBlink {
+  0%, 90%, 100% { opacity: 1; }
+  45%            { opacity: .4; }
+}
+.badge.new { animation: liveBlink 2.5s ease-in-out infinite, badgePop .35s .05s cubic-bezier(.34,1.56,.64,1) both; }

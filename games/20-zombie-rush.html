@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Zombie Rush - ZenMagma</title>
+    <meta name="description" content="Survive the zombie apocalypse! Defend your base from endless waves.">
+    <link rel="canonical" href="https://zenmagma.com/games/20-zombie-rush">
+    <meta property="og:title" content="Zombie Rush - ZenMagma">
+    <meta property="og:description" content="Survive the zombie apocalypse! Defend your base from endless waves.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/20-zombie-rush">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/zombie-rush.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#020a02;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}#hud{display:flex;gap:12px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em}.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#27ae60,#1e8449);color:#fff;transition:.2s}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:360px;width:90%;border:2px solid #27ae60}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#27ae60,#1e8449);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+
+<div id="hud"><span class="hv">HP:<b id="hp"> 100</b></span><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Wave:<b id="wv"> 1</b></span><span class="hv">Ammo:<b id="am"> 30</b></span></div>
+<canvas id="c" width="480" height="480"></canvas>
+<p style="text-align:center;color:#aaa;font-size:.8em">WASD/arrows to move | Click to shoot | R to reload</p>
+<div id="goov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid #e74c3c;"><div style="font-size:3em;margin-bottom:10px;">🧟</div><div style="font-size:1.6em;font-weight:800;color:#e74c3c;margin-bottom:8px;">You Died!</div><div id="gomsg" style="color:#aaa;margin-bottom:20px;font-size:.95em;"></div><button class="btn" onclick="doRestart()">▶ Play Again</button></div></div>
+<div id="ov"><div id="ob"><h2>Zombie Rush</h2><p>Survive zombie waves! Move with arrow keys, click to shoot toward cursor. Collect ammo drops. Don't get overwhelmed!</p><button class="btn" onclick="go()">Survive!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=480;
+let player,zombies,bullets,drops,score,wave,hp,ammo,frame,running,gameOver;
+const keys={};
+function init(){player={x:W/2,y:H/2,r:14,spd:3,angle:0};zombies=[];bullets=[];drops=[];score=0;wave=1;hp=100;ammo=30;frame=0;gameOver=false;document.getElementById("hp").textContent=hp;document.getElementById("sc").textContent=score;document.getElementById("wv").textContent=wave;document.getElementById("am").textContent=ammo;}
+function spawnWave(){const n=5+wave*3;for(let i=0;i<n;i++){const side=Math.floor(Math.random()*4);let x,y;if(side===0){x=Math.random()*W;y=-20;}else if(side===1){x=W+20;y=Math.random()*H;}else if(side===2){x=Math.random()*W;y=H+20;}else{x=-20;y=Math.random()*H;}zombies.push({x,y,r:12,hp:wave*10,maxHp:wave*10,spd:0.8+wave*.15});}}
+let mx=W/2,my=H/2;cv.addEventListener("mousemove",e=>{const r=cv.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;});
+cv.addEventListener("click",e=>{if(!running||ammo<=0)return;const angle=Math.atan2(my-player.y,mx-player.x);bullets.push({x:player.x,y:player.y,dx:Math.cos(angle)*12,dy:Math.sin(angle)*12,life:60});ammo--;document.getElementById("am").textContent=ammo;});
+document.addEventListener("keydown",e=>{keys[e.key]=true;if(e.key==="r"||e.key==="R"){ammo=30;document.getElementById("am").textContent=30;}});
+document.addEventListener("keyup",e=>keys[e.key]=false);
+function update(){
+  frame++;
+  if(keys["ArrowLeft"]||keys["a"]||keys["A"])player.x=Math.max(player.r,player.x-player.spd);
+  if(keys["ArrowRight"]||keys["d"]||keys["D"])player.x=Math.min(W-player.r,player.x+player.spd);
+  if(keys["ArrowUp"]||keys["w"]||keys["W"])player.y=Math.max(player.r,player.y-player.spd);
+  if(keys["ArrowDown"]||keys["s"]||keys["S"])player.y=Math.min(H-player.r,player.y+player.spd);
+  player.angle=Math.atan2(my-player.y,mx-player.x);
+  bullets=bullets.filter(b=>{b.x+=b.dx;b.y+=b.dy;b.life--;let hit=false;zombies=zombies.filter(z=>{if(Math.hypot(b.x-z.x,b.y-z.y)<z.r+4){z.hp-=25;hit=true;if(z.hp<=0){score+=10*wave;document.getElementById("sc").textContent=score;if(Math.random()<0.3)drops.push({x:z.x,y:z.y,type:"ammo"});return false;}return true;}return true;});return !hit&&b.life>0&&b.x>0&&b.x<W&&b.y>0&&b.y<H;});
+  zombies.forEach(z=>{const a=Math.atan2(player.y-z.y,player.x-z.x);z.x+=Math.cos(a)*z.spd;z.y+=Math.sin(a)*z.spd;if(Math.hypot(z.x-player.x,z.y-player.y)<z.r+player.r){hp-=0.3;document.getElementById("hp").textContent=Math.max(0,Math.round(hp));if(hp<=0&&!gameOver){gameOver=true;running=false;showGameOver("You died! Score: "+score);}}});
+  drops=drops.filter(d=>{if(Math.hypot(d.x-player.x,d.y-player.y)<20){ammo=Math.min(30,ammo+15);document.getElementById("am").textContent=ammo;return false;}return true;});
+  if(zombies.length===0){wave++;document.getElementById("wv").textContent=wave;spawnWave();}
+}
+function draw(){
+  ctx.fillStyle="#020a02";ctx.fillRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle="#0a1a0a";ctx.lineWidth=1;for(let i=0;i<W;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}for(let i=0;i<H;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+  drops.forEach(d=>{ctx.fillStyle="#f39c12";ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText("🔫",d.x,d.y);});
+  zombies.forEach(z=>{ctx.fillStyle="#27ae60";ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#1e8449";ctx.beginPath();ctx.arc(z.x,z.y-z.r*.5,z.r*.6,0,Math.PI*2);ctx.fill();ctx.fillStyle="#333";ctx.fillRect(z.x-z.r,z.y-z.r-8,z.r*2,4);ctx.fillStyle="#e74c3c";ctx.fillRect(z.x-z.r,z.y-z.r-8,z.r*2*(z.hp/z.maxHp),4);});
+  bullets.forEach(b=>{ctx.fillStyle="#f1c40f";ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill();});
+  // Player
+  ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.angle);
+  ctx.fillStyle="#3498db";ctx.beginPath();ctx.arc(0,0,player.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#2980b9";ctx.fillRect(0,-4,20,8);ctx.restore();
+  // HP bar
+  ctx.fillStyle="#333";ctx.fillRect(10,H-20,200,12);ctx.fillStyle="#e74c3c";ctx.fillRect(10,H-20,200*(hp/100),12);
+}
+function go(){document.getElementById("ov").style.display="none";running=true;spawnWave();(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
+init();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  init();
+  running=true;
+  spawnWave();
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

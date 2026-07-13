@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Spell Bee - ZenMagma</title>    <meta name="description" content="Compete in a spelling bee! Hear the word and type the correct spelling.">
+    <link rel="canonical" href="https://zenmagma.com/games/65-spell-bee">
+    <meta property="og:title" content="Spell Bee - ZenMagma">
+    <meta property="og:description" content="Compete in a spelling bee! Hear the word and type the correct spelling.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/65-spell-bee">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/spell-bee.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0800;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f9d423,#ff4e50);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #f9d423}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#f9d423,#ff4e50);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center;max-width:500px;margin:0 auto">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span><span class="hv">Lives:<b id="lf"> 3</b></span></div>
+<div style="font-size:4em;padding:20px">🐝</div>
+<div style="font-size:1em;color:#aaa;padding:4px">The bee said a word... type it!</div>
+<div id="word-display" style="font-size:1.4em;color:#f9d423;padding:10px;min-height:40px"></div>
+<input id="ans" style="padding:12px 20px;border-radius:30px;border:2px solid #f9d423;background:#1a1000;color:#fff;font-size:1.2em;width:260px;text-align:center;outline:none;margin:10px" placeholder="Type spelling here...">
+<br><button class="btn" onclick="submit()">Submit</button>
+<button class="btn" onclick="hear()" style="background:linear-gradient(135deg,#555,#333)">🔊 Hear Again</button>
+<div id="fb" style="font-size:1.1em;height:30px;margin:8px"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Spell Bee</h2><p>Listen to the word spoken by the bee and type the correct spelling! Each level uses harder words.</p><button class="btn" onclick="go()">Buzz!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const WORDS=[
+  ["cat","dog","sun","hat","map","cup","pen","fig","run","fly","bat","rat","tap","sit","lip","pin","mud","fox","jam","web","owl","ant","bee","cow","due","dew","aim","oak","ivy","elm"],
+  ["bird","fish","cake","moon","star","wind","fire","game","swim","draw","frog","wolf","hawk","deer","mole","barn","crab","duck","dove","worm","silk","harp","drum","maze","pear","lime","jade","ruby","opal","iron"],
+  ["cloud","ocean","flame","brave","smart","tiger","eagle","piano","magic","dance","frost","storm","globe","chest","cliff","herbs","knife","lunar","maple","nurse","olive","pearl","quilt","radar","serum","torch","tutor","ultra","vault","waltz"],
+  ["ancient","journey","mystery","thunder","whisper","crystal","kingdom","lantern","phantom","scholar","balance","blossom","captain","diamond","element","fortune","general","harvest","integer","library","monarch","network","orbital","pension","quarter","rattled","silence","tangent","unified","vibrant"],
+  ["beautiful","adventure","chocolate","wonderful","celebrate","beginning","knowledge","important","recognize","different","algorithm","ambiguous","botanical","cathedral","conquered","discovery","elaborate","fantastic","glamorous","hibernate","illusions","justified","labyrinth","magnitude","narration","orchestra","parallels","quotients","rhapsodic","symphony"],
+];
+let word,score=0,level=1,lives=3,running=false,streak=0,speechAvail=("speechSynthesis"in window);
+function mkQ(){level=Math.min(level,WORDS.length);const pool=WORDS[level-1];word=pool[Math.floor(Math.random()*pool.length)];document.getElementById("word-display").textContent="";document.getElementById("ans").value="";document.getElementById("fb").textContent="";setTimeout(hear,300);}
+function hear(){if(speechAvail){const u=new SpeechSynthesisUtterance(word);u.rate=0.8;speechSynthesis.speak(u);}else{// Partial reveal fallback: show first + last letter, middle blanked
+const hint=word[0]+"_".repeat(Math.max(0,word.length-2))+(word.length>1?word[word.length-1]:"");document.getElementById("word-display").innerHTML=`<span style="color:#f9d423;font-size:1.3em;letter-spacing:4px">${hint}</span><br><span style="font-size:.7em;color:#888">(${word.length} letters — speech unavailable)</span>`;}}
+function submit(){const a=document.getElementById("ans").value.toLowerCase().trim();if(a===word){score+=word.length*10*level;level++;streak++;document.getElementById("sc").textContent=score;document.getElementById("lv").textContent=level;let msg='<span style="color:#2ecc71">✓ Correct!</span>';if(streak>0&&streak%3===0){lives++;document.getElementById("lf").textContent=lives;msg+=' <span style="color:#f9d423">+1 Life! 🐝</span>';}document.getElementById("fb").innerHTML=msg;setTimeout(mkQ,800);}else{lives--;streak=0;document.getElementById("lf").textContent=lives;document.getElementById("fb").innerHTML=`<span style="color:#e74c3c">✗ It was: "${word}"</span>`;if(lives<=0){setTimeout(()=>window._showMod("No more lives! Score: "+score),200);}else setTimeout(mkQ,1200);}}
+document.getElementById("ans").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+function go(){document.getElementById("ov").style.display="none";running=true;mkQ();}
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+<script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Meteor Dodge - ZenMagma</title>    <meta name="description" content="Dodge incoming meteors in space! How long can you survive the meteor shower?">
+    <link rel="canonical" href="https://zenmagma.com/games/99-meteor-dodge">
+    <meta property="og:title" content="Meteor Dodge - ZenMagma">
+    <meta property="og:description" content="Dodge incoming meteors in space! How long can you survive the meteor shower?">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/99-meteor-dodge">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/meteor-dodge.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000010;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:8px;overflow:hidden}canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transition:.2s;margin:3px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #667eea}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center"><div style="padding:6px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Lives:<b id="lf"> 3</b></span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<canvas id="c" width="420" height="480"></canvas>
+<p style="color:#aaa;font-size:.8em">Mouse/touch to move ship. Dodge meteors, collect fuel!</p></div>
+<div id="ov"><div id="ob"><h2>Meteor Dodge</h2><p>Pilot your spaceship through an endless meteor storm! Dodge rocks, collect power crystals, and survive as long as possible.</p><button class="btn" onclick="go()">Launch!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=420,H=480;
+let ship,meteors,crystals,particles,score,lives,level,frame,running;
+function init(){ship={x:W/2,y:H-80,r:16,tx:W/2,ty:H-80};meteors=[];crystals=[];particles=[];score=0;lives=3;level=1;frame=0;}
+cv.addEventListener("mousemove",e=>{const r=cv.getBoundingClientRect();ship.tx=e.clientX-r.left;ship.ty=e.clientY-r.top;});
+cv.addEventListener("touchmove",e=>{e.preventDefault();const r=cv.getBoundingClientRect();ship.tx=e.touches[0].clientX-r.left;ship.ty=e.touches[0].clientY-r.top;},{passive:false});
+function update(){
+  frame++;score+=0.1*level;document.getElementById("sc").textContent=Math.round(score);
+  ship.x+=(ship.tx-ship.x)*.1;ship.y+=(ship.ty-ship.y)*.1;
+  ship.x=Math.max(ship.r,Math.min(W-ship.r,ship.x));ship.y=Math.max(ship.r,Math.min(H-ship.r,ship.y));
+  if(frame%Math.max(8,30-level*2)===0){const r=12+Math.random()*20;meteors.push({x:Math.random()*W,y:-r,r,dy:2+level*.3+Math.random()*2,dx:(Math.random()-.5)*level,rot:0,rotSpd:(Math.random()-.5)*.1});}
+  if(frame%80===0)crystals.push({x:Math.random()*W,y:-15,r:10,dy:2});
+  meteors=meteors.filter(m=>{m.x+=m.dx;m.y+=m.dy;m.rot+=m.rotSpd;if(Math.hypot(m.x-ship.x,m.y-ship.y)<m.r+ship.r-4){lives--;document.getElementById("lf").textContent=lives;for(let i=0;i<10;i++)particles.push({x:ship.x,y:ship.y,dx:(Math.random()-.5)*5,dy:(Math.random()-.5)*5,life:30,color:"#667eea"});if(lives<=0){running=false;setTimeout(()=>window._showMod("Ship destroyed! Score: "+Math.round(score)),200);}return false;}return m.y<H+m.r;});
+  crystals=crystals.filter(c=>{c.y+=c.dy;if(Math.hypot(c.x-ship.x,c.y-ship.y)<c.r+ship.r){score+=50*level;document.getElementById("sc").textContent=Math.round(score);return false;}return c.y<H+15;});
+  particles=particles.filter(p=>{p.x+=p.dx;p.y+=p.dy;p.life--;return p.life>0;});
+  if(Math.round(score)>level*500){level++;document.getElementById("lv").textContent=level;}
+}
+function draw(){
+  ctx.fillStyle="#000010";ctx.fillRect(0,0,W,H);
+  // Stars
+  for(let i=0;i<80;i++){const s=(frame*.2+i*73)%1;ctx.fillStyle=`rgba(255,255,255,${.1+s*.4})`;ctx.fillRect((i*137)%W,(i*97+frame*.3)%H,s<.5?1:2,s<.5?1:2);}
+  meteors.forEach(m=>{ctx.save();ctx.translate(m.x,m.y);ctx.rotate(m.rot);ctx.fillStyle="#888";ctx.beginPath();ctx.arc(0,0,m.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#555";ctx.fillRect(-m.r*.3,-m.r*.5,m.r*.4,m.r*.7);ctx.restore();});
+  crystals.forEach(c=>{ctx.fillStyle="#a855f7";ctx.beginPath();ctx.moveTo(c.x,c.y-c.r);ctx.lineTo(c.x+c.r,c.y);ctx.lineTo(c.x,c.y+c.r);ctx.lineTo(c.x-c.r,c.y);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();});
+  // Ship
+  ctx.save();ctx.translate(ship.x,ship.y);
+  ctx.fillStyle="#667eea";ctx.beginPath();ctx.moveTo(0,-ship.r);ctx.lineTo(-ship.r*.6,ship.r*.5);ctx.lineTo(ship.r*.6,ship.r*.5);ctx.closePath();ctx.fill();ctx.fillStyle="#764ba2";ctx.beginPath();ctx.moveTo(-ship.r*.6,ship.r*.5);ctx.lineTo(-ship.r*.9,ship.r);ctx.lineTo(-ship.r*.2,ship.r*.5);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(ship.r*.6,ship.r*.5);ctx.lineTo(ship.r*.9,ship.r);ctx.lineTo(ship.r*.2,ship.r*.5);ctx.closePath();ctx.fill();
+  // Engine glow
+  ctx.fillStyle=`rgba(255,100,0,${.5+Math.sin(frame*.3)*.3})`;ctx.beginPath();ctx.arc(0,ship.r*.6,5,0,Math.PI*2);ctx.fill();ctx.restore();
+  particles.forEach(p=>{ctx.globalAlpha=p.life/30;ctx.fillStyle=p.color;ctx.fillRect(p.x-2,p.y-2,4,4);ctx.globalAlpha=1;});
+}
+function go(){document.getElementById("ov").style.display="none";running=true;(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  init();
+}
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById(''_gmod'').style.display=''none''" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+<script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

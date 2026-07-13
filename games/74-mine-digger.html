@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Mine Digger - ZenMagma</title>    <meta name="description" content="Dig deep into the earth to find rare gems and minerals! Upgrade your tools.">
+    <link rel="canonical" href="https://zenmagma.com/games/74-mine-digger">
+    <meta property="og:title" content="Mine Digger - ZenMagma">
+    <meta property="og:description" content="Dig deep into the earth to find rare gems and minerals! Upgrade your tools.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/74-mine-digger">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/mine-digger.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0f0f1a;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#8B4513,#c9a84c);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #8B4513}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#8B4513,#c9a84c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center;padding:20px">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<div style="font-size:5em;padding:20px">⛏️</div>
+<div style="font-size:1.2em;color:#aaa;padding:10px">Dig for ores and gems in this idle mining game!</div>
+<canvas id="c" width="400" height="300"></canvas>
+<div style="padding:10px"><button class="btn" onclick="action1()">Action 1</button><button class="btn" onclick="action2()">Action 2</button></div>
+<div id="log" style="color:#aaa;font-size:.85em;height:24px;padding:4px"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Mine Digger</h2><p>Dig for ores and gems in this idle mining game!</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=400,H=300;
+let score=0,level=1,running=false,frame=0;
+const items=[],particles=[];
+function draw(){
+  ctx.fillStyle="#0f0f1a";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#8B4513";ctx.font="bold 24px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("Mine Digger",W/2,H/2-30);
+  ctx.fillStyle="#aaa";ctx.font="16px Segoe UI";ctx.fillText("Score: "+score,W/2,H/2+10);
+  ctx.fillStyle="#c9a84c";ctx.font="14px Segoe UI";ctx.fillText("Click actions to play!",W/2,H/2+40);
+  frame++;
+  for(let i=0;i<20;i++){ctx.fillStyle=`hsl(${(i*30+frame)%360},80%,60%)`;ctx.beginPath();ctx.arc(50+i*16,(H*.7+Math.sin((frame*.05+i)*.5)*20),6,0,Math.PI*2);ctx.fill();}
+}
+function action1(){if(!running)return;score+=10*level;document.getElementById("sc").textContent=score;document.getElementById("log").textContent="Action 1! +"+10*level+" points";if(score>level*100){level++;document.getElementById("lv").textContent=level;}draw();}
+function action2(){if(!running)return;score+=5*level;document.getElementById("sc").textContent=score;document.getElementById("log").textContent="Action 2! +"+5*level+" points";draw();}
+function go(){document.getElementById("ov").style.display="none";running=true;(function lp(){if(!running)return;draw();requestAnimationFrame(lp);})();}
+draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

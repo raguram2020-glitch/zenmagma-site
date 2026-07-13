@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html><html lang="en"><head>
+<script>
+// roundRect polyfill for Chrome <99, Firefox <112, Safari <15.4
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    if(typeof r==='number')r=[r,r,r,r];
+    else if(r.length===1)r=[r[0],r[0],r[0],r[0]];
+    else if(r.length===2)r=[r[0],r[1],r[0],r[1]];
+    else if(r.length===3)r=[r[0],r[1],r[2],r[1]];
+    this.moveTo(x+r[0],y);
+    this.lineTo(x+w-r[1],y);this.quadraticCurveTo(x+w,y,x+w,y+r[1]);
+    this.lineTo(x+w,y+h-r[2]);this.quadraticCurveTo(x+w,y+h,x+w-r[2],y+h);
+    this.lineTo(x+r[3],y+h);this.quadraticCurveTo(x,y+h,x,y+h-r[3]);
+    this.lineTo(x,y+r[0]);this.quadraticCurveTo(x,y,x+r[0],y);
+    this.closePath();
+    return this;
+  };
+}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Logic Gates - ZenMagma</title>
+    <meta name="description" content="Wire up logic gates to solve circuits! Learn about AND, OR and NOT gates.">
+    <link rel="canonical" href="https://zenmagma.com/games/14-logic-gates">
+    <meta property="og:title" content="Logic Gates - ZenMagma">
+    <meta property="og:description" content="Wire up logic gates to solve circuits! Learn about AND, OR and NOT gates.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/14-logic-gates">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/logic-gates.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050510;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}
+#hud{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hval{background:rgba(255,255,255,.12);padding:5px 16px;border-radius:20px;font-weight:700;font-size:.9em}
+.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#00ff88,#00b4d8);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05)}
+#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}
+#ob{background:#16213e;border-radius:20px;padding:40px;text-align:center;max-width:380px;width:90%;border:2px solid #00ff88}
+#ob h2{font-size:2em;margin-bottom:8px;background:linear-gradient(135deg,#00ff88,#00b4d8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#ob p{color:#aaa;margin-bottom:22px;line-height:1.5}
+#hm{position:fixed;top:10px;left:10px;padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8em;z-index:100}
+</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+
+
+<div id="hud"><span class="hval">Score:<b id="sc"> 0</b></span><span class="hval">Level:<b id="lv"> 1</b></span><span class="hval" id="ph">Set inputs correctly!</span></div>
+<canvas id="c" width="480" height="380"></canvas>
+<div id="ov"><div id="ob"><h2>Logic Gates</h2><p>Toggle A and B inputs to make the output match the TARGET!<br>Learn AND, OR, NOT, XOR, NAND gates!</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const GATES=[
+  {name:"AND",fn:(a,b)=>a&&b},
+  {name:"OR", fn:(a,b)=>a||b},
+  {name:"XOR",fn:(a,b)=>a!==b},
+  {name:"NAND",fn:(a,b)=>!(a&&b)},
+  {name:"NOR",fn:(a,b)=>!(a||b)},
+  {name:"XNOR",fn:(a,b)=>a===b},
+];
+let A=false,B=false,target=false,gate,score=0,level=1,running=false;
+function newPuzzle(){gate=GATES[Math.floor(Math.random()*Math.min(2+Math.floor(level/2),GATES.length))];target=Math.random()>.5;A=false;B=false;draw();}
+function draw(){
+  ctx.fillStyle="#050510";ctx.fillRect(0,0,480,380);
+  // Draw inputs
+  function drawIO(x,y,val,label){ctx.fillStyle=val?"#00ff88":"#333";ctx.beginPath();ctx.arc(x,y,28,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#00b4d8";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle=val?"#000":"#aaa";ctx.font="bold 14px monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(label,x,y-35);ctx.fillText(val?"1":"0",x,y);}
+  drawIO(80,120,A,"A");drawIO(80,250,B,"B");
+  // Gate box
+  ctx.fillStyle="#0a1a2a";ctx.beginPath();ctx.roundRect(200,155,120,70,12);ctx.fill();ctx.strokeStyle="#00b4d8";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#00ff88";ctx.font="bold 22px monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(gate.name,260,190);
+  // Wires
+  ctx.strokeStyle="#00b4d8";ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(108,120);ctx.lineTo(200,175);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(108,250);ctx.lineTo(200,205);ctx.stroke();
+  // Output
+  const out=gate.fn(A,B);
+  ctx.beginPath();ctx.moveTo(320,190);ctx.lineTo(380,190);ctx.stroke();
+  ctx.fillStyle=out?"#00ff88":"#333";ctx.beginPath();ctx.arc(390,190,28,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#00b4d8";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle=out?"#000":"#aaa";ctx.font="bold 18px monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(out?"1":"0",390,190);ctx.fillStyle="#aaa";ctx.font="14px monospace";ctx.fillText("OUT",390,155);
+  // Target
+  ctx.fillStyle="#f39c12";ctx.font="bold 18px Segoe UI";ctx.textAlign="center";ctx.fillText("TARGET: "+(target?"1":"0"),390,290);
+  ctx.fillStyle="#aaa";ctx.font="14px Segoe UI";ctx.fillText("Click A or B to toggle",240,340);
+  // Check
+  if(out===target){score+=10*level;level++;document.getElementById("sc").textContent=score;document.getElementById("lv").textContent=level;document.getElementById("ph").textContent="Correct!";setTimeout(newPuzzle,700);}
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const[mx,my]=[e.offsetX,e.offsetY];
+  if(Math.hypot(mx-80,my-120)<30){A=!A;draw();}
+  else if(Math.hypot(mx-80,my-250)<30){B=!B;draw();}
+});
+function go(){document.getElementById("ov").style.display="none";running=true;newPuzzle();}
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

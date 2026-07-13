@@ -1,0 +1,338 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Match - Kids Game</title>
+        <meta name="description" content="Find all matching pairs of cards! Great memory training game for kids.">
+    <link rel="canonical" href="https://zenmagma.com/games/memorymatch">
+    <meta property="og:title" content="Memory Match - ZenMagma">
+    <meta property="og:description" content="Find all matching pairs of cards! Great memory training game for kids.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/memorymatch">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/memory-match.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial;
+            background: radial-gradient(ellipse at 30% 20%, #1a0a3a 0%, #050514 60%, #000008 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 520px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f093fb, #f5576c, #ff9a3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .info {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            backdrop-filter: blur(6px);
+        }
+
+        .info-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .card {
+            width: 100%;
+            aspect-ratio: 1;
+            cursor: pointer;
+            perspective: 600px;
+            user-select: none;
+        }
+        .card:hover .card-inner:not(.flipped):not(.matched) {
+            transform: rotateY(20deg);
+        }
+        .card-inner {
+            width: 100%; height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.45s cubic-bezier(.4,1.4,.6,1);
+            border-radius: 14px;
+        }
+        .card-inner.flipped { transform: rotateY(180deg); }
+        .card-inner.matched { transform: rotateY(180deg); }
+        .card-front, .card-back {
+            position: absolute; inset: 0;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .card-front {
+            background: linear-gradient(135deg, #2a1a5e 0%, #1a0a3a 100%);
+            border: 1px solid rgba(120,60,220,0.5);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            font-size: 28px; font-weight: 900;
+            color: rgba(160,120,255,0.8);
+        }
+        .card-back {
+            background: linear-gradient(135deg, #2a1060 0%, #1a0840 100%);
+            border: 1px solid rgba(200,100,255,0.7);
+            transform: rotateY(180deg);
+            font-size: 28px;
+        }
+        .card-inner.matched .card-back {
+            background: linear-gradient(135deg, #1a4a10 0%, #0a3008 100%);
+            border-color: rgba(100,255,80,0.6);
+            box-shadow: 0 0 20px rgba(100,255,80,0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Segoe UI', Arial;
+            background: linear-gradient(135deg, #7b2ff7, #f107a3);
+            color: white;
+            box-shadow: 0 4px 16px rgba(160,40,255,0.4);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .controls button:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(160,40,255,0.6);}
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(160deg, #1a0a3a, #0a0818);
+            padding: 40px;
+            border-radius: 24px;
+            border: 2px solid rgba(200,100,255,0.4);
+            text-align: center;
+            max-width: 380px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+
+        .modal-title {
+            font-size: 32px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg,#f093fb,#f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-score {
+            font-size: 42px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 16px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+        .modal-buttons button{
+            padding: 12px 28px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background: linear-gradient(135deg, #7b2ff7, #f107a3);
+            color: white;
+            box-shadow: 0 4px 16px rgba(160,40,255,0.4);
+            transition: transform .15s;
+        }
+        .modal-buttons button:hover{transform:translateY(-2px);}
+    </style>
+</head>
+<body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+    <div class="container">
+        <h1>🧠 MEMORY MATCH 🎮</h1>
+
+        <div class="info">
+            <div class="info-box"><div>Moves: <span id="moves">0</span></div></div>
+            <div class="info-box"><div>Matched: <span id="matched">0</span>/<span id="total">8</span></div></div>
+            <div class="info-box"><div>Time: <span id="timer">0</span>s</div></div>
+            <div class="info-box"><div>Best: <span id="best">-</span>s</div></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px">
+            <button class="controls button" id="btn4x4" onclick="setMode(4)" style="padding:8px 20px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7b2ff7,#f107a3);color:#fff">4×4 Easy</button>
+            <button class="controls button" id="btn6x6" onclick="setMode(6)" style="padding:8px 20px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.12);color:#aaa;border:1px solid rgba(255,255,255,0.2)">6×6 Hard</button>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="resetGame()">New Game</button>
+        </div>
+    </div>
+
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <div class="modal-title">You Won! 🎉</div>
+            <div class="modal-score" id="finalMoves">0 Moves</div>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="resetGame()">Play Again</button>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ALL_EMOJIS = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐸','🐧','🦋','🐙','🦄','🐲','🍕','🍩'];
+        let cards = [], flipped = [], matched = 0, moves = 0, canFlip = true;
+        let gridMode = 4, pairs = 8;
+        let timerVal = 0, timerInt = null, timerStarted = false;
+
+        document.addEventListener('DOMContentLoaded', () => { setMode(4); });
+
+        function setMode(n) {
+            gridMode = n;
+            pairs = (n * n) / 2;
+            document.getElementById('btn4x4').style.background = n===4 ? 'linear-gradient(135deg,#7b2ff7,#f107a3)' : 'rgba(255,255,255,0.12)';
+            document.getElementById('btn4x4').style.color = n===4 ? '#fff' : '#aaa';
+            document.getElementById('btn6x6').style.background = n===6 ? 'linear-gradient(135deg,#7b2ff7,#f107a3)' : 'rgba(255,255,255,0.12)';
+            document.getElementById('btn6x6').style.color = n===6 ? '#fff' : '#aaa';
+            const board = document.getElementById('gameBoard');
+            board.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+            board.style.fontSize = n===6 ? '20px' : '28px';
+            const bestKey = 'mm_best_' + n;
+            const b = localStorage.getItem(bestKey);
+            document.getElementById('best').textContent = b ? b : '-';
+            initGame();
+        }
+
+        function initGame() {
+            clearInterval(timerInt); timerVal = 0; timerStarted = false;
+            document.getElementById('timer').textContent = '0';
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            const pool = ALL_EMOJIS.slice(0, pairs);
+            const deck = [...pool, ...pool].sort(() => Math.random() - 0.5);
+            cards = deck;
+            flipped = []; matched = 0; moves = 0;
+            document.getElementById('total').textContent = pairs;
+            updateDisplay();
+            deck.forEach((emoji, i) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<div class="card-inner"><div class="card-front">?</div><div class="card-back">${emoji}</div></div>`;
+                card.onclick = () => flipCard(card, i);
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard(card, index) {
+            const inner = card.querySelector('.card-inner');
+            if (!canFlip || inner.classList.contains('flipped') || inner.classList.contains('matched')) return;
+            if (!timerStarted) { timerStarted = true; timerInt = setInterval(() => { timerVal++; document.getElementById('timer').textContent = timerVal; }, 1000); }
+            inner.classList.add('flipped');
+            flipped.push({ card, inner, index, emoji: cards[index] });
+            if (flipped.length === 2) {
+                canFlip = false; moves++; updateDisplay();
+                setTimeout(() => {
+                    if (flipped[0].emoji === flipped[1].emoji) {
+                        flipped[0].inner.classList.add('matched');
+                        flipped[1].inner.classList.add('matched');
+                        matched++; updateDisplay();
+                        if (matched === pairs) { clearInterval(timerInt); checkBest(); showWinModal(); }
+                    } else {
+                        flipped[0].inner.classList.remove('flipped');
+                        flipped[1].inner.classList.remove('flipped');
+                    }
+                    flipped = []; canFlip = true;
+                }, 700);
+            }
+        }
+
+        function checkBest() {
+            const key = 'mm_best_' + gridMode;
+            const prev = +localStorage.getItem(key) || Infinity;
+            if (timerVal < prev) { localStorage.setItem(key, timerVal); document.getElementById('best').textContent = timerVal; }
+        }
+
+        function updateDisplay() {
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('matched').textContent = matched;
+        }
+
+        function showWinModal() {
+            document.getElementById('finalMoves').textContent = moves + ' moves in ' + timerVal + 's';
+            document.getElementById('winModal').classList.add('active');
+        }
+
+        function resetGame() {
+            document.getElementById('winModal').classList.remove('active');
+            initGame();
+        }
+    </script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body>
+</html>

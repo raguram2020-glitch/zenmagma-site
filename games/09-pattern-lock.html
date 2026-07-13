@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pattern Lock - ZenMagma</title>
+    <meta name="description" content="Memorize and recreate patterns! Gets harder with every level.">
+    <link rel="canonical" href="https://zenmagma.com/games/09-pattern-lock">
+    <meta property="og:title" content="Pattern Lock - ZenMagma">
+    <meta property="og:description" content="Memorize and recreate patterns! Gets harder with every level.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/09-pattern-lock">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/pattern-lock.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#05051a;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}
+#hud{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hval{background:rgba(255,255,255,.12);padding:5px 16px;border-radius:20px;font-weight:700;font-size:.9em}
+.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#4776E6,#8E54E9);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05)}
+#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}
+#ob{background:#16213e;border-radius:20px;padding:40px;text-align:center;max-width:380px;width:90%;border:2px solid #4776E6}
+#ob h2{font-size:2em;margin-bottom:8px;background:linear-gradient(135deg,#4776E6,#8E54E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#ob p{color:#aaa;margin-bottom:22px;line-height:1.5}
+#hm{position:fixed;top:10px;left:10px;padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8em;z-index:100}
+</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+
+
+<div id="hud"><span class="hval">Score:<b id="sc"> 0</b></span><span class="hval">Round:<b id="rnd"> 1</b></span><span class="hval" id="ph">Watch pattern...</span><button class="btn" onclick="ng()">Restart</button></div>
+<canvas id="c" width="360" height="360"></canvas>
+<div id="ov"><div id="ob"><h2>Pattern Lock</h2><p>Watch the dots light up, then repeat the pattern! Each round adds one more dot.</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const DOTS=[[60,60],[180,60],[300,60],[60,180],[180,180],[300,180],[60,300],[180,300],[300,300]];
+let pattern=[],input=[],score=0,round=1,showing=false,running=false;
+function drawDots(lit=new Set(),inp=new Set()){
+  ctx.fillStyle="#05051a";ctx.fillRect(0,0,360,360);
+  if(input.length>1){ctx.strokeStyle="#4776E6";ctx.lineWidth=4;ctx.beginPath();input.forEach((i,idx)=>{const[x,y]=DOTS[i];idx===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();}
+  DOTS.forEach(([x,y],i)=>{
+    const isLit=lit.has(i),isInp=inp.has(i);
+    ctx.fillStyle=isLit?"#f7ff00":isInp?"#4776E6":"#222";
+    ctx.beginPath();ctx.arc(x,y,22,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=isLit?"#fff":isInp?"#8E54E9":"#444";ctx.lineWidth=3;ctx.stroke();
+    if(isLit||isInp){ctx.fillStyle="#fff";ctx.font="bold 14px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(isInp?input.indexOf(i)+1:"",x,y);}
+  });
+}
+async function showPattern(){
+  showing=true;document.getElementById("ph").textContent="Watch!";
+  const lit=new Set();
+  for(let i=0;i<pattern.length;i++){lit.add(pattern[i]);drawDots(lit);await sleep(500);lit.delete(pattern[i]);drawDots(lit);await sleep(150);}
+  showing=false;input=[];document.getElementById("ph").textContent="Repeat it!";drawDots(new Set(),new Set());
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function getDot(mx,my){for(let i=0;i<DOTS.length;i++){const[x,y]=DOTS[i];if(Math.hypot(mx-x,my-y)<25)return i;}return -1;}
+cv.addEventListener("click",e=>{
+  if(!running||showing)return;
+  const d=getDot(e.offsetX,e.offsetY);
+  if(d<0||input.includes(d))return;
+  input.push(d);
+  const ok=input.every((v,i)=>v===pattern[i]);
+  drawDots(new Set(),new Set(input));
+  if(!ok){document.getElementById("ph").textContent="Wrong! Try again.";setTimeout(()=>{input=[];showPattern();},1200);return;}
+  if(input.length===pattern.length){score+=round*30;document.getElementById("sc").textContent=score;document.getElementById("ph").textContent="Correct!";round++;document.getElementById("rnd").textContent=round;pattern.push(Math.floor(Math.random()*9));setTimeout(()=>showPattern(),800);}
+});
+function go(){document.getElementById("ov").style.display="none";running=true;pattern=[Math.floor(Math.random()*9)];showPattern();}
+function ng(){score=0;round=1;document.getElementById("sc").textContent=0;document.getElementById("rnd").textContent=1;pattern=[Math.floor(Math.random()*9)];if(running)showPattern();}
+drawDots();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

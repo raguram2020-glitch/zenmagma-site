@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Light Refract - ZenMagma</title>
+    <meta name="description" content="Reflect laser beams using mirrors! Direct light to all targets to beat each level.">
+    <link rel="canonical" href="https://zenmagma.com/games/07-light-refract">
+    <meta property="og:title" content="Light Refract - ZenMagma">
+    <meta property="og:description" content="Reflect laser beams using mirrors! Direct light to all targets to beat each level.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/07-light-refract">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/light-refract.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000010;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);touch-action:none}
+#hud{display:flex;gap:16px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}
+.hval{background:rgba(255,255,255,.12);padding:5px 16px;border-radius:20px;font-weight:700;font-size:.9em}
+.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f7ff00,#db36a4);color:#fff;transition:.2s}
+.btn:hover{transform:scale(1.05);opacity:.9}
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}
+#obox{background:#16213e;border-radius:20px;padding:40px;text-align:center;max-width:380px;width:90%;border:2px solid #f7ff00}
+#obox h2{font-size:2.2em;margin-bottom:8px;background:linear-gradient(135deg,#f7ff00,#db36a4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#obox p{color:#aaa;margin-bottom:22px;line-height:1.5}
+#home{position:fixed;top:10px;left:10px;padding:6px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8em;z-index:100}
+</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+
+
+<div id="hud"><span class="hval">Score: <b id="sc">0</b></span><span class="hval">Level: <b id="lv">1</b></span><span class="hval">Mirrors: <b id="mr">3</b></span><button class="btn" onclick="newGame()">New</button></div>
+<canvas id="c" width="400" height="400"></canvas>
+<p style="text-align:center;color:#aaa;font-size:.8em;padding:4px">Click empty cell to place mirror (/ or \). Click mirror to toggle. Hit all targets!</p>
+<div id="overlay"><div id="obox"><h2>Light Refract</h2><p>Place mirrors to redirect the laser beam to hit all yellow targets!<br>Click empty cells to place mirrors. Click mirrors to rotate them.</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),N=8,SZ=50;
+const LEVELS=[
+  {src:[0,0,"E"],targets:[[3,7],[7,3]]},
+  {src:[0,3,"S"],targets:[[7,3],[4,7],[0,7]]},
+  {src:[0,0,"E"],targets:[[0,7],[7,0],[7,7]]},
+];
+let grid=[],score=0,level=0,mirrorsLeft=3,running=false;
+function mkGrid(){grid=[];for(let r=0;r<N;r++){grid[r]=[];for(let c=0;c<N;c++)grid[r][c]=null;}}
+function traceLaser(){
+  const lv=LEVELS[level%LEVELS.length];
+  let[r,c,dir]=lv.src;const path=[];const visited=new Set();
+  for(let step=0;step<200;step++){
+    const key=`${r},${c},${dir}`;if(visited.has(key))break;visited.add(key);
+    path.push([r,c]);
+    const m=grid[r][c];
+    if(m==="/"){ dir={N:"E",E:"N",S:"W",W:"S"}[dir]; }
+    else if(m==="\\"){ dir={N:"W",W:"N",S:"E",E:"S"}[dir]; }
+    const[dr,dc]={N:[-1,0],E:[0,1],S:[1,0],W:[0,-1]}[dir];
+    r+=dr;c+=dc;
+    if(r<0||r>=N||c<0||c>=N)break;
+  }
+  return path;
+}
+function draw(){
+  ctx.fillStyle="#000010";ctx.fillRect(0,0,400,400);
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const x=c*SZ,y=r*SZ;
+    ctx.strokeStyle="#112";ctx.strokeRect(x,y,SZ,SZ);
+    const m=grid[r][c];
+    if(m){ctx.strokeStyle="#aaa";ctx.lineWidth=3;ctx.beginPath();if(m==="/"){ctx.moveTo(x+SZ,y);ctx.lineTo(x,y+SZ);}else{ctx.moveTo(x,y);ctx.lineTo(x+SZ,y+SZ);}ctx.stroke();ctx.lineWidth=1;}
+  }
+  const lv=LEVELS[level%LEVELS.length];
+  // Draw source
+  const[sr,sc,sd]=lv.src;
+  ctx.fillStyle="#f7ff00";ctx.beginPath();ctx.arc(sc*SZ+SZ/2,sr*SZ+SZ/2,10,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#000";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(sd,sc*SZ+SZ/2,sr*SZ+SZ/2);
+  // Draw targets
+  const path=traceLaser();
+  const hitSet=new Set(path.map(([r,c])=>`${r},${c}`));
+  lv.targets.forEach(([tr,tc])=>{
+    const hit=hitSet.has(`${tr},${tc}`);
+    ctx.strokeStyle=hit?"#2ecc71":"#e74c3c";ctx.lineWidth=3;ctx.beginPath();ctx.arc(tc*SZ+SZ/2,tr*SZ+SZ/2,14,0,Math.PI*2);ctx.stroke();ctx.lineWidth=1;
+    ctx.fillStyle=hit?"rgba(46,204,113,.3)":"rgba(231,76,60,.2)";ctx.fill();
+  });
+  // Draw laser
+  ctx.strokeStyle="rgba(247,255,0,.8)";ctx.lineWidth=2;ctx.setLineDash([5,3]);ctx.beginPath();
+  if(path.length>0){ctx.moveTo(path[0][1]*SZ+SZ/2,path[0][0]*SZ+SZ/2);path.forEach(([r,c])=>ctx.lineTo(c*SZ+SZ/2,r*SZ+SZ/2));}
+  ctx.stroke();ctx.setLineDash([]);ctx.lineWidth=1;
+  // Check win
+  const allHit=lv.targets.every(([r,c])=>hitSet.has(`${r},${c}`));
+  if(allHit){score+=100*(level+1);level++;document.getElementById("sc").textContent=score;document.getElementById("lv").textContent=level+1;document.getElementById("mr").textContent=3;mirrorsLeft=3;mkGrid();setTimeout(draw,400);}
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const c=Math.floor(e.offsetX/SZ),r=Math.floor(e.offsetY/SZ);
+  if(r<0||r>=N||c<0||c>=N)return;
+  const lv=LEVELS[level%LEVELS.length];
+  if(JSON.stringify(lv.src.slice(0,2))==="["+r+","+c+"]")return;
+  if(lv.targets.some(([tr,tc])=>tr===r&&tc===c))return;
+  if(grid[r][c]===null){if(mirrorsLeft<=0)return;grid[r][c]="/";mirrorsLeft--;document.getElementById("mr").textContent=mirrorsLeft;}
+  else if(grid[r][c]==="/")grid[r][c]="\\";
+  else{grid[r][c]=null;mirrorsLeft++;document.getElementById("mr").textContent=mirrorsLeft;}
+  draw();
+});
+function go(){document.getElementById("overlay").style.display="none";running=true;draw();}
+function newGame(){score=0;level=0;mirrorsLeft=3;document.getElementById("sc").textContent=0;document.getElementById("lv").textContent=1;document.getElementById("mr").textContent=3;mkGrid();if(running)draw();}
+mkGrid();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

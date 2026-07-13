@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Fraction Fun - ZenMagma</title>    <meta name="description" content="Learn fractions with pizza slices and fruit! Visual fraction learning made easy.">
+    <link rel="canonical" href="https://zenmagma.com/games/63-fraction-fun">
+    <meta property="og:title" content="Fraction Fun - ZenMagma">
+    <meta property="og:description" content="Learn fractions with pizza slices and fruit! Visual fraction learning made easy.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/63-fraction-fun">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/fraction-fun.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#05000f;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #a855f7}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#a855f7,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<div style="font-size:2em;font-weight:900;padding:14px;color:#a855f7" id="frac">1/2</div>
+<div style="color:#aaa;font-size:.9em;padding:4px">Click the pie slices to shade the correct fraction</div>
+<canvas id="c" width="300" height="300" style="margin:10px"></canvas>
+<div style="padding:10px"><button class="btn" onclick="submit()">Submit</button><button class="btn" onclick="reset()" style="background:linear-gradient(135deg,#555,#333)">Reset</button></div>
+<div id="fb" style="font-size:1.1em;height:30px;margin:8px"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Fraction Fun</h2><p>Shade the correct fraction of the pie! Click slices to shade them. Get 1/3 means shade 1 out of 3 pieces.</p><button class="btn" onclick="go()">Play!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),CX=150,CY=150,R=120;
+let num,den,shaded=[],score=0,level=1,running=false;
+function mkQ(){
+  const pairs=[[1,2],[1,3],[2,3],[1,4],[3,4],[2,4],[1,6],[2,6],[3,6],[4,6],[5,6]];
+  const p=pairs[Math.floor(Math.random()*pairs.length)];num=p[0];den=p[1];shaded=Array(den).fill(false);
+  document.getElementById("frac").textContent=`${num}/${den}`;draw();
+}
+function draw(){
+  ctx.fillStyle="#05000f";ctx.fillRect(0,0,300,300);
+  for(let i=0;i<den;i++){const a=i*Math.PI*2/den-Math.PI/2,a2=(i+1)*Math.PI*2/den-Math.PI/2;ctx.fillStyle=shaded[i]?"#a855f7":"#1a0a2a";ctx.beginPath();ctx.moveTo(CX,CY);ctx.arc(CX,CY,R,a,a2);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();}
+  ctx.strokeStyle="rgba(168,85,247,.3)";ctx.lineWidth=3;ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);ctx.stroke();
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const mx=e.offsetX-CX,my=e.offsetY-CY;if(Math.hypot(mx,my)>R)return;
+  let a=Math.atan2(my,mx)+Math.PI/2;if(a<0)a+=Math.PI*2;
+  const i=Math.floor(a/(Math.PI*2/den));shaded[i]=!shaded[i];draw();
+});
+function submit(){
+  const n=shaded.filter(Boolean).length;
+  if(n===num){score+=50*level;level++;document.getElementById("sc").textContent=score;document.getElementById("lv").textContent=level;document.getElementById("fb").innerHTML='<span style="color:#2ecc71">✓ Correct fraction!</span>';setTimeout(mkQ,700);}
+  else{document.getElementById("fb").innerHTML=`<span style="color:#e74c3c">✗ ${n}/${den} shaded, need ${num}/${den}</span>`;}
+}
+function reset(){shaded=Array(den).fill(false);draw();}
+function go(){document.getElementById("ov").style.display="none";running=true;mkQ();}
+mkQ();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

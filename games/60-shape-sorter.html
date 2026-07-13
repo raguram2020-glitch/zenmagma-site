@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Shape Sorter - ZenMagma</title>    <meta name="description" content="Sort shapes into the correct holes! Circles, squares, triangles and more.">
+    <link rel="canonical" href="https://zenmagma.com/games/60-shape-sorter">
+    <meta property="og:title" content="Shape Sorter - ZenMagma">
+    <meta property="og:description" content="Sort shapes into the correct holes! Circles, squares, triangles and more.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/60-shape-sorter">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/shape-sorter.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0800;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f7971e,#ffd200);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #f7971e}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#f7971e,#ffd200);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Time:<b id="tm"> 60</b>s</span><span class="hv">Level:<b id="lv"> 1</b></span></div>
+<canvas id="c" width="480" height="400"></canvas>
+<p style="color:#aaa;font-size:.8em">Drag shapes to matching slots below!</p>
+</div>
+<div id="ov"><div id="ob"><h2>Shape Sorter</h2><p>Drag each falling shape into its matching slot! Learn shapes while racing the clock.</p><button class="btn" onclick="go()">Sort!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=400;
+const SHAPES=["circle","square","triangle","diamond","pentagon","star"];
+const COLORS=["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6","#1abc9c"];
+let shapes=[],slots=[],dragging=null,score=0,level=1,timeLeft=60,timer,running=false;
+function drawShape(ctx,type,x,y,r,color){
+  ctx.fillStyle=color;ctx.beginPath();
+  if(type==="circle")ctx.arc(x,y,r,0,Math.PI*2);
+  else if(type==="square")ctx.rect(x-r,y-r,r*2,r*2);
+  else if(type==="triangle"){ctx.moveTo(x,y-r);ctx.lineTo(x+r*.866,y+r*.5);ctx.lineTo(x-r*.866,y+r*.5);}
+  else if(type==="diamond"){ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);}
+  else if(type==="pentagon"){for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2;ctx.lineTo(Math.cos(a)*r+x,Math.sin(a)*r+y);}ctx.closePath();}
+  else{for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,rad=i%2===0?r:r*.45;ctx.lineTo(Math.cos(a)*rad+x,Math.sin(a)*rad+y);}ctx.closePath();}
+  ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(255,255,255,.3)";ctx.lineWidth=2;ctx.stroke();
+}
+function mkLevel(){
+  const n=Math.min(3+level,6);
+  slots=[];shapes=[];
+  for(let i=0;i<n;i++){
+    const si=Math.floor(Math.random()*SHAPES.length);
+    slots.push({x:40+i*(W-60)/(n-1||1),y:H-50,type:SHAPES[si],color:COLORS[si],filled:false});
+    shapes.push({x:40+Math.random()*(W-80),y:50+Math.random()*(H-150),type:SHAPES[si],color:COLORS[si],r:24,sorted:false});
+  }
+  shapes.sort(()=>Math.random()-.5);
+}
+function draw(){
+  ctx.fillStyle="#0a0800";ctx.fillRect(0,0,W,H);
+  slots.forEach(s=>{ctx.strokeStyle=s.filled?"#2ecc71":"#555";ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.beginPath();if(s.type==="circle")ctx.arc(s.x,s.y,30,0,Math.PI*2);else ctx.rect(s.x-30,s.y-30,60,60);ctx.stroke();ctx.setLineDash([]);if(!s.filled){ctx.fillStyle="rgba(255,255,255,.1)";drawShape(ctx,s.type,s.x,s.y,26,s.color+"44");}else{ctx.fillStyle="#2ecc71";ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✓",s.x,s.y);}ctx.fillStyle=s.filled?"#2ecc71":"rgba(255,255,255,.5)";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.textBaseline="top";ctx.fillText(s.type,s.x,s.y+32);});
+  shapes.forEach(s=>{if(!s.sorted)drawShape(ctx,s.type,s.x,s.y,s.r,s.color);});
+}
+let offX=0,offY=0;
+function cvPos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*(W/r.width),y:(e.clientY-r.top)*(H/r.height)};}
+cv.addEventListener("mousedown",e=>{const mx=e.offsetX,my=e.offsetY;dragging=shapes.find(s=>!s.sorted&&Math.hypot(s.x-mx,s.y-my)<s.r+5);if(dragging){offX=mx-dragging.x;offY=my-dragging.y;}});
+cv.addEventListener("mousemove",e=>{if(dragging){dragging.x=e.offsetX-offX;dragging.y=e.offsetY-offY;draw();}});
+cv.addEventListener("mouseup",e=>{
+  if(!dragging)return;
+  const slot=slots.find(s=>!s.filled&&s.type===dragging.type&&Math.hypot(s.x-dragging.x,s.y-dragging.y)<50);
+  if(slot){slot.filled=true;dragging.sorted=true;score+=20*level;document.getElementById("sc").textContent=score;}
+  dragging=null;draw();
+  if(shapes.every(s=>s.sorted)){level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkLevel();draw();},500);}
+});
+cv.addEventListener("touchstart",e=>{e.preventDefault();const t=cvPos(e.touches[0]);dragging=shapes.find(s=>!s.sorted&&Math.hypot(s.x-t.x,s.y-t.y)<s.r+5);if(dragging){offX=t.x-dragging.x;offY=t.y-dragging.y;}},{passive:false});
+cv.addEventListener("touchmove",e=>{e.preventDefault();if(!dragging)return;const t=cvPos(e.touches[0]);dragging.x=t.x-offX;dragging.y=t.y-offY;draw();},{passive:false});
+cv.addEventListener("touchend",e=>{e.preventDefault();if(!dragging)return;const slot=slots.find(s=>!s.filled&&s.type===dragging.type&&Math.hypot(s.x-dragging.x,s.y-dragging.y)<50);if(slot){slot.filled=true;dragging.sorted=true;score+=20*level;document.getElementById("sc").textContent=score;}dragging=null;draw();if(shapes.every(s=>s.sorted)){level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkLevel();draw();},500);}},{passive:false});
+function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;setTimeout(()=>window._showMod("Time up! Score: "+score),100);}else timeLeft--;}
+function go(){document.getElementById("ov").style.display="none";running=true;timer=setInterval(tick,1000);(function lp(){if(!running)return;draw();requestAnimationFrame(lp);})();}
+mkLevel();draw();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script><div id="_gmod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9998;align-items:center;justify-content:center;"><div style="background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:340px;width:90%;border:2px solid rgba(255,255,255,.2)"><div style="font-size:52px;margin-bottom:10px">🎮</div><div id="_gmod_t" style="font-size:1.6em;font-weight:800;color:#fff;margin-bottom:10px">Game Over</div><div id="_gmod_m" style="color:#aaa;margin-bottom:24px;font-size:1em;line-height:1.5"></div><button onclick="document.getElementById('_gmod').style.display='none'" style="padding:12px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1em;font-weight:700;cursor:pointer">OK</button></div></div>
+<script>function _showMod(msg){var m=document.getElementById("_gmod");if(!m)return;document.getElementById("_gmod_m").textContent=msg;m.style.display="flex";}</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body></html>

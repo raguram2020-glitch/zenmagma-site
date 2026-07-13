@@ -1,0 +1,995 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Gravity Flip! 🚀</title>
+    <meta name="description" content="Flip gravity to collect stars! Navigate platforms by flipping the world upside down.">
+    <link rel="canonical" href="https://zenmagma.com/games/08-gravity-blocks">
+    <meta property="og:title" content="Gravity Flip! - ZenMagma">
+    <meta property="og:description" content="Flip gravity to collect stars! Navigate platforms by flipping the world upside down.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/08-gravity-blocks">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/gravity-flip.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --p1:#FF6B9D;--p2:#C44569;
+  --s1:#FFD93D;--s2:#FF9A3C;
+  --b1:#0f0c29;--b2:#302b63;--b3:#24243e;
+}
+html,body{width:100%;height:100%;overflow:hidden;touch-action:none;font-family:'Fredoka One',cursive;}
+body{
+  background:linear-gradient(160deg,var(--b1),var(--b2),var(--b3));
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  position:relative;
+}
+
+/* ── BG STARS ── */
+#bg-stars{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle linear infinite;}
+@keyframes twinkle{0%,100%{opacity:0.1;transform:scale(1)}50%{opacity:0.8;transform:scale(1.4)}}
+
+/* ── WRAPPER ── */
+#wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;width:100%;max-width:440px;padding:6px 8px;gap:5px;}
+
+/* ── TITLE ── */
+#title-bar{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:clamp(20px,4vw,28px);
+  background:linear-gradient(135deg,#FFD93D,#FF6B9D,#A855F7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:1px;
+}
+
+/* ── HUD ── */
+#hud{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;padding:7px 12px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:20px;backdrop-filter:blur(8px);
+}
+.hud-item{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.hud-lbl{font-size:9px;color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:1px;}
+.hud-val{font-size:18px;color:#fff;line-height:1;}
+#score-display{background:linear-gradient(135deg,#FFD93D,#FF9A3C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:20px;}
+.lives-hearts{font-size:16px;letter-spacing:1px;}
+
+/* ── LEVEL BAR ── */
+#lv-wrap{width:100%;padding:0 2px;}
+#lv-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.6);font-family:'Nunito',sans-serif;margin-bottom:2px;}
+#lv-bg{height:9px;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);}
+#lv-fill{height:100%;width:0%;background:linear-gradient(90deg,#FFD93D,#FF6B9D,#A855F7);border-radius:8px;transition:width 0.5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 8px rgba(255,107,157,0.7);}
+
+/* ── CANVAS ── */
+#cv-wrap{position:relative;display:inline-block;}
+#c{display:block;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 0 2px rgba(255,255,255,0.08);touch-action:none;cursor:pointer;}
+#pc{position:absolute;top:0;left:0;border-radius:16px;pointer-events:none;z-index:20;}
+
+/* ── FLOAT MSG ── */
+#fmsg{
+  position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);
+  font-size:clamp(22px,5vw,34px);pointer-events:none;z-index:30;
+  white-space:nowrap;opacity:0;color:#FFD93D;
+  text-shadow:0 0 20px #FFD93D,0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* ── SHAKE ── */
+@keyframes shake{0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}100%{transform:translateX(0)}}
+.shake{animation:shake 0.35s ease;}
+@keyframes tilt{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
+.tilt{animation:tilt 0.4s ease;}
+
+/* ── CONTROLS ── */
+#ctrl{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;padding:4px 0;gap:8px;
+}
+.ctrl-btn{
+  flex:1;padding:12px 0;border-radius:18px;border:none;
+  font-family:'Fredoka One',cursive;font-size:18px;color:#fff;
+  cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;
+  box-shadow:0 5px 15px rgba(0,0,0,0.3);
+  -webkit-user-select:none;user-select:none;
+  touch-action:manipulation;
+}
+.ctrl-btn:active{transform:scale(0.93);}
+#btn-left {background:linear-gradient(135deg,#4D96FF,#2563EB);}
+#btn-flip {background:linear-gradient(135deg,#FF6B9D,#A855F7);flex:1.4;font-size:16px;}
+#btn-right{background:linear-gradient(135deg,#6BCB77,#16A34A);}
+
+/* ── OVERLAYS ── */
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,10,0.82);backdrop-filter:blur(8px);z-index:100;}
+.ob{
+  background:linear-gradient(160deg,#1e1b4b,#312e81,#1e1b4b);
+  border-radius:28px;padding:32px 24px;text-align:center;
+  max-width:340px;width:92%;
+  border:2px solid rgba(255,255,255,0.15);
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  animation:popIn 0.4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.ob h2{font-size:clamp(26px,6vw,38px);background:linear-gradient(135deg,#FFD93D,#FF6B9D,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+.ob p{color:rgba(255,255,255,0.7);font-family:'Nunito',sans-serif;font-size:13px;line-height:1.6;margin-bottom:16px;}
+.ob-btn{display:block;width:100%;padding:13px;border-radius:16px;border:none;font-family:'Fredoka One',cursive;font-size:18px;color:#fff;cursor:pointer;margin-top:8px;transition:transform 0.1s;}
+.ob-btn:active{transform:scale(0.96);}
+.ob-btn.go{background:linear-gradient(135deg,#FFD93D,#FF9A3C);box-shadow:0 5px 18px rgba(255,153,60,0.5);}
+.ob-btn.replay{background:linear-gradient(135deg,#FF6B9D,#A855F7);box-shadow:0 5px 18px rgba(168,85,247,0.4);}
+.ob-btn.next{background:linear-gradient(135deg,#6BCB77,#16A34A);box-shadow:0 5px 18px rgba(107,203,119,0.4);}
+.ob-btn.menu{background:rgba(255,255,255,0.1);box-shadow:none;}
+.stars-row{font-size:36px;margin:8px 0;letter-spacing:6px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.07);border-radius:12px;padding:8px 14px;margin:5px 0;color:#fff;font-family:'Nunito',sans-serif;font-size:13px;}
+.world-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-family:'Nunito',sans-serif;font-weight:800;margin-bottom:10px;background:rgba(255,217,61,0.2);color:#FFD93D;border:1px solid rgba(255,217,61,0.4);}
+
+/* ── THEME SELECT ── */
+.theme-row{display:flex;gap:8px;justify-content:center;margin:10px 0;}
+.th-btn{padding:7px 12px;border-radius:14px;border:2px solid transparent;background:rgba(255,255,255,0.1);color:#fff;font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;transition:all 0.2s;}
+.th-btn.on{border-color:#FFD93D;background:rgba(255,217,61,0.15);}
+
+/* ── TUT STEPS ── */
+.tut{display:none;flex-direction:column;align-items:center;gap:4px;}
+.tut.on{display:flex;}
+.tut-ico{font-size:44px;animation:bounce 1s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.tut-dots{display:flex;gap:5px;margin-top:6px;}
+.td{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.25);}
+.td.on{background:#FFD93D;}
+
+/* ── PAUSE BTN ── */
+#pause-btn{
+  position:absolute;top:6px;right:6px;z-index:25;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:10px;padding:4px 8px;color:#fff;font-size:16px;cursor:pointer;
+  font-family:'Fredoka One',cursive;
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka+One&display=swap" media="print" onload="this.media='all'">
+</head>
+<body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+
+<!-- BG -->
+<div id="bg-stars"></div>
+
+<!-- ── START OVERLAY ── -->
+<div class="ov" id="start-ov">
+  <div class="ob">
+    <div style="font-size:52px;margin-bottom:4px">🚀</div>
+    <h2>Gravity Flip!</h2>
+    <div class="world-badge">🍭 Candy World — Level 1</div>
+
+    <div class="tut on" id="t0">
+      <div class="tut-ico">⬅️➡️</div>
+      <p style="margin:0">Use the <b style="color:#FFD93D">← →</b> buttons (or arrow keys) to move your character!</p>
+    </div>
+    <div class="tut" id="t1">
+      <div class="tut-ico">🔄</div>
+      <p style="margin:0">Press <b style="color:#FF6B9D">Flip Gravity</b> to flip upside down and reach new places!</p>
+    </div>
+    <div class="tut" id="t2">
+      <div class="tut-ico">⭐</div>
+      <p style="margin:0">Collect all the <b style="color:#FFD93D">stars ⭐</b> to complete the level and earn coins!</p>
+    </div>
+
+    <div class="tut-dots">
+      <div class="td on" id="dot0"></div><div class="td" id="dot1"></div><div class="td" id="dot2"></div>
+    </div>
+
+    <div class="theme-row">
+      <button class="th-btn on" onclick="setWorld('candy',this)">🍭 Candy</button>
+      <button class="th-btn" onclick="setWorld('space',this)">🚀 Space</button>
+      <button class="th-btn" onclick="setWorld('ocean',this)">🌊 Ocean</button>
+    </div>
+
+    <button class="ob-btn go" id="tut-btn" onclick="tutAdv()">Next →</button>
+  </div>
+</div>
+
+<!-- ── WIN OVERLAY ── -->
+<div class="ov" id="win-ov" style="display:none">
+  <div class="ob">
+    <div style="font-size:48px">🎉</div>
+    <h2>Level Clear!</h2>
+    <div class="stars-row" id="win-stars">⭐⭐⭐</div>
+    <div class="stat-row"><span>Score</span><b id="win-score">0</b></div>
+    <div class="stat-row"><span>Stars Collected</span><b id="win-stcount">0</b></div>
+    <div class="stat-row"><span>Coins Earned</span><b id="win-coins">+0 🪙</b></div>
+    <button class="ob-btn next" onclick="nextLevel()">Next Level →</button>
+    <button class="ob-btn menu" onclick="goMenu()">🏠 Menu</button>
+  </div>
+</div>
+
+<!-- ── GAME OVER OVERLAY ── -->
+<div class="ov" id="over-ov" style="display:none">
+  <div class="ob">
+    <div style="font-size:48px">😵</div>
+    <h2>Oops!</h2>
+    <p>Don't give up! You're getting better!</p>
+    <div class="stat-row"><span>Score</span><b id="over-score">0</b></div>
+    <div class="stat-row"><span>Best</span><b id="over-best">0</b></div>
+    <button class="ob-btn replay" onclick="retryLevel()">Try Again! 🔄</button>
+    <button class="ob-btn menu" onclick="goMenu()">🏠 Menu</button>
+  </div>
+</div>
+
+<!-- ── PAUSE OVERLAY ── -->
+<div class="ov" id="pause-ov" style="display:none">
+  <div class="ob">
+    <div style="font-size:48px">⏸️</div>
+    <h2>Paused</h2>
+    <button class="ob-btn go" onclick="resumeGame()">▶ Resume</button>
+    <button class="ob-btn replay" onclick="retryLevel()">🔄 Retry</button>
+    <button class="ob-btn menu" onclick="goMenu()">🏠 Menu</button>
+  </div>
+</div>
+
+<!-- ── MAIN GAME ── -->
+<div id="wrap" style="display:none">
+  <div id="title-bar">🚀 <span>Gravity Flip!</span></div>
+
+  <div id="hud">
+    <div class="hud-item">
+      <span class="hud-lbl">Coins</span>
+      <span class="hud-val" id="coin-disp">🪙 0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-lbl">Score</span>
+      <span class="hud-val" id="score-display">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-lbl">Lives</span>
+      <div class="lives-hearts" id="lives-disp">❤️❤️❤️</div>
+    </div>
+    <div class="hud-item">
+      <span class="hud-lbl">Gravity</span>
+      <span class="hud-val" id="grav-disp" style="font-size:20px">⬇️</span>
+    </div>
+  </div>
+
+  <div id="lv-wrap">
+    <div id="lv-row">
+      <span id="lv-lbl">⭐ Level 1</span>
+      <span id="lv-goal">0 / 3 stars</span>
+    </div>
+    <div id="lv-bg"><div id="lv-fill"></div></div>
+    <!-- Timer bar -->
+    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+      <span style="font-size:13px;">⏱️</span>
+      <div style="flex:1;height:8px;background:rgba(255,255,255,0.1);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+        <div id="timer-fill" style="height:100%;width:100%;border-radius:6px;transition:width 0.9s linear;"></div>
+      </div>
+      <span id="timer-txt" style="font-size:12px;color:rgba(255,255,255,0.7);font-family:'Nunito',sans-serif;min-width:26px;text-align:right;">30s</span>
+    </div>
+  </div>
+
+  <div id="cv-wrap">
+    <button id="pause-btn" onclick="togglePause()">⏸</button>
+    <canvas id="c"></canvas>
+    <canvas id="pc"></canvas>
+    <div id="fmsg"></div>
+  </div>
+
+  <div id="ctrl">
+    <button class="ctrl-btn" id="btn-left"  onpointerdown="startMove(-1)" onpointerup="stopMove()" onpointerleave="stopMove()">◀ Left</button>
+    <button class="ctrl-btn" id="btn-flip"  onpointerdown="doFlip()">🔄 Flip!</button>
+    <button class="ctrl-btn" id="btn-right" onpointerdown="startMove(1)"  onpointerup="stopMove()" onpointerleave="stopMove()">Right ▶</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════
+   GRAVITY FLIP — PREMIUM ENGINE
+══════════════════════════════ */
+
+// ── Audio ──
+const AC = new(window.AudioContext||window.webkitAudioContext)();
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+function tone(f,d,v=0.12,t='sine'){try{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function sndMove()   {tone(300,0.05,0.07,'sine');}
+function sndFlip()   {[200,300,450,600].forEach((f,i)=>setTimeout(()=>tone(f,0.08,0.1,'square'),i*40));}
+function sndStar()   {[880,1100,1320].forEach((f,i)=>setTimeout(()=>tone(f,0.1,0.1,'sine'),i*60));}
+function sndWin()    {[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.15,0.1,'sine'),i*90));}
+function sndLose()   {[300,240,180].forEach((f,i)=>setTimeout(()=>tone(f,0.2,0.12,'sawtooth'),i*110));}
+function sndCombo()  {[660,880,1100].forEach((f,i)=>setTimeout(()=>tone(f,0.1,0.1,'triangle'),i*60));}
+function sndLvUp()   {[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,0.18,0.1,'sine'),i*80));}
+
+// ── Worlds / Themes ──
+const WORLDS = {
+  candy:{
+    name:'🍭 Candy World',
+    bgTop:'#1a0030',bgBot:'#3d0065',
+    wallGrad:['#FF6B9D','#C44569'],wallAcc:'#FFD93D',
+    floor:'#7B2D8B',
+    star:'#FFD93D',starGlow:'rgba(255,217,61,0.5)',
+    playerBody:'#FF6B9D',playerFace:'😄',
+    platforms:['🍬','🍭','🍡'],
+    mascot:'🐣',
+    particles:['#FF6B9D','#FFD93D','#A855F7','#FF9A3C','#6BCB77'],
+  },
+  space:{
+    name:'🚀 Space',
+    bgTop:'#000020',bgBot:'#001040',
+    wallGrad:['#4D96FF','#2563EB'],wallAcc:'#00FFFF',
+    floor:'#001A5C',
+    star:'#00FFFF',starGlow:'rgba(0,255,255,0.4)',
+    playerBody:'#4D96FF',playerFace:'🤖',
+    platforms:['🪐','⭐','☄️'],
+    mascot:'🛸',
+    particles:['#4D96FF','#00FFFF','#A855F7','#FFD93D','#ffffff'],
+  },
+  ocean:{
+    name:'🌊 Ocean Dive',
+    bgTop:'#001a33',bgBot:'#003366',
+    wallGrad:['#6BCB77','#16A34A'],wallAcc:'#00FFAA',
+    floor:'#002244',
+    star:'#FFD93D',starGlow:'rgba(255,217,61,0.4)',
+    playerBody:'#6BCB77',playerFace:'🐠',
+    platforms:['🐚','🪸','🐟'],
+    mascot:'🐳',
+    particles:['#6BCB77','#00FFAA','#4D96FF','#FFD93D','#ffffff'],
+  }
+};
+let world = 'candy';
+function setWorld(w, btn) {
+  world = w;
+  document.querySelectorAll('.th-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ── Tutorial ──
+let tutStep = 0;
+function tutAdv() {
+  tutStep++;
+  ['t0','t1','t2'].forEach((id,i)=>document.getElementById(id).classList.toggle('on', i===tutStep));
+  ['dot0','dot1','dot2'].forEach((id,i)=>document.getElementById(id).classList.toggle('on', i===tutStep));
+  if(tutStep>=2){document.getElementById('tut-btn').textContent='Play! 🎮';document.getElementById('tut-btn').onclick=startGame;}
+}
+
+// ── Canvas Setup ──
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const pc = document.getElementById('pc');
+const pctx = pc.getContext('2d');
+const COLS=9, ROWS=12;
+let SZ, CW, CH;
+function resizeCanvas(){
+  const maxW = Math.min(window.innerWidth, 420) - 16;
+  SZ = Math.floor(maxW / COLS);
+  CW = SZ * COLS; CH = SZ * ROWS;
+  cv.width=CW; cv.height=CH;
+  pc.width=CW; pc.height=CH;
+  cv.style.width=CW+'px'; cv.style.height=CH+'px';
+  pc.style.width=CW+'px'; pc.style.height=CH+'px';
+}
+
+// ── Game State ──
+let grid=[], goals=[], gravDir=1;
+let score=0, level=1, lives=3, coins=0;
+let best=parseInt(localStorage.getItem('gf_best')||'0');
+let running=false, paused=false, animating=false;
+let totalGoals=0, collectedGoals=0;
+let combo=0, comboTimer=0;
+let player={r:1,c:4,anim:0,flip:0,squash:1,stretch:1,expression:'😄'};
+let moveDir=0, moveInterval=null;
+let particles=[];
+let bgStars=[];
+let frameCount=0;
+
+// ── Timer ──
+let timeLeft=0, timerMax=30, timerInterval=null;
+function getTimerMax(){ return Math.max(15, 40 - level*2); } // harder levels = less time
+function startTimer(){
+  clearInterval(timerInterval);
+  timerMax = getTimerMax();
+  timeLeft = timerMax;
+  updateTimerBar();
+  timerInterval = setInterval(()=>{
+    if(!running || paused) return;
+    timeLeft--;
+    updateTimerBar();
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      loseLife();
+    }
+  }, 1000);
+}
+function stopTimer(){ clearInterval(timerInterval); }
+function updateTimerBar(){
+  const el = document.getElementById('timer-fill');
+  if(!el) return;
+  const pct = (timeLeft/timerMax)*100;
+  el.style.width = pct+'%';
+  // Color: green → yellow → red
+  el.style.background = pct>60 ? 'linear-gradient(90deg,#6BCB77,#FFD93D)'
+                       : pct>30 ? 'linear-gradient(90deg,#FFD93D,#FF9A3C)'
+                                : 'linear-gradient(90deg,#FF6B6B,#FF0000)';
+  el.style.boxShadow = pct<=30 ? '0 0 10px rgba(255,50,50,0.8)' : '0 0 8px rgba(255,217,61,0.6)';
+  const txt = document.getElementById('timer-txt');
+  if(txt) { txt.textContent = timeLeft+'s'; txt.style.color = pct<=30?'#FF6B6B':'rgba(255,255,255,0.7)'; }
+}
+function loseLife(){
+  lives--;
+  updateHUD();
+  if(lives<=0){
+    running=false;
+    if(score>best){best=score;localStorage.setItem('gf_best',best);}
+    spawnExplosion(player.c*SZ+SZ/2, player.r*SZ+SZ/2);
+    showFMsg('💥 Out of Time!','#FF6B6B');
+    setTimeout(showOver, 1000);
+  } else {
+    showFMsg(`⏰ Time's up! ${lives} ❤️ left`,'#FF9A3C');
+    spawnExplosion(player.c*SZ+SZ/2, player.r*SZ+SZ/2);
+    player.expression='😵';
+    setTimeout(()=>{
+      // Reset player position, restart timer
+      const T=WORLDS[world];
+      player={r:1,c:Math.floor(COLS/2),anim:0,flip:0,squash:1,stretch:1,expression:T.playerFace};
+      gravDir=1;
+      document.getElementById('grav-disp').textContent='⬇️';
+      applyGrav();
+      draw();
+      startTimer();
+    }, 800);
+  }
+}
+function spawnExplosion(cx,cy){
+  const T=WORLDS[world];
+  for(let i=0;i<25;i++){
+    const a=Math.random()*Math.PI*2, spd=2+Math.random()*6;
+    particles.push({x:cx,y:cy,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-2,life:1,decay:0.025,size:4+Math.random()*8,col:T.particles[Math.floor(Math.random()*T.particles.length)],type:'conf',rot:0,rotV:(Math.random()-0.5)*0.4});
+  }
+}
+
+// ── BG Stars ──
+function makeBgStars(){
+  const cont=document.getElementById('bg-stars');
+  cont.innerHTML='';
+  bgStars=[];
+  for(let i=0;i<80;i++){
+    const el=document.createElement('div');
+    el.className='star';
+    const size=1+Math.random()*3;
+    el.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}vw;top:${Math.random()*100}vh;animation-duration:${1.5+Math.random()*3}s;animation-delay:${-Math.random()*4}s;opacity:${0.2+Math.random()*0.6}`;
+    cont.appendChild(el);
+  }
+}
+
+// ── Level Design ──
+function mkLevel(){
+  const T = WORLDS[world];
+  grid=[]; goals=[]; gravDir=1; collectedGoals=0; combo=0; comboTimer=0;
+  player={r:1,c:Math.floor(COLS/2),anim:0,flip:0,squash:1,stretch:1,expression:T.playerFace};
+  particles=[];
+
+  // Grid: 0=empty, 1=wall
+  for(let r=0;r<ROWS;r++){grid[r]=[];for(let c=0;c<COLS;c++)grid[r][c]=0;}
+  // Border walls
+  for(let c=0;c<COLS;c++){grid[0][c]=1;grid[ROWS-1][c]=1;}
+  for(let r=0;r<ROWS;r++){grid[r][0]=1;grid[r][COLS-1]=1;}
+
+  // Platforms (more complex with levels)
+  const numPlatforms = 2 + level;
+  for(let i=0;i<numPlatforms;i++){
+    const r=2+Math.floor(Math.random()*(ROWS-4));
+    const c0=1+Math.floor(Math.random()*(COLS-4));
+    const len=2+Math.floor(Math.random()*3);
+    for(let c=c0;c<c0+len&&c<COLS-1;c++) grid[r][c]=1;
+  }
+
+  // Goals — only place stars on LANDABLE cells:
+  // A cell is landable if the cell directly below it is a wall (reachable with normal gravity)
+  // OR the cell directly above it is a wall (reachable with flipped gravity).
+  // This guarantees the player can always stop on a star cell.
+  const landable = [];
+  for(let r=1; r<ROWS-1; r++){
+    for(let c=1; c<COLS-1; c++){
+      if(grid[r][c]) continue; // skip walls
+      const floorBelow = !!grid[r+1]?.[c];  // wall below → reachable falling down
+      const floorAbove = !!grid[r-1]?.[c];  // wall above → reachable falling up
+      if(floorBelow || floorAbove) landable.push({r,c});
+    }
+  }
+  // Shuffle landable cells
+  for(let i=landable.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[landable[i],landable[j]]=[landable[j],landable[i]];}
+
+  const numGoals = Math.min(2+level, 5);
+  totalGoals = numGoals;
+  goals = [];
+  for(const cell of landable){
+    if(goals.length >= numGoals) break;
+    if(cell.r===player.r && cell.c===player.c) continue;
+    goals.push({r:cell.r, c:cell.c, pulse:0, collected:false});
+  }
+  // Fallback if not enough landable spots
+  if(goals.length === 0) goals.push({r:2, c:Math.floor(COLS/2), pulse:0, collected:false});
+  totalGoals = goals.length;
+  updateHUD();
+  updateLevelBar();
+}
+
+// ── Physics ──
+function applyGrav(){
+  // Fall step by step — stop the moment the NEXT cell is a wall
+  let nr = player.r + gravDir;
+  while(nr >= 0 && nr < ROWS){
+    if(grid[nr]?.[player.c]) break; // next cell is a wall — stop before it
+    player.r = nr;                  // move into this empty cell
+    nr += gravDir;
+  }
+  // Squash on landing
+  player.squash=1.3; player.stretch=0.75;
+  setTimeout(()=>{player.squash=0.9;player.stretch=1.1;},80);
+  setTimeout(()=>{player.squash=1;player.stretch=1;},160);
+}
+
+function tryMove(dc){
+  if(!running||paused||animating) return;
+  const nc=player.c+dc;
+  if(!grid[player.r]?.[nc] && nc>=0 && nc<COLS){
+    player.c=nc;
+    applyGrav();
+    checkGoals();
+    sndMove();
+    draw();
+  }
+}
+
+function doFlip(){
+  if(!running||paused) return;
+  gravDir*=-1;
+  document.getElementById('grav-disp').textContent=gravDir>0?'⬇️':'⬆️';
+  // Player expression change
+  player.expression='😵';
+  player.flip=1;
+  setTimeout(()=>{player.expression=WORLDS[world].playerFace;player.flip=0;},400);
+  applyGrav();
+  checkGoals();
+  sndFlip();
+  // Camera shake
+  const wrap=document.getElementById('cv-wrap');
+  wrap.classList.remove('shake');
+  void wrap.offsetWidth;
+  wrap.classList.add('shake');
+  setTimeout(()=>wrap.classList.remove('shake'),350);
+  draw();
+}
+
+function checkGoals(){
+  goals.forEach(g=>{
+    if(!g.collected && g.r===player.r && g.c===player.c){
+      g.collected=true; collectedGoals++;
+      spawnStarBurst(g.c*SZ+SZ/2, g.r*SZ+SZ/2);
+      sndStar();
+      combo++;
+      const now=Date.now();
+      const pts=10*level*(combo>1?combo:1);
+      score+=pts; coins+=Math.floor(pts/5);
+      animScore(score-pts, score);
+      // Combo msg
+      if(combo>=4) showFMsg('🌟 STAR MASTER!','#A855F7');
+      else if(combo>=3) showFMsg('🔥 AMAZING!','#FF9A3C');
+      else if(combo>=2) showFMsg('✨ COMBO!','#FFD93D');
+      else showFMsg('⭐ Nice!','#FFD93D');
+      if(combo>=2) sndCombo();
+      updateLevelBar();
+      updateHUD();
+    }
+  });
+
+  const remaining = goals.filter(g=>!g.collected).length;
+  if(remaining===0){
+    running=false;
+    sndWin();
+    spawnConfetti(50);
+    setTimeout(showWin, 700);
+  }
+}
+
+// ── DRAW ──
+function draw(){
+  if(!CW) return;
+  const T=WORLDS[world];
+  // BG gradient
+  const bg=ctx.createLinearGradient(0,0,0,CH);
+  bg.addColorStop(0,T.bgTop); bg.addColorStop(1,T.bgBot);
+  ctx.fillStyle=bg; ctx.fillRect(0,0,CW,CH);
+
+  // Grid lines (subtle)
+  ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+  for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*SZ);ctx.lineTo(CW,r*SZ);ctx.stroke();}
+  for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*SZ,0);ctx.lineTo(c*SZ,CH);ctx.stroke();}
+
+  // Walls
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      if(grid[r][c]){
+        drawWall(c*SZ, r*SZ, T);
+      }
+    }
+  }
+
+  // Goals (stars)
+  goals.forEach(g=>{
+    if(!g.collected){
+      g.pulse=(g.pulse||0)+0.07;
+      drawStar(g.c*SZ+SZ/2, g.r*SZ+SZ/2, g.pulse, T);
+    }
+  });
+
+  // Player
+  drawPlayer(player.c*SZ+SZ/2, player.r*SZ+SZ/2, T);
+
+  // Gravity indicator lines
+  drawGravIndicator(T);
+
+  // ── Star direction arrows (help player find uncollected stars) ──
+  drawStarArrows(T);
+}
+
+function drawWall(x, y, T){
+  const pad=2, r2=SZ*0.2;
+  const wx=x+pad, wy=y+pad, ws=SZ-pad*2;
+  // Shadow
+  ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=6; ctx.shadowOffsetY=3;
+  // Main gradient
+  const g=ctx.createLinearGradient(wx,wy,wx,wy+ws);
+  g.addColorStop(0,T.wallGrad[0]); g.addColorStop(1,T.wallGrad[1]);
+  ctx.fillStyle=g;
+  ctx.beginPath(); rrect(ctx,wx,wy,ws,ws,r2); ctx.fill();
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+  // Top shine
+  const sh=ctx.createLinearGradient(wx,wy,wx,wy+ws*0.4);
+  sh.addColorStop(0,'rgba(255,255,255,0.3)'); sh.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sh;
+  ctx.beginPath(); rrect(ctx,wx,wy,ws,ws*0.45,[r2,r2,0,0]); ctx.fill();
+  // Accent line at bottom
+  ctx.fillStyle=T.wallAcc+'44';
+  ctx.fillRect(wx+2, wy+ws-3, ws-4, 2);
+}
+
+function drawStar(cx, cy, pulse, T){
+  const r=SZ*0.28+Math.sin(pulse)*SZ*0.05;
+  // Glow
+  ctx.shadowColor=T.starGlow; ctx.shadowBlur=16;
+  // Outer circle
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r+4);
+  g.addColorStop(0,T.star); g.addColorStop(1,'rgba(255,217,61,0)');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(cx,cy,r+6,0,Math.PI*2); ctx.fill();
+  // Star shape
+  ctx.fillStyle=T.star;
+  drawStarShape(ctx,cx,cy,r,r*0.4,5);
+  ctx.fill();
+  // Inner shine
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.beginPath(); ctx.arc(cx-r*0.25,cy-r*0.25,r*0.2,0,Math.PI*2); ctx.fill();
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+}
+
+function drawPlayer(cx, cy, T){
+  const sz=SZ*0.85;
+  const halfW=sz/2*player.squash, halfH=sz/2*player.stretch;
+  const flip=player.flip?Math.PI:0;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  if(flip) ctx.rotate(Math.PI*(frameCount%20/20));
+  // Shadow
+  ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=12; ctx.shadowOffsetY=4;
+  // Body gradient
+  const bg=ctx.createRadialGradient(-halfW*0.3,-halfH*0.3,0,0,0,halfW+8);
+  bg.addColorStop(0,lighten(T.playerBody,50));
+  bg.addColorStop(1,T.playerBody);
+  ctx.fillStyle=bg;
+  ctx.beginPath();
+  ctx.ellipse(0,0,halfW,halfH,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+  // Top shine
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.beginPath(); ctx.ellipse(-halfW*0.2,-halfH*0.35,halfW*0.35,halfH*0.22,0,0,Math.PI*2); ctx.fill();
+  // Face emoji
+  ctx.font=`${sz*0.55}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(player.expression,0,2);
+  ctx.restore();
+}
+
+function drawGravIndicator(T){
+  const x=10, dir=gravDir;
+  const arr=dir>0?'↓':'↑';
+  ctx.globalAlpha=0.3;
+  ctx.fillStyle=T.wallAcc;
+  ctx.font=`bold ${SZ*0.55}px monospace`;
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText('G '+arr, 4, 4);
+  ctx.globalAlpha=1;
+}
+
+function drawStarArrows(T){
+  // For each uncollected star, draw a pulsing arrow from player toward it
+  const px = player.c * SZ + SZ/2;
+  const py = player.r * SZ + SZ/2;
+  const pulse = 0.6 + 0.4*Math.sin(frameCount*0.1);
+
+  goals.filter(g=>!g.collected).forEach(g=>{
+    const gx = g.c * SZ + SZ/2;
+    const gy = g.r * SZ + SZ/2;
+    const dx = gx - px, dy = gy - py;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if(dist < SZ*1.5) return; // too close, no arrow needed
+
+    // Draw dashed line from player toward star (capped at 60px from player)
+    const angle = Math.atan2(dy, dx);
+    const arrowLen = Math.min(dist*0.4, SZ*1.2);
+    const ax = px + Math.cos(angle)*arrowLen;
+    const ay = py + Math.sin(angle)*arrowLen;
+
+    ctx.save();
+    ctx.globalAlpha = pulse * 0.7;
+    ctx.strokeStyle = T.star;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(ax, ay); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrowhead
+    ctx.fillStyle = T.star;
+    ctx.translate(ax, ay);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(8, 0); ctx.lineTo(-5, 5); ctx.lineTo(-5, -5);
+    ctx.closePath(); ctx.fill();
+
+    // Mini star label at arrow tip
+    ctx.rotate(-angle);
+    ctx.font = `${SZ*0.35}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('⭐', 12, -12);
+
+    ctx.restore();
+  });
+}
+
+function drawStarShape(ctx,cx,cy,or,ir,pts){
+  ctx.beginPath();
+  for(let i=0;i<pts*2;i++){
+    const r=i%2===0?or:ir;
+    const a=(i*Math.PI)/pts-Math.PI/2;
+    i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+  }
+  ctx.closePath();
+}
+
+function rrect(ctx,x,y,w,h,r){
+  if(typeof r==='number')r=[r,r,r,r];
+  ctx.beginPath();
+  ctx.moveTo(x+r[0],y);
+  ctx.lineTo(x+w-r[1],y);ctx.arcTo(x+w,y,x+w,y+r[1],r[1]);
+  ctx.lineTo(x+w,y+h-r[2]);ctx.arcTo(x+w,y+h,x+w-r[2],y+h,r[2]);
+  ctx.lineTo(x+r[3],y+h);ctx.arcTo(x,y+h,x,y+h-r[3],r[3]);
+  ctx.lineTo(x,y+r[0]);ctx.arcTo(x,y,x+r[0],y,r[0]);
+  ctx.closePath();
+}
+
+function lighten(hex,amt){
+  return '#'+hex.replace(/^#/,'').replace(/../g,c=>Math.min(255,parseInt(c,16)+amt).toString(16).padStart(2,'0'));
+}
+
+// ── Particles ──
+function spawnStarBurst(cx,cy){
+  const T=WORLDS[world];
+  const cols=T.particles;
+  for(let i=0;i<20;i++){
+    const a=(Math.PI*2*i)/20+Math.random()*0.3;
+    const spd=2+Math.random()*5;
+    particles.push({x:cx,y:cy,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-2,life:1,decay:0.02+Math.random()*0.02,size:3+Math.random()*6,col:cols[Math.floor(Math.random()*cols.length)],type:'star',rot:Math.random()*Math.PI*2,rotV:(Math.random()-0.5)*0.3});
+  }
+}
+
+function spawnConfetti(n){
+  const T=WORLDS[world];
+  for(let i=0;i<n;i++){
+    particles.push({x:Math.random()*CW,y:-10,vx:(Math.random()-0.5)*5,vy:2+Math.random()*4,life:1,decay:0.006+Math.random()*0.01,size:5+Math.random()*9,col:T.particles[Math.floor(Math.random()*T.particles.length)],type:'conf',rot:Math.random()*Math.PI*2,rotV:(Math.random()-0.5)*0.25});
+  }
+}
+
+function drawParticles(){
+  pctx.clearRect(0,0,CW,CH);
+  particles.forEach(p=>{
+    pctx.save();
+    pctx.globalAlpha=p.life;
+    pctx.translate(p.x,p.y);
+    pctx.rotate(p.rot);
+    pctx.fillStyle=p.col;
+    if(p.type==='star'){
+      drawStarShape(pctx,0,0,p.size,p.size*0.4,5);
+      pctx.fill();
+    } else {
+      pctx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+    }
+    pctx.restore();
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12;
+    p.life-=p.decay; p.rot+=p.rotV;
+  });
+  particles=particles.filter(p=>p.life>0);
+}
+
+// ── Float Message ──
+function showFMsg(txt, col='#FFD93D'){
+  const el=document.getElementById('fmsg');
+  el.textContent=txt; el.style.color=col;
+  el.style.textShadow=`0 0 20px ${col}`;
+  el.style.transition='none'; el.style.opacity='1';
+  el.style.transform='translate(-50%,-50%) scale(0.5)';
+  requestAnimationFrame(()=>{
+    el.style.transition='transform 0.3s cubic-bezier(.34,1.56,.64,1), opacity 0.5s 0.8s';
+    el.style.transform='translate(-50%,-50%) scale(1)';
+    setTimeout(()=>{el.style.opacity='0';},900);
+  });
+}
+
+// ── HUD Updates ──
+function updateHUD(){
+  document.getElementById('coin-disp').textContent='🪙 '+coins;
+  document.getElementById('lv-lbl').textContent=`⭐ Level ${level}`;
+  document.getElementById('lv-goal').textContent=`${collectedGoals} / ${totalGoals} stars`;
+  document.getElementById('lives-disp').textContent='❤️'.repeat(lives);
+}
+
+function updateLevelBar(){
+  const pct=(collectedGoals/totalGoals)*100;
+  document.getElementById('lv-fill').style.width=pct+'%';
+}
+
+let _scoreTarget=0, _scoreAnim=null;
+function animScore(from, to){
+  _scoreTarget=to;
+  if(_scoreAnim) return;
+  let cur=from;
+  _scoreAnim=setInterval(()=>{
+    cur=Math.min(cur+Math.ceil((_scoreTarget-cur)/8)+1,_scoreTarget);
+    document.getElementById('score-display').textContent=cur;
+    if(cur>=_scoreTarget){clearInterval(_scoreAnim);_scoreAnim=null;}
+  },25);
+}
+
+// ── Controls ──
+let _moveLoop=null;
+function startMove(dc){
+  if(!running||paused) return;
+  tryMove(dc);
+  _moveLoop=setInterval(()=>tryMove(dc),160);
+}
+function stopMove(){clearInterval(_moveLoop);_moveLoop=null;}
+
+// ── Keyboard ──
+document.addEventListener('keydown',e=>{
+  if(!running||paused) return;
+  if(e.key==='ArrowLeft')tryMove(-1);
+  else if(e.key==='ArrowRight')tryMove(1);
+  else if(e.key==='ArrowUp'||e.key==='ArrowDown'||e.key===' ')doFlip();
+  else if(e.key==='Escape')togglePause();
+  e.preventDefault();
+});
+
+// ── Touch swipe on canvas ──
+let touchX=0;
+cv.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;},{passive:true});
+cv.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchX;
+  if(Math.abs(dx)>25)tryMove(dx>0?1:-1);
+  else doFlip();
+});
+
+// ── Pause ──
+function togglePause(){
+  paused=!paused;
+  document.getElementById('pause-ov').style.display=paused?'flex':'none';
+  document.getElementById('pause-btn').textContent=paused?'▶':'⏸';
+  // Timer is checked inside setInterval with `if(!running||paused)return` — auto-pauses
+}
+function resumeGame(){
+  paused=false;
+  document.getElementById('pause-ov').style.display='none';
+  document.getElementById('pause-btn').textContent='⏸';
+}
+
+// ── Win/Lose ──
+function showWin(){
+  stopTimer();
+  const timeBonus = timeLeft * 5; // bonus points for fast completion
+  score += timeBonus;
+  const stars=collectedGoals>=totalGoals?3:collectedGoals>=totalGoals*0.66?2:1;
+  document.getElementById('win-stars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  document.getElementById('win-score').textContent=score;
+  document.getElementById('win-stcount').textContent=`${collectedGoals}/${totalGoals}`;
+  const earned=Math.floor(score/8);
+  document.getElementById('win-coins').textContent=`+${earned} 🪙 ${timeBonus>0?'(+'+timeBonus+' speed bonus!)':''}`;
+  coins+=earned;
+  if(score>best){best=score;localStorage.setItem('gf_best',best);}
+  document.getElementById('win-ov').style.display='flex';
+  sndLvUp();
+}
+
+function showOver(){
+  document.getElementById('over-score').textContent=score;
+  document.getElementById('over-best').textContent=best;
+  document.getElementById('over-ov').style.display='flex';
+  sndLose();
+}
+
+function nextLevel(){
+  document.getElementById('win-ov').style.display='none';
+  level++;
+  mkLevel(); applyGrav();
+  running=true; draw(); startTimer();
+}
+
+function retryLevel(){
+  document.getElementById('over-ov').style.display='none';
+  document.getElementById('pause-ov').style.display='none';
+  lives=3; score=0;
+  mkLevel(); applyGrav();
+  running=true; paused=false;
+  document.getElementById('pause-btn').textContent='⏸';
+  draw(); updateHUD(); startTimer();
+}
+
+function goMenu(){
+  running=false; paused=false; stopTimer();
+  ['win-ov','over-ov','pause-ov'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('wrap').style.display='none';
+  document.getElementById('start-ov').style.display='flex';
+  level=1; score=0; lives=3; coins=0;
+  tutStep=0;
+  ['t0','t1','t2'].forEach((id,i)=>document.getElementById(id).classList.toggle('on',i===0));
+  ['dot0','dot1','dot2'].forEach((id,i)=>document.getElementById(id).classList.toggle('on',i===0));
+  document.getElementById('tut-btn').textContent='Next →';
+  document.getElementById('tut-btn').onclick=tutAdv;
+}
+
+// ── Start ──
+function startGame(){
+  document.getElementById('start-ov').style.display='none';
+  document.getElementById('wrap').style.display='flex';
+  resizeCanvas(); makeBgStars();
+  score=0; level=1; lives=3; coins=parseInt(localStorage.getItem('gf_coins')||'0');
+  mkLevel(); applyGrav();
+  running=true;
+  draw(); startTimer();
+  animLoop();
+}
+
+// ── Main Loop (particles + idle anim) ──
+function animLoop(){
+  frameCount++;
+  if(!paused){
+    drawParticles();
+    if(running){
+      // Idle bob
+      player.anim=(player.anim||0)+0.08;
+      draw();
+    }
+  }
+  requestAnimationFrame(animLoop);
+}
+
+// ── Window resize ──
+window.addEventListener('resize',()=>{
+  if(running){resizeCanvas();draw();}
+});
+
+// ── Save coins on exit ──
+window.addEventListener('beforeunload',()=>localStorage.setItem('gf_coins',coins));
+
+// ── Init bg stars immediately ──
+makeBgStars();
+</script>
+    <script src="../js/mobile-controls.js" defer></script>
+</body>
+</html>

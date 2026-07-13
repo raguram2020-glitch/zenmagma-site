@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Time Teacher - ZenMagma</title>    <meta name="description" content="Learn to read analog clocks! Match the time shown to the correct answer.">
+    <link rel="canonical" href="https://zenmagma.com/games/64-time-teacher">
+    <meta property="og:title" content="Time Teacher - ZenMagma">
+    <meta property="og:description" content="Learn to read analog clocks! Match the time shown to the correct answer.">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://zenmagma.com/games/64-time-teacher">
+    <meta property="og:image" content="https://zenmagma.com/assets/thumbs/time-teacher.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#001a14;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:10px}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em;display:inline-block;margin:3px}.btn{padding:10px 24px;border-radius:25px;border:none;font-size:.9em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1abc9c,#16a085);color:#fff;transition:.2s;margin:4px}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:380px;width:90%;border:2px solid #1abc9c}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#1abc9c,#16a085);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
+<a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<div style="text-align:center">
+<div style="padding:8px"><span class="hv">Score:<b id="sc"> 0</b></span><span class="hv">Level:<b id="lv"> 1</b></span><span class="hv">Streak:<b id="st"> 0</b></span></div>
+<div style="font-size:1.2em;color:#aaa;padding:8px">Set the clock to: <b id="timeStr" style="color:#1abc9c">12:00</b></div>
+<canvas id="c" width="280" height="280" style="margin:10px;cursor:pointer"></canvas>
+<div style="padding:8px;color:#aaa;font-size:.85em">Click on the clock face to set hour/minute hands</div>
+<div style="padding:8px"><button class="btn" onclick="submit()">Submit</button><button class="btn" onclick="mkQ()" style="background:linear-gradient(135deg,#555,#333)">Skip</button></div>
+<div id="fb" style="font-size:1.1em;height:28px;margin:6px"></div>
+</div>
+<div id="ov"><div id="ob"><h2>Time Teacher</h2><p>Set the clock hands to show the correct time! Click to position hour and minute hands.</p><button class="btn" onclick="go()">Tick-Tock!</button></div></div>
+<script>
+
+// === Sound Engine ===
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+function beep(freq=440,dur=0.08,vol=0.15,type='square'){
+  try{const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur);}catch(e){}
+}
+function sndScore(){beep(660,0.07,0.12,'square');}
+function sndHit(){beep(180,0.15,0.18,'sawtooth');}
+function sndLose(){beep(120,0.4,0.2,'sawtooth');setTimeout(()=>beep(80,0.4,0.2,'sawtooth'),200);}
+function sndWin(){beep(880,0.1,0.15);setTimeout(()=>beep(1100,0.1,0.15),120);setTimeout(()=>beep(1320,0.2,0.15),240);}
+function sndJump(){beep(300,0.08,0.1,'sine');}
+function sndCollect(){beep(780,0.06,0.12,'sine');}
+// Resume AudioContext on first interaction
+document.addEventListener('click',()=>AC.state==='suspended'&&AC.resume(),{once:true});
+
+function showGameOver(msg){
+  sndLose();
+  const el=document.getElementById('goov');
+  if(el){document.getElementById('gomsg').textContent=msg||'';el.style.display='flex';}
+}
+function showWin(msg){
+  sndWin();
+  const el=document.getElementById('winov');
+  if(el){document.getElementById('winmsg').textContent=msg||'';el.style.display='flex';}
+}
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d"),CX=140,CY=140,R=120;
+let targetH,targetM,userH=0,userM=0,mode="hour",score=0,level=1,streak=0,running=false;
+function mkQ(){
+  targetH=Math.floor(Math.random()*12);targetM=level>2?Math.floor(Math.random()*4)*15:0;
+  userH=0;userM=0;mode="hour";
+  const h=targetH===0?12:targetH,ampm=Math.random()>.5?"AM":"PM";
+  document.getElementById("timeStr").textContent=`${h}:${String(targetM).padStart(2,"0")} ${ampm}`;
+  document.getElementById("fb").textContent="Click to set hour hand first";draw();
+}
+function draw(){
+  ctx.fillStyle="#001a14";ctx.fillRect(0,0,280,280);
+  ctx.strokeStyle="#1abc9c";ctx.lineWidth=4;ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);ctx.stroke();
+  for(let i=0;i<12;i++){const a=i*Math.PI/6-Math.PI/2;ctx.fillStyle="#1abc9c";ctx.font="bold 14px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(i===0?12:i,CX+Math.cos(a)*(R-16),CY+Math.sin(a)*(R-16));}
+  for(let i=0;i<60;i+=5){const a=i*Math.PI/30-Math.PI/2;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.arc(CX+Math.cos(a)*(R-6),CY+Math.sin(a)*(R-6),2,0,Math.PI*2);ctx.fill();}
+  // Hour hand
+  const ha=(userH*Math.PI/6+userM*Math.PI/360)-Math.PI/2;
+  ctx.strokeStyle="#fff";ctx.lineWidth=6;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(CX,CY);ctx.lineTo(CX+Math.cos(ha)*(R*.6),CY+Math.sin(ha)*(R*.6));ctx.stroke();
+  // Minute hand
+  const ma=userM*Math.PI/30-Math.PI/2;
+  ctx.strokeStyle="#1abc9c";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(CX,CY);ctx.lineTo(CX+Math.cos(ma)*(R*.85),CY+Math.sin(ma)*(R*.85));ctx.stroke();
+  ctx.fillStyle=mode==="hour"?"#f1c40f":"#1abc9c";ctx.beginPath();ctx.arc(CX,CY,8,0,Math.PI*2);ctx.fill();
+}
+cv.addEventListener("click",e=>{
+  if(!running)return;
+  const mx=e.offsetX-CX,my=e.offsetY-CY;
+  let a=Math.atan2(my,mx)+Math.PI/2;if(a<0)a+=Math.PI*2;
+  if(mode==="hour"){userH=Math.round(a/(Math.PI/6))%12;mode="minute";document.getElementById("fb").textContent="Now set minute hand";}
+  else{userM=Math.round(a/(Math.PI/30))%60;mode="hour";}
+  draw();
+});
+function submit(){
+  const ok=userH===targetH&&Math.abs(userM-targetM)<=5;
+  if(ok){streak++;score+=50*level*(1+streak*.1);document.getElementById("sc").textContent=Math.round(score);document.getElementById("st").textContent=streak;document.getElementById("fb").innerHTML='<span style="color:#2ecc71">✓ Correct time!</span>';if(streak%3===0)level++;document.getElementById("lv").textContent=level;setTimeout(mkQ,700);}
+  else{streak=0;document.getElementById("fb").innerHTML=`<span style="color:#e74c3c">✗ Check hour and minute hands</span>`;}
+}
+function go(){document.getElementById("ov").style.display="none";running=true;mkQ();}
+mkQ();
+
+function doRestart(){
+  const g=document.getElementById('goov');if(g)g.style.display='none';
+  const w=document.getElementById('winov');if(w)w.style.display='none';
+  score=0;lives=3;level=1;
+  try{document.getElementById('sc').textContent=0;}catch(e){}
+  try{document.getElementById('lf').textContent=3;}catch(e){}
+  try{document.getElementById('lv').textContent=1;}catch(e){}
+  mkLevel&&mkLevel();
+  running=true;
+  (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
+}
+</script>    <script src="../js/mobile-controls.js" defer></script>
+</body></html>
