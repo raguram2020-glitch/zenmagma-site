@@ -32,14 +32,25 @@ if(!CanvasRenderingContext2D.prototype.roundRect){
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#5c94fc;touch-action:none}
-#cv{display:block;position:fixed;top:0;left:0}
+#cv3d,#cv{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+#cv3d{z-index:0}
+#cv{z-index:1;background:transparent}
 </style>
 </head><body>
+<canvas id="cv3d"></canvas>
 <canvas id="cv"></canvas>
 <script>
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 let W,H,GY;
-function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
+function resize(){
+  W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;
+  /* #cv3d needs real HTML width/height attributes too — game.html forces
+     canvas{width:auto;height:auto;object-fit:contain}, which resolves
+     against the canvas's intrinsic (attribute) size, not CSS 100%/100%.
+     Without this it's stuck at the browser default 300x150. */
+  const c3=document.getElementById('cv3d');
+  if(c3){c3.width=window.innerWidth;c3.height=window.innerHeight;}
+}
 resize();window.addEventListener('resize',resize);
 cv.setAttribute('tabindex','0');
 document.addEventListener('fullscreenchange',()=>{setTimeout(()=>{resize();cv.focus();},80);});
@@ -81,6 +92,66 @@ let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0,rainDrops=[]
 function triggerMood(next){
   moodIdx=next%MOOD_BGS.length;moodFade=0;moodChanging=true;moodText=MOOD_LABELS[moodIdx];moodTextT=120;
   if(moodIdx===2){rainDrops=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H,spd:10+Math.random()*6,len:14+Math.random()*10}));}else rainDrops=[];
+}
+
+/* ══════════════════════════════════════════════════════════
+   3D ENVIRONMENT — ground/sky/bridge render in real WebGL 3D
+   via Three.js on #cv3d, positioned underneath the existing
+   2D canvas. Characters, obstacles, coins, weather, and HUD
+   are untouched — they keep drawing on #cv exactly as before.
+   Falls back to the original drawBg()/drawGround() if WebGL2
+   is unavailable.
+══════════════════════════════════════════════════════════ */
+const cv3d=document.getElementById('cv3d');
+let shell3d=null,bridgeGroup=null;
+(async function initShell3d(){
+  try{
+    const shellMod=await import('../js/game-three-shell.js');
+    if(!shellMod.supportsWebGL2())return;
+    const THREE=await import('../js/vendor/three.module.min.js');
+    shell3d=new shellMod.RunnerShell(cv3d,{sky:0xa0c8e0,camHeight:4.2,camDistance:8.5,lookHeight:1.4,fov:60});
+    shell3d.setGroundTexture('../assets/game-art/templerun/ground-path.jpg',{width:14,length:500,repeatY:60});
+    shell3d.scene.fog=new THREE.Fog(0xa0c8e0,30,140);
+
+    bridgeGroup=new THREE.Group();
+    const deck=new THREE.Mesh(new THREE.BoxGeometry(6,0.3,500),new THREE.MeshStandardMaterial({color:0x6a4018}));
+    deck.position.set(0,0.05,-240);
+    bridgeGroup.add(deck);
+    const postMat=new THREE.MeshStandardMaterial({color:0x3a1e08});
+    for(let i=0;i<24;i++){
+      const z=-i*20;
+      [-3.3,3.3].forEach(x=>{
+        const post=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,1.6,6),postMat);
+        post.position.set(x,0.8,z);
+        bridgeGroup.add(post);
+      });
+    }
+    const water=new THREE.Mesh(new THREE.PlaneGeometry(30,500),new THREE.MeshStandardMaterial({color:0x0a2850,transparent:true,opacity:0.9}));
+    water.rotation.x=-Math.PI/2;water.position.set(0,-1.5,-240);
+    bridgeGroup.add(water);
+    bridgeGroup.visible=false;
+    shell3d.scene.add(bridgeGroup);
+  }catch(e){shell3d=null;}
+})();
+
+function seasonSkyRGB(){
+  const{i0,i1,tt}=getSeaBlend();
+  return lC3(SEA_SKYT[i0],SEA_SKYT[i1],tt);
+}
+
+/* Replaces drawBg()+drawGround() in the main draw() loop. */
+function render3D(){
+  if(!shell3d){drawBg();drawGround();return;}
+  const rgb=seasonSkyRGB();
+  const cssColor=`rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+  shell3d.setSkyColor(cssColor);
+  if(shell3d.scene.fog)shell3d.scene.fog.color.set(cssColor);
+  const spd=slowOn?speed*.45:speed;
+  shell3d.scrollGround(spd*0.0035);
+  const bridgeOn=(whaleEvt.fade||0)>0.02;
+  if(bridgeGroup)bridgeGroup.visible=bridgeOn;
+  if(shell3d.ground)shell3d.ground.visible=!bridgeOn;
+  shell3d.render();
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1476,8 +1547,7 @@ function draw(){
   }
 
   if(screen==='playing')checkLanding();
-  drawBg();
-  drawGround();      /* bridge mode handles water internally */
+  render3D();        /* 3D ground/sky/bridge — falls back to drawBg()+drawGround() if WebGL unavailable */
   drawWhaleEvt();    /* whale in water below bridge */
   drawWX();          /* weather particles behind everything */
   obs.forEach(drawObs);
