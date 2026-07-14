@@ -21,6 +21,7 @@ const ZM_NAV = [
   { href: 'categories/kids.html',    label: 'Kids',          icon: '🌈' },
   { href: 'categories/runner.html',  label: 'Runner',        icon: '🏃' },
   { href: 'categories/arcade.html',  label: 'Arcade',        icon: '🕹️' },
+  { href: 'videos.html',             label: 'Videos',        icon: '🎬' },
   { href: 'about.html',              label: 'About',         icon: '✨' },
   { href: 'contact.html',            label: 'Contact',       icon: '💬' },
 ];
@@ -77,16 +78,18 @@ function zmFooter() {
       <h4>Platform</h4>
       <a href="${ZM_BASE}index.html">🏠 Home</a>
       <a href="${ZM_BASE}index.html">🎮 All Games</a>
+      <a href="${ZM_BASE}videos.html">🎬 Videos</a>
       <a href="${ZM_BASE}about.html">✨ About Us</a>
       <a href="${ZM_BASE}contact.html">💬 Contact</a>
       <a href="${ZM_BASE}privacy-policy.html">🔒 Privacy Policy</a>
       <a href="${ZM_BASE}sitemap.html">🗺️ Sitemap</a>
     </div>
     <div class="footer-col">
-      <h4>Community</h4>
+      <h4>Follow Us</h4>
+      <a href="https://www.youtube.com/@zenmagma_wisdomnest" target="_blank" rel="noopener">▶️ YouTube</a>
+      <a href="https://www.instagram.com/zenmagma_official/" target="_blank" rel="noopener">📸 Instagram</a>
       <a href="${ZM_BASE}contact.html?subject=submit">📤 Submit a Game</a>
       <a href="${ZM_BASE}contact.html?subject=advertise">📢 Advertise</a>
-      <a href="${ZM_BASE}sitemap.html">🗺️ Sitemap</a>
     </div>
   </div>
   <div class="footer-bottom">

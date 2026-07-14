@@ -29,6 +29,12 @@
     <priority>0.95</priority>
   </url>
   <url>
+    <loc>https://zenmagma.com/videos.html</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://zenmagma.com/about.html</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>monthly</changefreq>
