@@ -9,6 +9,7 @@
     <meta property="og:url" content="https://zenmagma.com/games/23-storm-archer">
     <meta property="og:image" content="https://zenmagma.com/assets/thumbs/storm-archer.jpg">
     <meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="../css/game-fx.css">
 <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000800;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}canvas{border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);max-width:100vw}#hud{display:flex;gap:12px;align-items:center;padding:8px 0;flex-wrap:wrap;justify-content:center}.hv{background:rgba(255,255,255,.12);padding:5px 14px;border-radius:20px;font-weight:700;font-size:.85em}.btn{padding:9px 20px;border-radius:24px;border:none;font-size:.85em;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#56ab2f,#a8e063);color:#fff;transition:.2s}.btn:hover{transform:scale(1.05)}#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:50}#ob{background:#16213e;border-radius:20px;padding:36px;text-align:center;max-width:360px;width:90%;border:2px solid #56ab2f}#ob h2{font-size:1.9em;margin-bottom:8px;background:linear-gradient(135deg,#56ab2f,#a8e063);-webkit-background-clip:text;-webkit-text-fill-color:transparent}#ob p{color:#aaa;margin-bottom:20px;line-height:1.5;font-size:.9em}#hm{position:fixed;top:10px;left:10px;padding:5px 12px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.75em;z-index:100}</style></head><body>
 <a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
 
@@ -99,5 +100,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script>    <script src="../js/mobile-controls.js" defer></script>
+</script>    <script src="../js/game-fx.js"></script>
+<script src="../js/mobile-controls.js" defer></script>
 </body></html>

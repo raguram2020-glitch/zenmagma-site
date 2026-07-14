@@ -1,0 +1,52 @@
+/* ═══════════════════════════════════════════════════
+   ZENMAGMA — game-fx.css
+   Shared overlay polish + pseudo-3D utility classes,
+   included by every game in games/*.html
+═══════════════════════════════════════════════════ */
+
+/* Injected win/lose overlay button spacing — scoped by id
+   so it never touches a game's own unrelated .btn usage. */
+#goov .btn, #winov .btn { margin: 4px; }
+#goov > div, #winov > div { animation: gfxPopIn .28s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes gfxPopIn {
+  from { opacity: 0; transform: scale(.85) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Pseudo-3D utility classes (Action/Arcade phase) ──
+   Applied to canvas/DOM elements that want depth without
+   WebGL: perspective tilt, layered shadows, parallax. */
+
+.gfx-perspective { perspective: 900px; }
+
+.gfx-tilt {
+  transition: transform .15s ease-out;
+  transform-style: preserve-3d;
+}
+.gfx-tilt:hover {
+  transform: rotateX(4deg) rotateY(-4deg) scale(1.02);
+}
+
+/* Layered drop-shadows to fake stacked depth on flat
+   canvas/sprite elements — use gfx-depth-1 (closest to
+   the surface) through gfx-depth-3 (furthest/most blur). */
+.gfx-depth-1 { filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.gfx-depth-2 { filter: drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
+.gfx-depth-3 { filter: drop-shadow(0 14px 24px rgba(0,0,0,.45)); }
+
+/* Parallax background layers — apply to stacked absolutely
+   positioned elements behind a game canvas; JS sets
+   --gfx-parallax-x/--gfx-parallax-y per layer per frame. */
+.gfx-parallax-layer {
+  position: absolute;
+  inset: 0;
+  transform: translate(var(--gfx-parallax-x, 0), var(--gfx-parallax-y, 0));
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Simple ambient glow wrapper for canvases wanting a
+   soft light-source feel without per-frame canvas cost. */
+.gfx-glow {
+  box-shadow: 0 0 40px var(--gfx-glow-color, rgba(120,160,255,.25));
+}

@@ -12,6 +12,7 @@
     <meta property="og:url" content="https://zenmagma.com/games/48-jungle-sprint">
     <meta property="og:image" content="https://zenmagma.com/assets/thumbs/jungle-sprint.jpg">
     <meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="../css/game-fx.css">
 <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0}
 body{touch-action:none;user-select:none;-webkit-user-select:none}
 #touch-btns{display:none;position:fixed;bottom:18px;left:0;width:100%;z-index:10;pointer-events:none}
@@ -273,6 +274,7 @@ function draw(){
 function loop(){update();if(state==='start')drawStart();else if(state==='over'){draw();drawOver();}else draw();requestAnimationFrame(loop);}
 init();loop();
 </script>
-    <script src="../js/mobile-controls.js" defer></script>
+    <script src="../js/game-fx.js"></script>
+<script src="../js/mobile-controls.js" defer></script>
 </body>
 </html>

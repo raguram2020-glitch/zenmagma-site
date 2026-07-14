@@ -9,6 +9,7 @@
     <meta property="og:url" content="https://zenmagma.com/games/11-color-flood">
     <meta property="og:image" content="https://zenmagma.com/assets/thumbs/color-flood.jpg">
     <meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="../css/game-fx.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000814;font-family:"Segoe UI",sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
@@ -101,5 +102,6 @@ function doRestart(){
   running=true;
   (function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();
 }
-</script>    <script src="../js/mobile-controls.js" defer></script>
+</script>    <script src="../js/game-fx.js"></script>
+<script src="../js/mobile-controls.js" defer></script>
 </body></html>
