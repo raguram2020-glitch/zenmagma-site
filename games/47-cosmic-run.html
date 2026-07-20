@@ -13,7 +13,8 @@
     <meta property="og:image" content="https://zenmagma.com/assets/thumbs/cosmic-run.jpg">
     <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="../css/game-fx.css">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0}
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+#cv3d{z-index:0}#c{z-index:1;background:transparent}
 body{touch-action:none;user-select:none;-webkit-user-select:none}
 #touch-btns{display:none;position:fixed;bottom:18px;left:0;width:100%;z-index:10;pointer-events:none}
 #touch-btns button{pointer-events:all;width:110px;height:72px;font-size:18px;font-weight:bold;font-family:monospace;border:3px solid rgba(255,255,255,0.5);border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -23,6 +24,7 @@ body{touch-action:none;user-select:none;-webkit-user-select:none}
 </head>
 <body>
 <a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<canvas id="cv3d"></canvas>
 <canvas id="c"></canvas>
 <div id="touch-btns">
   <button id="btn-jump">⬆️ JUMP</button>
@@ -39,8 +41,36 @@ const MOOD_OVERLAYS=['rgba(0,0,20,0.1)','rgba(80,0,20,0.3)','rgba(0,0,0,0.45)'];
 let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0;
 function triggerMood(n){moodIdx=n%MOOD_BGS.length;moodFade=0;moodChanging=true;moodText=MOOD_LABELS[moodIdx];moodTextT=120;}
 let W,H,GY;
-function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
+function resize(){
+  W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;
+  const c3=document.getElementById('cv3d');
+  if(c3){c3.width=window.innerWidth;c3.height=window.innerHeight;}
+}
 resize();window.addEventListener('resize',resize);
+
+/* ── 3D ENVIRONMENT (WebGL ground/sky) ── */
+let shell3d=null;
+(async function initShell3d(){
+  try{
+    const shellMod=await import('../js/game-three-shell.js');
+    if(!shellMod.supportsWebGL2())return;
+    const THREE=await import('../js/vendor/three.module.min.js');
+    shell3d=new shellMod.RunnerShell(document.getElementById('cv3d'),{sky:0x05051a,camHeight:4.2,camDistance:8.5,lookHeight:1.4,fov:60});
+    shell3d.setGroundTexture('../assets/game-art/cosmic-run/ground.jpg',{width:14,length:500,repeatY:60});
+    shell3d.scene.fog=new THREE.Fog(0x05051a,30,150);
+  }catch(e){shell3d=null;}
+})();
+const MOOD_HEX=[0x05051a,0x2a0510,0x000000];
+function render3D(){
+  if(!shell3d){drawBG();return;}
+  cx.clearRect(0,0,W,H); /* drawBG() used to opaquely repaint the whole canvas each frame, which
+    doubled as an implicit clear — render3D() draws nothing to the 2D canvas, so it must clear explicitly */
+  const hex=MOOD_HEX[moodIdx];
+  shell3d.setSkyColor(hex);
+  if(shell3d.scene.fog)shell3d.scene.fog.color.set(hex);
+  shell3d.scrollGround(spd*0.0035);
+  shell3d.render();
+}
 const LSK='cr_hs',GRAV=0.55,JV=-13.5,SDUR=38,ISPD=4.5,MSPD=9,RAMP=0.2,RINT=300,SBASE=340,SRAND=120,MAX_LIVES=5,OBS_DELAY=180;
 const stars=Array.from({length:150},()=>({x:Math.random(),y:Math.random()*0.75,s:Math.random()*2.5+0.5,twk:Math.random()*Math.PI*2}));
 const planets=[{x:0.8,y:0.2,r:40,c:'#9933cc',ring:true},{x:0.15,y:0.12,r:22,c:'#cc6600',ring:false}];
@@ -227,7 +257,7 @@ function drawHUD(){
   if(mag){cx.fillStyle='#ff88ff';cx.font='bold 12px monospace';cx.fillText('MAGNET',W*0.88,28);}
 }
 function drawStart(){
-  drawBG();
+  render3D();
   cx.fillStyle='rgba(0,0,20,0.6)';cx.fillRect(W/2-240,H*0.28,480,H*0.55);
   cx.fillStyle='#00ffff';cx.font='bold 52px monospace';cx.textAlign='center';cx.fillText('COSMIC RUN',W/2,H*0.38);
   cx.fillStyle='#cc88ff';cx.font='20px monospace';cx.fillText('SPACE RUNNER',W/2,H*0.47);
@@ -269,7 +299,7 @@ function update(){
   pups.forEach(p=>{if(!p.collected&&Math.abs(W*0.22-p.x)<26&&Math.abs((py-30)-p.y)<32){p.collected=true;if(p.t==='shield'){shield=true;shT=300;}else if(p.t==='magnet'){mag=true;mgT=300;}else{slow=true;slT=200;spd=Math.max(2,spd-2);}addFT(p.x,p.y-20,p.t.toUpperCase()+'!',p.t==='shield'?'#00aaff':p.t==='magnet'?'#ff88ff':'#88ff88');}});
 }
 function draw(){
-  drawBG();
+  render3D();
   obs.forEach(o=>drawObs(o));
   coll.forEach(c=>{if(!c.collected)drawCoin(c);});
   pups.forEach(p=>{if(!p.collected)drawPup(p);});

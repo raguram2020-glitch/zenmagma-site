@@ -13,7 +13,8 @@
     <meta property="og:image" content="https://zenmagma.com/assets/thumbs/neon-runner.jpg">
     <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="../css/game-fx.css">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0}
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden}canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+#cv3d{z-index:0}#c{z-index:1;background:transparent}
 body{touch-action:none;user-select:none;-webkit-user-select:none}
 #touch-btns{display:none;position:fixed;bottom:18px;left:0;width:100%;z-index:10;pointer-events:none}
 #touch-btns button{pointer-events:all;width:110px;height:72px;font-size:18px;font-weight:bold;font-family:monospace;border:3px solid rgba(255,255,255,0.5);border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -23,6 +24,7 @@ body{touch-action:none;user-select:none;-webkit-user-select:none}
 </head>
 <body>
 <a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<canvas id="cv3d"></canvas>
 <canvas id="c"></canvas>
 <div id="touch-btns">
   <button id="btn-jump">⬆️ JUMP</button>
@@ -36,8 +38,35 @@ let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0;
 function triggerMood(n){moodIdx=n%MOOD_LABELS.length;moodFade=0;moodChanging=true;moodText=MOOD_LABELS[moodIdx];moodTextT=120;}
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 let W,H,GY;
-function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
+function resize(){
+  W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;
+  const c3=document.getElementById('cv3d');
+  if(c3){c3.width=window.innerWidth;c3.height=window.innerHeight;}
+}
 resize();window.addEventListener('resize',resize);
+
+/* ── 3D ENVIRONMENT (WebGL ground/sky) ── */
+let shell3d=null;
+(async function initShell3d(){
+  try{
+    const shellMod=await import('../js/game-three-shell.js');
+    if(!shellMod.supportsWebGL2())return;
+    const THREE=await import('../js/vendor/three.module.min.js');
+    shell3d=new shellMod.RunnerShell(document.getElementById('cv3d'),{sky:0x05001a,camHeight:4.2,camDistance:8.5,lookHeight:1.4,fov:60});
+    shell3d.setGroundTexture('../assets/game-art/neon-runner/ground.jpg',{width:14,length:500,repeatY:60});
+    shell3d.scene.fog=new THREE.Fog(0x05001a,30,150);
+  }catch(e){shell3d=null;}
+})();
+const NR_MOOD_HEX=[0x05001a,0x320014,0x001432,0x321400];
+function render3D(){
+  if(!shell3d){drawBG();return;}
+  cx.clearRect(0,0,W,H);
+  const hex=NR_MOOD_HEX[moodIdx];
+  shell3d.setSkyColor(hex);
+  if(shell3d.scene.fog)shell3d.scene.fog.color.set(hex);
+  shell3d.scrollGround(spd*0.0035);
+  shell3d.render();
+}
 const LSK='nr_hs',GRAV=0.55,JV=-13.5,SDUR=38,ISPD=4.5,MSPD=9,RAMP=0.2,RINT=300,SBASE=340,SRAND=120,MAX_LIVES=5;
 // Neon signs
 const signs=[{x:0.7,y:0.2,txt:'CYBER',col:'#ff0080'},{x:0.45,y:0.12,txt:'NEON',col:'#00ffff'},{x:0.2,y:0.18,txt:'CITY',col:'#ff0080'}];
@@ -228,7 +257,7 @@ function drawBG(){
 function drawPup(p){const col=p.t==='shield'?'#00aaff':p.t==='magnet'?'#ff88ff':'#88ff88';neonGlow(col,12,()=>{cx.strokeStyle=col;cx.lineWidth=2;cx.beginPath();cx.arc(p.x,p.y,12+Math.sin(p.a*0.1)*3,0,Math.PI*2);cx.stroke();});cx.fillStyle='rgba(0,0,0,0.5)';cx.beginPath();cx.arc(p.x,p.y,14,0,Math.PI*2);cx.fill();cx.fillStyle=col;cx.font='bold 11px monospace';cx.textAlign='center';cx.fillText(p.t[0].toUpperCase(),p.x,p.y+4);cx.textAlign='left';}
 function drawHUD(){cx.fillStyle='rgba(10,0,20,0.8)';cx.fillRect(0,0,W,44);neonGlow('#ff0080',8,()=>{cx.font='bold 14px monospace';cx.fillStyle='#ff0080';cx.fillText('SCORE: '+sc,16,28);});cx.fillStyle='#fff';cx.fillText('DIST: '+Math.floor(dist),W*0.25,28);cx.fillStyle='#00ffff';cx.fillText('COINS: '+coins,W*0.5,28);cx.fillStyle='#ff88ff';cx.fillText('MULT: x'+mult.toFixed(1),W*0.75,28);for(let i=0;i<MAX_LIVES;i++){cx.fillStyle=i<lives?'#ff4444':'#444';cx.fillRect(W-20-i*22,12,14,14);}if(shield){cx.fillStyle='#00aaff';cx.fillText('SHIELD',W*0.88,28);}if(mag){cx.fillStyle='#ff88ff';cx.fillText('MAGNET',W*0.88,28);}}
 function drawStart(){
-  drawBG();
+  render3D();
   cx.fillStyle='rgba(10,0,20,0.7)';cx.fillRect(W/2-240,H*0.28,480,H*0.55);
   neonGlow('#ff0080',20,()=>{cx.fillStyle='#ff0080';cx.font='bold 48px monospace';cx.textAlign='center';cx.fillText('NEON RUNNER',W/2,H*0.38);});
   cx.fillStyle='#00ffff';cx.font='20px monospace';cx.textAlign='center';cx.fillText('CYBERPUNK RUNNER',W/2,H*0.47);
@@ -270,7 +299,7 @@ function update(){
   pups.forEach(p=>{if(!p.collected&&Math.abs(W*0.22-p.x)<26&&Math.abs((py-30)-p.y)<32){p.collected=true;if(p.t==='shield'){shield=true;shT=300;}else if(p.t==='magnet'){mag=true;mgT=300;}else{slow=true;slT=200;spd=Math.max(2,spd-2);}addFT(p.x,p.y-20,p.t.toUpperCase()+'!',p.t==='shield'?'#00aaff':p.t==='magnet'?'#ff88ff':'#88ff88');}});
 }
 function draw(){
-  drawBG();
+  render3D();
   obs.forEach(o=>drawObs(o));
   coll.forEach(c=>{if(!c.collected)drawCoin(c);});
   pups.forEach(p=>{if(!p.collected)drawPup(p);});

@@ -16,7 +16,8 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
-canvas{display:block;position:fixed;top:0;left:0}
+canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+#cv3d{z-index:0}#c{z-index:1;background:transparent}
 #touch-btns{display:none;position:fixed;bottom:18px;left:0;width:100%;z-index:10;pointer-events:none}
 #touch-btns button{pointer-events:all;width:110px;height:72px;font-size:18px;font-weight:bold;font-family:monospace;border:3px solid rgba(255,255,255,0.5);border-radius:14px;background:rgba(0,0,0,0.55);color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 #btn-jump{position:absolute;left:24px;bottom:0;background:rgba(0,0,100,0.7);border-color:#4488ff}
@@ -26,6 +27,7 @@ canvas{display:block;position:fixed;top:0;left:0}
 </head>
 <body>
 <a href="../index.html" style="position:fixed;top:12px;left:14px;z-index:9999;color:rgba(255,255,255,0.8);text-decoration:none;font-size:14px;font-weight:700;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">← Home</a>
+<canvas id="cv3d"></canvas>
 <canvas id="c"></canvas>
 <div id="touch-btns">
   <button id="btn-jump">⬆️ JUMP</button>
@@ -39,8 +41,35 @@ const MOOD_OVERLAYS=['rgba(255,255,100,0.04)','rgba(0,255,0,0.12)','rgba(0,50,0,
 let moodIdx=0,moodFade=0,moodChanging=false,moodText='',moodTextT=0;
 function triggerMood(n){moodIdx=n%MOOD_LABELS.length;moodFade=0;moodChanging=true;moodText=MOOD_LABELS[moodIdx];moodTextT=120;}
 let W,H,GY;
-function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;}
+function resize(){
+  W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;GY=H*0.72;
+  const c3=document.getElementById('cv3d');
+  if(c3){c3.width=window.innerWidth;c3.height=window.innerHeight;}
+}
 resize();window.addEventListener('resize',resize);
+
+/* ── 3D ENVIRONMENT (WebGL ground/sky) ── */
+let shell3d=null;
+(async function initShell3d(){
+  try{
+    const shellMod=await import('../js/game-three-shell.js');
+    if(!shellMod.supportsWebGL2())return;
+    const THREE=await import('../js/vendor/three.module.min.js');
+    shell3d=new shellMod.RunnerShell(document.getElementById('cv3d'),{sky:0x1a1a2e,camHeight:4.2,camDistance:8.5,lookHeight:1.4,fov:60});
+    shell3d.setGroundTexture('../assets/game-art/pixel-dash/ground.jpg',{width:14,length:500,repeatY:60});
+    shell3d.scene.fog=new THREE.Fog(0x1a1a2e,30,150);
+  }catch(e){shell3d=null;}
+})();
+const PD_MOOD_HEX=[0x1a1a2e,0x0a2a0a,0x001a00,0x00003c];
+function render3D(){
+  if(!shell3d){drawBG();return;}
+  cx.clearRect(0,0,W,H);
+  const hex=PD_MOOD_HEX[moodIdx];
+  shell3d.setSkyColor(hex);
+  if(shell3d.scene.fog)shell3d.scene.fog.color.set(hex);
+  shell3d.scrollGround(spd*0.0035);
+  shell3d.render();
+}
 const LSK='px_hs',GRAV=0.55,JV=-13.5,SDUR=38,ISPD=4.5,MSPD=9,RAMP=0.2,RINT=300,SBASE=340,SRAND=120,MAX_LIVES=5;
 const stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random()*0.65,s:Math.floor(Math.random()*3)+1,b:Math.random()>0.7}));
 const mnts=Array.from({length:7},(x,i)=>({x:i/7,w:0.12+Math.random()*0.1,h:0.12+Math.random()*0.1}));
@@ -287,7 +316,7 @@ function update(){
   pups.forEach(p=>{if(!p.collected&&Math.abs(W*0.22-p.x)<26&&Math.abs((py-30)-p.y)<32){p.collected=true;if(p.t==='shield'){shield=true;shT=300;}else if(p.t==='magnet'){mag=true;mgT=300;}else{slow=true;slT=200;spd=Math.max(2,spd-2);}addFT(p.x,p.y-20,p.t.toUpperCase()+'!',p.t==='shield'?'#00aaff':p.t==='magnet'?'#ff88ff':'#88ff88');}});
 }
 function draw(){
-  drawBG();
+  render3D();
   obs.forEach(o=>drawObs(o));
   coll.forEach(c=>{if(!c.collected)drawCoin(c);});
   pups.forEach(p=>{if(!p.collected)drawPup(p);});
