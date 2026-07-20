@@ -46,11 +46,13 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=420;
+const partyBg=new Image();partyBg.src='../assets/game-art/balloon-pop/party.jpg';
 const COLORS=["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6","#1abc9c","#e91e63","#ff9800"];
 let balloons=[],pops=[],score=0,combo=1,lastColor=null,timeLeft=60,timer,running=false;
 function spawn(){const c=COLORS[Math.floor(Math.random()*COLORS.length)];balloons.push({x:Math.random()*(W-80)+40,y:H+40,r:24+Math.random()*14,color:c,spd:0.5+Math.random()*1.5});}
 function draw(){
-  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#000a14");g.addColorStop(1,"#001428");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,partyBg,()=>{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#000a14");g.addColorStop(1,"#001428");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#000a14");g.addColorStop(1,"#001428");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
   balloons.forEach(b=>{
     ctx.fillStyle=b.color;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="rgba(255,255,255,.3)";ctx.beginPath();ctx.ellipse(b.x-b.r*.3,b.y-b.r*.3,b.r*.25,b.r*.18,0,0,Math.PI*2);ctx.fill();
@@ -62,7 +64,7 @@ function update(){balloons.forEach(b=>b.y-=b.spd);balloons=balloons.filter(b=>{i
 cv.addEventListener("click",e=>{
   if(!running)return;
   const mx=e.offsetX,my=e.offsetY;let hit=false;
-  balloons=balloons.filter(b=>{if(!hit&&Math.hypot(b.x-mx,b.y-my)<b.r){hit=true;pops.push({x:b.x,y:b.y,r:b.r,color:b.color,alpha:1});if(b.color===lastColor){combo++;} else{combo=1;}lastColor=b.color;score+=10*combo;document.getElementById("sc").textContent=score;document.getElementById("cb").textContent="x"+combo;return false;}return true;});
+  balloons=balloons.filter(b=>{if(!hit&&Math.hypot(b.x-mx,b.y-my)<b.r){hit=true;pops.push({x:b.x,y:b.y,r:b.r,color:b.color,alpha:1});if(window.GameFX)GameFX.burst(cv,b.x,b.y,{count:12,colors:[b.color,'#fff'],spread:2.5,life:0.4});if(b.color===lastColor){combo++;} else{combo=1;}lastColor=b.color;score+=10*combo;document.getElementById("sc").textContent=score;document.getElementById("cb").textContent="x"+combo;return false;}return true;});
 });
 function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;setTimeout(()=>window._showMod("Time up! Score: "+score),200);}else timeLeft--;}
 function go(){document.getElementById("ov").style.display="none";running=true;for(let i=0;i<8;i++)spawn();timer=setInterval(tick,1000);(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}

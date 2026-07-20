@@ -46,15 +46,17 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=420;
+const lakeBg=new Image();lakeBg.src='../assets/game-art/lucky-fishing/lake.jpg';
 const FISH=[{name:"Boot",e:"👢",pts:-5,rarity:0.05},{name:"Seaweed",e:"🌿",pts:1,rarity:0.1},{name:"Clam",e:"🦪",pts:5,rarity:0.15},{name:"Sardine",e:"🐟",pts:10,rarity:0.25},{name:"Bass",e:"🐠",pts:20,rarity:0.2},{name:"Tuna",e:"🐡",pts:35,rarity:0.12},{name:"Salmon",e:"🦈",pts:50,rarity:0.07},{name:"Swordfish",e:"⚔️",pts:75,rarity:0.04},{name:"Dolphin",e:"🐬",pts:100,rarity:0.015},{name:"Whale",e:"🐳",pts:200,rarity:0.005}];
 let state="idle",line,fish_on,score=0,catches=0,level=1,frame=0,bobbing=0,running=false,lives=3,timeLeft=300,gameTimer=null;
 function pickFish(){let r=Math.random(),acc=0;for(const f of FISH){acc+=f.rarity;if(r<acc)return f;}return FISH[4];}
 function cast(mx,my){if(state!=="idle")return;state="cast";line={x:W/2,y:60,tx:mx,ty:my,prog:0};document.getElementById("result").textContent="🎣 Casting...";}
 function draw(){
   // Sky + water
-  const sg=ctx.createLinearGradient(0,0,0,H*.4);sg.addColorStop(0,"#001428");sg.addColorStop(1,"#003366");ctx.fillStyle=sg;ctx.fillRect(0,0,W,H*.4);
-  const wg=ctx.createLinearGradient(0,H*.4,0,H);wg.addColorStop(0,"#006994");wg.addColorStop(1,"#001440");ctx.fillStyle=wg;ctx.fillRect(0,H*.4,W,H*.6);
-  for(let i=0;i<W;i+=60){ctx.strokeStyle="rgba(0,188,212,.2)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(i,H*.4);ctx.bezierCurveTo(i+20,H*.4+8,i+40,H*.4-8,i+60,H*.4);ctx.stroke();}
+  if(window.GameFX)GameFX.fxImage(ctx,lakeBg,()=>{const sg=ctx.createLinearGradient(0,0,0,H*.4);sg.addColorStop(0,"#001428");sg.addColorStop(1,"#003366");ctx.fillStyle=sg;ctx.fillRect(0,0,W,H*.4);const wg=ctx.createLinearGradient(0,H*.4,0,H);wg.addColorStop(0,"#006994");wg.addColorStop(1,"#001440");ctx.fillStyle=wg;ctx.fillRect(0,H*.4,W,H*.6);},0,0,W,H);
+  else{const sg=ctx.createLinearGradient(0,0,0,H*.4);sg.addColorStop(0,"#001428");sg.addColorStop(1,"#003366");ctx.fillStyle=sg;ctx.fillRect(0,0,W,H*.4);const wg=ctx.createLinearGradient(0,H*.4,0,H);wg.addColorStop(0,"#006994");wg.addColorStop(1,"#001440");ctx.fillStyle=wg;ctx.fillRect(0,H*.4,W,H*.6);}
+  ctx.fillStyle="rgba(0,20,40,.3)";ctx.fillRect(0,H*.4,W,H*.6);
+  for(let i=0;i<W;i+=60){ctx.strokeStyle="rgba(0,188,212,.25)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(i,H*.4);ctx.bezierCurveTo(i+20,H*.4+8,i+40,H*.4-8,i+60,H*.4);ctx.stroke();}
   // Fisherman
   ctx.fillStyle="#8B4513";ctx.fillRect(W/2-20,20,40,50);ctx.fillStyle="#f1c40f";ctx.font="40px sans-serif";ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText("🎣",W/2,70);
   // Line
@@ -69,7 +71,7 @@ function update(){
 cv.addEventListener("click",e=>{
   if(!running)return;
   if(state==="idle")cast(e.offsetX,Math.max(H*.4,e.offsetY));
-  else if(state==="bite"){const f=fish_on;state="idle";line=null;fish_on=null;score+=f.pts;catches++;document.getElementById("sc").textContent=score;document.getElementById("ct").textContent=catches;document.getElementById("result").innerHTML=`<span style="color:#2ecc71">${f.e} Caught ${f.name}! +${f.pts} pts</span>`;level=Math.floor(catches/5)+1;document.getElementById("lv").textContent=level;if(catches>=20){running=false;clearInterval(gameTimer);sndWin();window._showMod("🏆 20 catches! Final Score: "+score);}}
+  else if(state==="bite"){const f=fish_on;state="idle";line=null;fish_on=null;score+=f.pts;catches++;document.getElementById("sc").textContent=score;document.getElementById("ct").textContent=catches;document.getElementById("result").innerHTML=`<span style="color:#2ecc71">${f.e} Caught ${f.name}! +${f.pts} pts</span>`;if(window.GameFX)GameFX.burst(cv,W/2,H*.4,{count:14,colors:['#00bcd4','#fff','#f1c40f'],spread:2.5,life:0.45});level=Math.floor(catches/5)+1;document.getElementById("lv").textContent=level;if(catches>=20){running=false;clearInterval(gameTimer);sndWin();window._showMod("🏆 20 catches! Final Score: "+score);}}
 });
 function go(){document.getElementById("ov").style.display="none";running=true;
   gameTimer=setInterval(()=>{if(!running)return;timeLeft--;const m=Math.floor(timeLeft/60),s=timeLeft%60;document.getElementById("tm").textContent=m+":"+(s<10?"0":"")+s;if(timeLeft<=0){running=false;clearInterval(gameTimer);window._showMod("Time's up! Final Score: "+score);}},1000);
