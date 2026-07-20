@@ -114,6 +114,14 @@
         .cell.x { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
         .cell.o { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
 
+        .mark-img {
+            position: absolute; inset: 10px;
+            width: calc(100% - 20px); height: calc(100% - 20px);
+            object-fit: contain;
+            filter: drop-shadow(0 3px 8px rgba(0,0,0,.4));
+            pointer-events: none;
+        }
+
         /* winning cells flash */
         .cell.win-flash {
             animation: winFlash 0.6s ease infinite alternate;
@@ -292,6 +300,20 @@
 </div>
 
 <script>
+/* ── Illustrated X/O marks, with a graceful text fallback
+   if the image fails to load ── */
+function markHTML(type) {
+    const src = type === 'X' ? '../assets/game-art/tictactoe/x-icon.png' : '../assets/game-art/tictactoe/o-icon.png';
+    const fallback = type === 'X' ? '✕' : '◯';
+    return '<img class="mark-img" src="' + src + '" alt="' + type + '" data-fallback="' + fallback + '" onerror="markFallback(this)">';
+}
+function markFallback(img) {
+    const span = document.createElement('span');
+    span.className = 'mark-text';
+    span.textContent = img.dataset.fallback;
+    img.replaceWith(span);
+}
+
 /* ── State ── */
 let board        = Array(9).fill('');
 let currentPlayer = 'X';
@@ -643,10 +665,10 @@ function renderBoard() {
         const val = board[i];
         if (val === 'X') {
             cell.classList.add('x', 'taken');
-            cell.innerHTML = '<span class="hint">' + (i+1) + '</span>✕';
+            cell.innerHTML = '<span class="hint">' + (i+1) + '</span>' + markHTML('X');
         } else if (val === 'O') {
             cell.classList.add('o', 'taken');
-            cell.innerHTML = '<span class="hint">' + (i+1) + '</span>◯';
+            cell.innerHTML = '<span class="hint">' + (i+1) + '</span>' + markHTML('O');
         } else {
             cell.innerHTML = '<span class="hint">' + (i+1) + '</span>';
         }
