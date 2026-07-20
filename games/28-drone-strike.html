@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=480;
+const skyBg=new Image();skyBg.src='../assets/game-art/drone-strike/sky.jpg';
 let drone,missiles,intercepts,explosions,score,level,missileHp,frame,running;
 const keys={};
 function init(){drone={x:W/2,y:100,r:16,spd:5};missiles=[];intercepts=[];explosions=[];score=0;level=1;missileHp=3;frame=0;}
@@ -64,13 +65,14 @@ function update(){
   if(keys["ArrowDown"])drone.y=Math.min(H*.7,drone.y+drone.spd);
   if(frame%Math.max(20,60-level*5)===0)spawnMissile();
   if(missileHp<5&&frame%120===0){missileHp++;document.getElementById("ms").textContent=missileHp;}
-  intercepts=intercepts.filter(ic=>{ic.x+=ic.dx;ic.y+=ic.dy;let hit=false;missiles=missiles.filter(m=>{if(Math.hypot(ic.x-m.x,ic.y-m.y)<m.r+8){hit=true;explosions.push({x:m.x,y:m.y,r:30,life:20});score+=10*level;document.getElementById("sc").textContent=score;return false;}return true;});return !hit&&ic.x>0&&ic.x<W&&ic.y>0&&ic.y<H;});
+  intercepts=intercepts.filter(ic=>{ic.x+=ic.dx;ic.y+=ic.dy;let hit=false;missiles=missiles.filter(m=>{if(Math.hypot(ic.x-m.x,ic.y-m.y)<m.r+8){hit=true;explosions.push({x:m.x,y:m.y,r:30,life:20});score+=10*level;document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,m.x,m.y,{count:14,colors:['#f39c12','#e74c3c','#00f5d4'],spread:2.5,life:0.4});return false;}return true;});return !hit&&ic.x>0&&ic.x<W&&ic.y>0&&ic.y<H;});
   missiles=missiles.filter(m=>{m.y+=m.dy;const a=Math.atan2(m.tx-m.x,1);m.x+=Math.sin(a)*.5;if(m.y>H-20){explosions.push({x:m.x,y:H-20,r:40,life:30});score=Math.max(0,score-50);document.getElementById("sc").textContent=score;return false;}return true;});
   explosions=explosions.filter(e=>{e.r+=2;e.life--;return e.life>0;});
   if(score>level*200){level++;document.getElementById("lv").textContent=level;}
 }
 function draw(){
-  ctx.fillStyle="#000510";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,skyBg,()=>{ctx.fillStyle="#000510";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#000510";ctx.fillRect(0,0,W,H);}
   for(let i=0;i<60;i++){ctx.fillStyle="rgba(255,255,255,.2)";ctx.fillRect((i*137)%W,(i*97)%H,1,1);}
   ctx.fillStyle="#0a2a0a";ctx.fillRect(0,H-20,W,20);
   ctx.fillStyle="#0f0f0f";for(let i=0;i<W;i+=50){ctx.fillRect(i,H-20,30,20);}

@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=400;
+const alleyBg=new Image();alleyBg.src='../assets/game-art/cyber-punch/alley.jpg';
 let player,enemies,effects,score,hp,wave,frame,running,paused=false,waveClearTimer=0;
 const keys={};
 function init(){player={x:W/2,y:H-80,r:18,spd:4};enemies=[];effects=[];score=0;hp=100;wave=1;frame=0;}
@@ -58,7 +59,7 @@ document.addEventListener("keydown",e=>{if(e.key===' '&&running){e.preventDefaul
 cv.addEventListener("click",e=>{
   if(!running)return;
   const mx=e.offsetX,my=e.offsetY;
-  enemies.forEach(en=>{if(Math.hypot(mx-en.x,my-en.y)<en.r+12){en.hp-=20+Math.random()*15;score+=5*wave;document.getElementById("sc").textContent=score;effects.push({x:en.x,y:en.y-20,text:"PUNCH!",life:25,color:"#f953c6"});if(en.hp<=0){effects.push({x:en.x,y:en.y,text:"KO!",life:40,color:"#f1c40f"});score+=50*wave;document.getElementById("sc").textContent=score;}}});
+  enemies.forEach(en=>{if(Math.hypot(mx-en.x,my-en.y)<en.r+12){en.hp-=20+Math.random()*15;score+=5*wave;document.getElementById("sc").textContent=score;effects.push({x:en.x,y:en.y-20,text:"PUNCH!",life:25,color:"#f953c6"});if(window.GameFX)GameFX.burst(cv,en.x,en.y,{count:8,colors:['#f953c6','#00d2ff'],spread:1.8,life:0.3});if(en.hp<=0){effects.push({x:en.x,y:en.y,text:"KO!",life:40,color:"#f1c40f"});score+=50*wave;document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,en.x,en.y,{count:16,colors:['#f1c40f','#f953c6','#fff'],spread:3,life:0.5});}}});
 });
 function update(){
   if(paused)return;
@@ -74,12 +75,11 @@ function update(){
   if(enemies.length===0&&waveClearTimer===0){waveClearTimer=120;effects.push({x:W/2,y:H/2,text:"Wave "+(wave)+" Cleared! 🎉",life:120,color:"#f1c40f"});setTimeout(()=>{wave++;document.getElementById("wv").textContent=wave;spawnWave();waveClearTimer=0;},2000);}
 }
 function draw(){
-  ctx.fillStyle="#05000f";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,alleyBg,()=>{ctx.fillStyle="#05000f";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#05000f";ctx.fillRect(0,0,W,H);}
+  ctx.fillStyle="rgba(5,0,15,.4)";ctx.fillRect(0,0,W,H);
   // Neon floor
-  ctx.fillStyle="#0a0018";ctx.fillRect(0,H-60,W,60);
-  for(let i=0;i<W;i+=40){ctx.strokeStyle=`rgba(249,83,198,${.1+Math.sin(frame*.05+i)*.05})`;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(i,H-60);ctx.lineTo(i,H);ctx.stroke();}
-  // Buildings bg
-  [50,150,250,350,450].forEach((x,i)=>{ctx.fillStyle=`rgba(249,83,198,0.05)`;ctx.fillRect(x-20,20,40,H-80);});
+  for(let i=0;i<W;i+=40){ctx.strokeStyle=`rgba(249,83,198,${.15+Math.sin(frame*.05+i)*.08})`;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(i,H-60);ctx.lineTo(i,H);ctx.stroke();}
   enemies.forEach(e=>{
     ctx.fillStyle=e.color;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();
     ctx.fillStyle="#333";ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2,5);ctx.fillStyle="#e74c3c";ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2*(e.hp/e.maxHp),5);

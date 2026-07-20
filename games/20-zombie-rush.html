@@ -51,6 +51,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=480;
+const cityBg=new Image();cityBg.src='../assets/game-art/zombie-rush/city.jpg';
 let player,zombies,bullets,drops,score,wave,hp,ammo,frame,running,gameOver;
 const keys={};
 function init(){player={x:W/2,y:H/2,r:14,spd:3,angle:0};zombies=[];bullets=[];drops=[];score=0;wave=1;hp=100;ammo=30;frame=0;gameOver=false;document.getElementById("hp").textContent=hp;document.getElementById("sc").textContent=score;document.getElementById("wv").textContent=wave;document.getElementById("am").textContent=ammo;}
@@ -66,15 +67,17 @@ function update(){
   if(keys["ArrowUp"]||keys["w"]||keys["W"])player.y=Math.max(player.r,player.y-player.spd);
   if(keys["ArrowDown"]||keys["s"]||keys["S"])player.y=Math.min(H-player.r,player.y+player.spd);
   player.angle=Math.atan2(my-player.y,mx-player.x);
-  bullets=bullets.filter(b=>{b.x+=b.dx;b.y+=b.dy;b.life--;let hit=false;zombies=zombies.filter(z=>{if(Math.hypot(b.x-z.x,b.y-z.y)<z.r+4){z.hp-=25;hit=true;if(z.hp<=0){score+=10*wave;document.getElementById("sc").textContent=score;if(Math.random()<0.3)drops.push({x:z.x,y:z.y,type:"ammo"});return false;}return true;}return true;});return !hit&&b.life>0&&b.x>0&&b.x<W&&b.y>0&&b.y<H;});
+  bullets=bullets.filter(b=>{b.x+=b.dx;b.y+=b.dy;b.life--;let hit=false;zombies=zombies.filter(z=>{if(Math.hypot(b.x-z.x,b.y-z.y)<z.r+4){z.hp-=25;hit=true;if(window.GameFX)GameFX.burst(cv,z.x,z.y,{count:6,colors:['#27ae60','#1e8449'],spread:1.5,life:0.25});if(z.hp<=0){score+=10*wave;document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,z.x,z.y,{count:14,colors:['#27ae60','#e74c3c','#f1c40f'],spread:2.5,life:0.4});if(Math.random()<0.3)drops.push({x:z.x,y:z.y,type:"ammo"});return false;}return true;}return true;});return !hit&&b.life>0&&b.x>0&&b.x<W&&b.y>0&&b.y<H;});
   zombies.forEach(z=>{const a=Math.atan2(player.y-z.y,player.x-z.x);z.x+=Math.cos(a)*z.spd;z.y+=Math.sin(a)*z.spd;if(Math.hypot(z.x-player.x,z.y-player.y)<z.r+player.r){hp-=0.3;document.getElementById("hp").textContent=Math.max(0,Math.round(hp));if(hp<=0&&!gameOver){gameOver=true;running=false;showGameOver("You died! Score: "+score);}}});
   drops=drops.filter(d=>{if(Math.hypot(d.x-player.x,d.y-player.y)<20){ammo=Math.min(30,ammo+15);document.getElementById("am").textContent=ammo;return false;}return true;});
   if(zombies.length===0){wave++;document.getElementById("wv").textContent=wave;spawnWave();}
 }
 function draw(){
-  ctx.fillStyle="#020a02";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,cityBg,()=>{ctx.fillStyle="#020a02";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#020a02";ctx.fillRect(0,0,W,H);}
+  ctx.fillStyle="rgba(2,10,2,.35)";ctx.fillRect(0,0,W,H);
   // Grid
-  ctx.strokeStyle="#0a1a0a";ctx.lineWidth=1;for(let i=0;i<W;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}for(let i=0;i<H;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+  ctx.strokeStyle="rgba(39,174,96,.15)";ctx.lineWidth=1;for(let i=0;i<W;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}for(let i=0;i<H;i+=40){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
   drops.forEach(d=>{ctx.fillStyle="#f39c12";ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText("🔫",d.x,d.y);});
   zombies.forEach(z=>{ctx.fillStyle="#27ae60";ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#1e8449";ctx.beginPath();ctx.arc(z.x,z.y-z.r*.5,z.r*.6,0,Math.PI*2);ctx.fill();ctx.fillStyle="#333";ctx.fillRect(z.x-z.r,z.y-z.r-8,z.r*2,4);ctx.fillStyle="#e74c3c";ctx.fillRect(z.x-z.r,z.y-z.r-8,z.r*2*(z.hp/z.maxHp),4);});
   bullets.forEach(b=>{ctx.fillStyle="#f1c40f";ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill();});

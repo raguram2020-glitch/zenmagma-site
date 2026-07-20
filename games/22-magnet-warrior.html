@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=420,H=480;
+const spaceBg=new Image();spaceBg.src='../assets/game-art/magnet-warrior/space.jpg';
 let player,enemies,bullets,particles,score,lives,level,polarity,frame,running;
 const keys={};
 function init(){player={x:W/2,y:H-60,r:16,spd:4};enemies=[];bullets=[];particles=[];score=0;lives=3;level=1;polarity=1;frame=0;}
@@ -71,7 +72,7 @@ function update(){
     if(dist<120){const force=0.08/dist*40;if(b.pol===polarity){b.dx+=dx/dist*force;b.dy+=dy/dist*force;}else{b.dx-=dx/dist*force;b.dy-=dy/dist*force;}}
     b.x+=b.dx;b.y+=b.dy;
     // Check hit enemies (if deflected)
-    enemies=enemies.filter(e=>{if(b.pol===polarity&&Math.hypot(b.x-e.x,b.y-e.y)<18){e.hp--;for(let i=0;i<6;i++)particles.push({x:e.x,y:e.y,dx:(Math.random()-.5)*4,dy:(Math.random()-.5)*4,life:25,color:"#ee9ca7"});if(e.hp<=0){score+=20*level;document.getElementById("sc").textContent=score;}return e.hp>0;}return true;});
+    enemies=enemies.filter(e=>{if(b.pol===polarity&&Math.hypot(b.x-e.x,b.y-e.y)<18){e.hp--;for(let i=0;i<6;i++)particles.push({x:e.x,y:e.y,dx:(Math.random()-.5)*4,dy:(Math.random()-.5)*4,life:25,color:"#ee9ca7"});if(e.hp<=0){score+=20*level;document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,e.x,e.y,{count:12,colors:['#ee9ca7','#3498db','#e74c3c'],spread:2,life:0.4});}return e.hp>0;}return true;});
     // Hit player
     if(b.pol!==polarity&&Math.hypot(b.x-player.x,b.y-player.y)<player.r+6){lives--;document.getElementById("lf").textContent=lives;if(lives<=0){running=false;showGameOver("Score: "+score);}return false;}
     return b.x>0&&b.x<W&&b.y>0&&b.y<H;
@@ -80,7 +81,8 @@ function update(){
   if(enemies.length===0){level++;document.getElementById("lv").textContent=level;spawnEnemies();}
 }
 function draw(){
-  ctx.fillStyle="#00000a";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,spaceBg,()=>{ctx.fillStyle="#00000a";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#00000a";ctx.fillRect(0,0,W,H);}
   // Stars bg
   for(let i=0;i<50;i++){ctx.fillStyle=`rgba(255,255,255,${.1+Math.sin(frame*.05+i)*.05})`;ctx.fillRect((i*137)%W,(i*97)%H,1,1);}
   enemies.forEach(e=>{ctx.fillStyle="#c0392b";ctx.beginPath();ctx.arc(e.x,e.y,16,0,Math.PI*2);ctx.fill();ctx.fillStyle="#e74c3c";ctx.font="20px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("👾",e.x,e.y);});

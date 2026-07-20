@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=460;
+const tundraBg=new Image();tundraBg.src='../assets/game-art/ice-sniper/tundra.jpg';
 let enemies,iceShots,score,ammo,frozen,level,hp,frame,running;
 function init(){enemies=[];iceShots=[];score=0;ammo=15;frozen=0;level=1;hp=3;frame=0;document.getElementById("am").textContent=15;document.getElementById("fr").textContent=0;document.getElementById("hpbar").textContent=" ❤️❤️❤️";}
 function spawnEnemy(){const y=40+Math.random()*(H-80);enemies.push({x:-20,y,r:16,spd:0.6+level*.08,frozen:0,hp:1+Math.floor(level/3)});}
@@ -61,11 +62,12 @@ cv.addEventListener("click",e=>{
 });
 function update(){
   frame++;if(frame%Math.max(30,80-level*5)===0)spawnEnemy();
-  iceShots=iceShots.filter(s=>{s.progress+=s.speed;const ix=s.progress*s.tx,iy=s.ty;let hit=false;enemies=enemies.filter(e=>{if(!hit&&Math.hypot(ix-e.x,iy-e.y)<e.r+8){e.frozen=120+level*20;e.hp--;if(e.hp<=0){score+=20*level;frozen++;document.getElementById("sc").textContent=score;document.getElementById("fr").textContent=frozen;hit=true;return false;}return true;}return true;});return s.progress<1.05&&!hit;});
+  iceShots=iceShots.filter(s=>{s.progress+=s.speed;const ix=s.progress*s.tx,iy=s.ty;let hit=false;enemies=enemies.filter(e=>{if(!hit&&Math.hypot(ix-e.x,iy-e.y)<e.r+8){e.frozen=120+level*20;e.hp--;if(e.hp<=0){score+=20*level;frozen++;document.getElementById("sc").textContent=score;document.getElementById("fr").textContent=frozen;if(window.GameFX)GameFX.burst(cv,e.x,e.y,{count:12,colors:['#00d2ff','#7fdbff','#fff'],spread:2,life:0.4});hit=true;return false;}return true;}return true;});return s.progress<1.05&&!hit;});
   enemies=enemies.filter(e=>{if(e.frozen>0)e.frozen--;else e.x+=e.spd;if(e.x>W-40){hp--;document.getElementById("hpbar").textContent=" "+"❤️".repeat(Math.max(0,hp));if(hp<=0){running=false;setTimeout(()=>window._showMod("Igloo destroyed! Score: "+score),200);}return false;}return true;});
 }
 function draw(){
-  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#000a14");g.addColorStop(1,"#001428");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,tundraBg,()=>{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#000a14");g.addColorStop(1,"#001428");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#000a14");g.addColorStop(1,"#001428");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
   // Snow ground
   ctx.fillStyle="#e8f4f8";ctx.fillRect(0,H-20,W,20);
   // Snowflakes

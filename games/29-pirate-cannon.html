@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=500,H=440;
+const oceanBg=new Image();oceanBg.src='../assets/game-art/pirate-cannon/ocean.jpg';
 let ships,ball,score,cannonballs,wind,angle,frame,dragging,running;
 function init(){ships=[];ball=null;score=0;cannonballs=10;wind=(Math.random()-.5)*0.15;angle=Math.PI/4;frame=0;dragging=false;document.getElementById("wd").textContent=(wind>0?"+":"")+wind.toFixed(2);}
 function spawnShip(){ships.push({x:Math.random()<0.5?-80:W+80,y:H*.3+Math.random()*80,spd:(Math.random()*.5+0.5)*(Math.random()<0.5?1:-1),hp:2,maxHp:2,w:70,h:30});}
@@ -67,12 +68,13 @@ cv.addEventListener("mouseup",e=>{
 function update(){
   frame++;if(frame%120===0)spawnShip();
   ships=ships.filter(s=>{s.x+=s.spd;return s.x>-100&&s.x<W+100;});
-  if(ball){ball.x+=ball.dx;ball.dy+=0.2;ball.dx+=wind;ball.y+=ball.dy;let hit=false;ships=ships.filter(s=>{if(!hit&&ball.x>s.x-s.w/2&&ball.x<s.x+s.w/2&&ball.y>s.y-s.h/2&&ball.y<s.y+s.h/2){s.hp--;score+=50*(3-s.hp);document.getElementById("sc").textContent=score;hit=true;return s.hp>0;}return true;});if(hit||ball.y>H||ball.x<0||ball.x>W)ball=null;if(!ball&&cannonballs<=0)setTimeout(()=>window._showMod("No cannonballs! Score: "+score),200);}
+  if(ball){ball.x+=ball.dx;ball.dy+=0.2;ball.dx+=wind;ball.y+=ball.dy;let hit=false;ships=ships.filter(s=>{if(!hit&&ball.x>s.x-s.w/2&&ball.x<s.x+s.w/2&&ball.y>s.y-s.h/2&&ball.y<s.y+s.h/2){s.hp--;score+=50*(3-s.hp);document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,ball.x,ball.y,{count:s.hp<=0?16:10,colors:['#8B4513','#c9a84c','#fff'],spread:2.5,life:0.4});hit=true;return s.hp>0;}return true;});if(hit||ball.y>H||ball.x<0||ball.x>W)ball=null;if(!ball&&cannonballs<=0)setTimeout(()=>window._showMod("No cannonballs! Score: "+score),200);}
 }
 function draw(){
-  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#001428");g.addColorStop(.7,"#00294d");g.addColorStop(1,"#00bcd4");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,oceanBg,()=>{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#001428");g.addColorStop(.7,"#00294d");g.addColorStop(1,"#00bcd4");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#001428");g.addColorStop(.7,"#00294d");g.addColorStop(1,"#00bcd4");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
   // Waves
-  ctx.strokeStyle="rgba(0,188,212,.3)";ctx.lineWidth=2;for(let i=0;i<5;i++){ctx.beginPath();for(let x=0;x<W;x+=5){ctx.lineTo(x,H*.6+Math.sin((x+frame*.5+i*40)*.05)*8+i*15);}ctx.stroke();}
+  ctx.strokeStyle="rgba(0,188,212,.35)";ctx.lineWidth=2;for(let i=0;i<5;i++){ctx.beginPath();for(let x=0;x<W;x+=5){ctx.lineTo(x,H*.6+Math.sin((x+frame*.5+i*40)*.05)*8+i*15);}ctx.stroke();}
   // Cannon island
   ctx.fillStyle="#8B4513";ctx.beginPath();ctx.arc(60,H-30,40,0,Math.PI*2);ctx.fill();ctx.fillStyle="#c9a84c";ctx.save();ctx.translate(60,H-60);ctx.rotate(-Math.PI/4);ctx.fillRect(0,-8,50,16);ctx.restore();
   ships.forEach(s=>{ctx.fillStyle="#8B4513";ctx.fillRect(s.x-s.w/2,s.y-s.h/2,s.w,s.h);ctx.fillStyle="#f5f5dc";ctx.fillRect(s.x-4,s.y-s.h/2-30,8,30);ctx.beginPath();ctx.moveTo(s.x-4,s.y-s.h/2-30);ctx.lineTo(s.x+20,s.y-s.h/2-15);ctx.lineTo(s.x-4,s.y-s.h/2);ctx.fill();ctx.fillStyle="#333";ctx.fillRect(s.x-s.w/2,s.y+s.h/2-5,s.w*(s.hp/s.maxHp),5);});
