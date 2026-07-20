@@ -47,6 +47,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=420,H=380;
+const casinoBg=new Image();casinoBg.src='../assets/game-art/spin-match/casino.jpg';
 const SYMBOLS=["🍒","🍋","🍇","⭐","💎","🎰","🔔","🎁"];
 let reels,spinning,balance=100,wins=0,level=1,running=false;
 const SY=3;
@@ -62,14 +63,15 @@ function checkWin(){
   const top=reels.map(r=>r.symbols[Math.floor(r.offset/60)%r.symbols.length]);
   const win3=top[0]===top[1]&&top[1]===top[2];
   const win2=top[0]===top[1]||top[1]===top[2]||top[0]===top[2];
-  if(win3){const prize=50+level*20;balance+=prize;wins++;document.getElementById("result").innerHTML=`<span style="color:#f1c40f">🎉 JACKPOT! +${prize} coins!</span>`;if(wins%3===0){level++;document.getElementById("lv").textContent=level;}}
-  else if(win2){balance+=20;document.getElementById("result").innerHTML='<span style="color:#2ecc71">✨ Match! +20 coins</span>';}
+  if(win3){const prize=50+level*20;balance+=prize;wins++;document.getElementById("result").innerHTML=`<span style="color:#f1c40f">🎉 JACKPOT! +${prize} coins!</span>`;if(window.GameFX)GameFX.burst(cv,W/2,H/2,{count:24,colors:['#f9d423','#f1c40f','#fff','#ff9a9e'],spread:3,life:0.6});if(wins%3===0){level++;document.getElementById("lv").textContent=level;}}
+  else if(win2){balance+=20;document.getElementById("result").innerHTML='<span style="color:#2ecc71">✨ Match! +20 coins</span>';if(window.GameFX)GameFX.burst(cv,W/2,H/2,{count:10,colors:['#2ecc71','#fff'],spread:2,life:0.35});}
   else document.getElementById("result").innerHTML='<span style="color:#aaa">No match. Try again!</span>';
   document.getElementById("bal").textContent=balance;document.getElementById("wins").textContent=wins;
   if(balance<=0)setTimeout(()=>window._showMod("Out of coins! Wins: "+wins),200);
 }
 function draw(){
-  ctx.fillStyle="#0a0008";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,casinoBg,()=>{ctx.fillStyle="#0a0008";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#0a0008";ctx.fillRect(0,0,W,H);}
   // Machine body
   ctx.fillStyle="#1a0020";ctx.fillRect(60,40,300,260);ctx.strokeStyle="#f9d423";ctx.lineWidth=4;ctx.strokeRect(60,40,300,260);
   // Reels

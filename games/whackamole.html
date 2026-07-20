@@ -69,7 +69,7 @@
             gap: 20px;
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1) url('../assets/game-art/whack-a-mole/garden.jpg') center/cover;
             border-radius: 15px;
         }
 
@@ -316,6 +316,11 @@
             const pts = goldenMole === index ? 30 : 10;
             score += pts;
             document.getElementById('score').textContent = score;
+            if (window.GameFX) {
+                const holeEl = document.getElementById('mole' + index).parentElement;
+                const r = holeEl.getBoundingClientRect();
+                GameFX.burst(holeEl, r.width / 2, r.height / 2, { count: 10, colors: [goldenMole === index ? '#FFD700' : '#8B6914', '#fff'], spread: 2, life: 0.35 });
+            }
             // Speed up on milestones
             const newDelay = getMoleDelay();
             if (newDelay !== moleDelay) { moleDelay = newDelay; resetMoleInterval(); }

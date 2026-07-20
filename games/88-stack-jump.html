@@ -46,6 +46,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=360,H=480;
+const skyBg=new Image();skyBg.src='../assets/game-art/stack-jump/sky.jpg';
 let stack=[],moving,score=0,height=0,running=false,offset=0;
 const COLORS=["#ff6b6b","#feca57","#48dbfb","#ff9ff3","#54a0ff","#5f27cd","#1dd1a1","#ee5a24"];
 let bestHeight=+localStorage.getItem('sj_best')||0;
@@ -55,6 +56,7 @@ function drop(){
   const ox=Math.max(moving.x,top.x),oend=Math.min(moving.x+moving.w,top.x+top.w),ow=oend-ox;
   if(ow<=0){running=false;if(height>bestHeight){bestHeight=height;localStorage.setItem('sj_best',bestHeight);}setTimeout(()=>window._showMod("Stack fell! Height: "+height+" | Best: "+bestHeight),200);return;}
   const perfect=Math.abs(ow-top.w)<4;score+=perfect?30:Math.round(ow);height++;
+  if(window.GameFX)GameFX.burst(cv,ox+ow/2,oy+offset,{count:perfect?16:6,colors:perfect?['#f1c40f','#fff','#feca57']:[COLORS[height%COLORS.length]],spread:perfect?2.5:1.5,life:0.35});
   stack.push({x:ox,w:Math.min(ow+( perfect?2:0),120),y:oy,color:COLORS[height%COLORS.length]});
   document.getElementById("sc").textContent=score;document.getElementById("ht").textContent=height;
   if(stack.length>10){offset+=40;}
@@ -64,7 +66,8 @@ cv.addEventListener("click",()=>{if(running)drop();});
 cv.addEventListener("touchstart",e=>{e.preventDefault();if(running)drop();},{passive:false});
 function update(){moving.x+=moving.spd*moving.dir;if(moving.x>W+40||moving.x+moving.w<-40)moving.dir*=-1;}
 function draw(){
-  ctx.fillStyle="#0a0008";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,skyBg,()=>{ctx.fillStyle="#0a0008";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#0a0008";ctx.fillRect(0,0,W,H);}
   ctx.save();ctx.translate(0,offset);
   stack.forEach((s,i)=>{ctx.fillStyle=s.color||COLORS[i%COLORS.length];ctx.fillRect(s.x,s.y,s.w,36);ctx.fillStyle="rgba(255,255,255,.25)";ctx.fillRect(s.x,s.y,s.w,10);});
   ctx.restore();

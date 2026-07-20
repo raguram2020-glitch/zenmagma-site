@@ -45,14 +45,16 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=380;
+const marshBg=new Image();marshBg.src='../assets/game-art/duck-shooter/marsh.jpg';
 let ducks=[],shots=[],score=0,ammo=15,round=1,running=false,frame=0;
 const HOLES=[[80,280],[160,280],[240,280],[320,280],[400,280],[120,220],[200,220],[280,220],[360,220]];
 function spawnDuck(){const hole=HOLES[Math.floor(Math.random()*HOLES.length)];if(!ducks.find(d=>d.hx===hole[0]&&d.hy===hole[1])){ducks.push({hx:hole[0],hy:hole[1],y:hole[1]+50,vy:-1.5,visible:0,hit:false,color:`hsl(${Math.random()*360},70%,50%)`});}}
 function draw(){
   // Background
-  const sg=ctx.createLinearGradient(0,0,0,H);sg.addColorStop(0,"#001a00");sg.addColorStop(.6,"#003300");sg.addColorStop(.6,"#1a6b1a");sg.addColorStop(1,"#2d5a1b");ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,marshBg,()=>{const sg=ctx.createLinearGradient(0,0,0,H);sg.addColorStop(0,"#001a00");sg.addColorStop(.6,"#003300");sg.addColorStop(.6,"#1a6b1a");sg.addColorStop(1,"#2d5a1b");ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{const sg=ctx.createLinearGradient(0,0,0,H);sg.addColorStop(0,"#001a00");sg.addColorStop(.6,"#003300");sg.addColorStop(.6,"#1a6b1a");sg.addColorStop(1,"#2d5a1b");ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);}
   // Grass lumps
-  for(let i=0;i<W;i+=40){ctx.fillStyle="#1a6b1a";ctx.beginPath();ctx.arc(i,H*.6+8,30,Math.PI,0);ctx.fill();}
+  for(let i=0;i<W;i+=40){ctx.fillStyle="rgba(26,107,26,.85)";ctx.beginPath();ctx.arc(i,H*.6+8,30,Math.PI,0);ctx.fill();}
   // Ducks
   ducks.forEach(d=>{if(d.y>d.hy+60)return;const sz=d.boss?3:1;ctx.save();ctx.translate(d.hx,d.y);if(d.hit){ctx.globalAlpha=0.5;ctx.rotate(0.5);}ctx.font=(d.boss?"52":"20")+"px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(d.boss?"👑🦆":"🦆",0,0);if(d.boss&&!d.hit){ctx.fillStyle="#333";ctx.fillRect(-24,-28,48,6);ctx.fillStyle="#e74c3c";ctx.fillRect(-24,-28,48*(d.hp/d.maxHp),6);ctx.fillStyle="#fff";ctx.font="10px sans-serif";ctx.fillText("BOSS",0,-22);}ctx.restore();});
   // Shots
@@ -72,7 +74,7 @@ cv.addEventListener("click",e=>{
   if(!running||ammo<=0)return;
   ammo--;document.getElementById("am").textContent=ammo;
   const mx=e.offsetX,my=e.offsetY;shots.push({x:mx,y:my,r:5,a:1});
-  ducks.forEach(d=>{if(!d.hit&&Math.abs(mx-d.hx)<(d.boss?40:22)&&Math.abs(my-d.y)<(d.boss?30:15)){if(d.boss){d.hp--;shots.push({x:mx,y:my,r:8,a:1});if(d.hp<=0){d.hit=true;score+=20*round*3;}}else{d.hit=true;score+=20*round;}document.getElementById("sc").textContent=score;}});
+  ducks.forEach(d=>{if(!d.hit&&Math.abs(mx-d.hx)<(d.boss?40:22)&&Math.abs(my-d.y)<(d.boss?30:15)){if(d.boss){d.hp--;shots.push({x:mx,y:my,r:8,a:1});if(window.GameFX)GameFX.burst(cv,d.hx,d.y,{count:8,colors:['#e74c3c','#fff'],spread:1.8,life:0.3});if(d.hp<=0){d.hit=true;score+=20*round*3;if(window.GameFX)GameFX.burst(cv,d.hx,d.y,{count:20,colors:['#f1c40f','#fff','#e74c3c'],spread:3,life:0.5});}}else{d.hit=true;score+=20*round;if(window.GameFX)GameFX.burst(cv,d.hx,d.y,{count:10,colors:[d.color,'#fff'],spread:2,life:0.35});}document.getElementById("sc").textContent=score;}});
 });
 function go(){document.getElementById("ov").style.display="none";running=true;spawnDuck();spawnDuck();(function lp(){if(!running)return;update();draw();requestAnimationFrame(lp);})();}
 

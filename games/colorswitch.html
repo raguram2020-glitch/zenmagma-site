@@ -195,6 +195,7 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const backdropBg = new Image(); backdropBg.src = '../assets/game-art/color-switch/backdrop.jpg';
 
         let score = 0;
         let lives = 3;
@@ -286,11 +287,13 @@
 
                     if (obs.color === targetColor) {
                         score += 10;
+                        if (window.GameFX) GameFX.burst(canvas, obs.x + obs.width / 2, obs.y + obs.height / 2, { count: 10, colors: [obs.color, '#fff'], spread: 2, life: 0.35 });
                         changeTargetColor();
                         obstacles.splice(index, 1);
                         return false;
                     } else {
                         lives--;
+                        if (window.GameFX) GameFX.burst(canvas, obs.x + obs.width / 2, obs.y + obs.height / 2, { count: 8, colors: ['#e74c3c', '#333'], spread: 2, life: 0.3 });
                         if (lives <= 0) endGame();
                         obstacles.splice(index, 1);
                         return false;
@@ -318,7 +321,9 @@
         }
 
         function draw() {
-            ctx.fillStyle = '#f0f0f0';
+            if (window.GameFX) GameFX.fxImage(ctx, backdropBg, () => { ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0, 0, canvas.width, canvas.height); }, 0, 0, canvas.width, canvas.height);
+            else { ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            ctx.fillStyle = 'rgba(240,240,240,.72)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Neon particle trail

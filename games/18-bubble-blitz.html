@@ -65,6 +65,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const underwaterBg=new Image();underwaterBg.src='../assets/game-art/bubble-blitz/underwater.jpg';
 const W=400,H=500,R=22,COLS=9;
 const COLORS=["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6","#1abc9c"];
 let grid=[],shooter,bullet,score=0,level=1,running=false;
@@ -73,7 +74,8 @@ function bx(r,c){return (r%2===0?0:R)+c*R*2+R;}
 function by(r){return R+r*R*1.75;}
 function mkShooter(){shooter={x:W/2,y:H-40,color:Math.floor(Math.random()*Math.min(3+level,COLORS.length))};}
 function draw(){
-  ctx.fillStyle="#000a14";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,underwaterBg,()=>{ctx.fillStyle="#000a14";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#000a14";ctx.fillRect(0,0,W,H);}
   grid.forEach((row,r)=>row.forEach((c,ci)=>{if(c<0)return;const x=bx(r,ci),y=by(r);ctx.fillStyle=COLORS[c];ctx.beginPath();ctx.arc(x,y,R-2,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(255,255,255,.3)";ctx.beginPath();ctx.arc(x-5,y-5,R*.3,0,Math.PI*2);ctx.fill();}));
   if(bullet){ctx.fillStyle=COLORS[bullet.c];ctx.beginPath();ctx.arc(bullet.x,bullet.y,R-2,0,Math.PI*2);ctx.fill();}
   // Shooter
@@ -88,7 +90,7 @@ function findMatches(r,c,col,visited=new Set()){
 }
 function popBubbles(r,c){
   const m=findMatches(r,c,grid[r][c]);
-  if(m.size>=3){m.forEach(k=>{const[rr,cc]=k.split(",").map(Number);grid[rr][cc]=-1;});score+=m.size*10*level;document.getElementById("sc").textContent=score;}
+  if(m.size>=3){const col=COLORS[grid[r][c]];m.forEach(k=>{const[rr,cc]=k.split(",").map(Number);if(window.GameFX)GameFX.burst(cv,bx(rr,cc),by(rr),{count:6,colors:[col,'#fff'],spread:1.5,life:0.3});grid[rr][cc]=-1;});score+=m.size*10*level;document.getElementById("sc").textContent=score;}
 }
 function placeBullet(){
   let br=0;let bc=0;
