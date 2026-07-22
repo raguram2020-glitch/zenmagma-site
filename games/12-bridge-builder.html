@@ -63,6 +63,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const canyonBg=new Image();canyonBg.src='../assets/game-art/bridge-builder/canyon.jpg';
 const COLORS=["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6"];
 let dots=[],paths=[],selected=null,score=0,level=1,running=false;
 const N=6,SZ=400/N;
@@ -74,8 +75,9 @@ function mkLevel(){
   for(let i=0;i<pairs;i++){dots.push({r:cells[i*2][0],c:cells[i*2][1],color:i,paired:false});dots.push({r:cells[i*2+1][0],c:cells[i*2+1][1],color:i,paired:false});}
 }
 function draw(){
-  ctx.fillStyle="#0a001a";ctx.fillRect(0,0,400,400);
-  ctx.strokeStyle="#1a0a2a";ctx.lineWidth=1;for(let i=0;i<=N;i++){ctx.beginPath();ctx.moveTo(i*SZ,0);ctx.lineTo(i*SZ,400);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*SZ);ctx.lineTo(400,i*SZ);ctx.stroke();}
+  if(window.GameFX)GameFX.fxImage(ctx,canyonBg,()=>{ctx.fillStyle="#0a001a";ctx.fillRect(0,0,400,400);},0,0,400,400);
+  else{ctx.fillStyle="#0a001a";ctx.fillRect(0,0,400,400);}
+  ctx.strokeStyle="rgba(26,10,42,.4)";ctx.lineWidth=1;for(let i=0;i<=N;i++){ctx.beginPath();ctx.moveTo(i*SZ,0);ctx.lineTo(i*SZ,400);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*SZ);ctx.lineTo(400,i*SZ);ctx.stroke();}
   paths.forEach(p=>{ctx.strokeStyle=COLORS[p.color];ctx.lineWidth=8;ctx.lineCap="round";ctx.beginPath();p.points.forEach(([r,c],i)=>i===0?ctx.moveTo(c*SZ+SZ/2,r*SZ+SZ/2):ctx.lineTo(c*SZ+SZ/2,r*SZ+SZ/2));ctx.stroke();});
   dots.forEach(d=>{const x=d.c*SZ+SZ/2,y=d.r*SZ+SZ/2;ctx.fillStyle=COLORS[d.color];ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.fill();if(selected===d){ctx.strokeStyle="#fff";ctx.lineWidth=4;ctx.stroke();}ctx.fillStyle="#fff";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(d.color+1,x,y);});
 }
@@ -90,6 +92,7 @@ cv.addEventListener("click",e=>{
     selected.paired=dot.paired=true;
     paths.push({color:dot.color,points:[[selected.r,selected.c],[dot.r,dot.c]]});
     score+=100*level;document.getElementById("sc").textContent=score;
+    if(window.GameFX)GameFX.burst(cv,dot.c*SZ+SZ/2,dot.r*SZ+SZ/2,{count:10,colors:[COLORS[dot.color],'#fff'],spread:1.8,life:0.35});
     selected=null;
     if(dots.every(d=>d.paired)){document.getElementById("ph").textContent="Level "+level+" complete!";level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkLevel();document.getElementById("ph").textContent="Connect all dots!";draw();},700);}
   }else selected=dot;

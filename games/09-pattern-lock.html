@@ -63,10 +63,12 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const lockBg=new Image();lockBg.src='../assets/game-art/pattern-lock/lock.jpg';
 const DOTS=[[60,60],[180,60],[300,60],[60,180],[180,180],[300,180],[60,300],[180,300],[300,300]];
 let pattern=[],input=[],score=0,round=1,showing=false,running=false;
 function drawDots(lit=new Set(),inp=new Set()){
-  ctx.fillStyle="#05051a";ctx.fillRect(0,0,360,360);
+  if(window.GameFX)GameFX.fxImage(ctx,lockBg,()=>{ctx.fillStyle="#05051a";ctx.fillRect(0,0,360,360);},0,0,360,360);
+  else{ctx.fillStyle="#05051a";ctx.fillRect(0,0,360,360);}
   if(input.length>1){ctx.strokeStyle="#4776E6";ctx.lineWidth=4;ctx.beginPath();input.forEach((i,idx)=>{const[x,y]=DOTS[i];idx===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();}
   DOTS.forEach(([x,y],i)=>{
     const isLit=lit.has(i),isInp=inp.has(i);
@@ -92,7 +94,7 @@ cv.addEventListener("click",e=>{
   const ok=input.every((v,i)=>v===pattern[i]);
   drawDots(new Set(),new Set(input));
   if(!ok){document.getElementById("ph").textContent="Wrong! Try again.";setTimeout(()=>{input=[];showPattern();},1200);return;}
-  if(input.length===pattern.length){score+=round*30;document.getElementById("sc").textContent=score;document.getElementById("ph").textContent="Correct!";round++;document.getElementById("rnd").textContent=round;pattern.push(Math.floor(Math.random()*9));setTimeout(()=>showPattern(),800);}
+  if(input.length===pattern.length){score+=round*30;document.getElementById("sc").textContent=score;document.getElementById("ph").textContent="Correct!";if(window.GameFX)GameFX.burst(cv,180,180,{count:16,colors:['#f7ff00','#4776E6','#8E54E9'],spread:2.5,life:0.45});round++;document.getElementById("rnd").textContent=round;pattern.push(Math.floor(Math.random()*9));setTimeout(()=>showPattern(),800);}
 });
 function go(){document.getElementById("ov").style.display="none";running=true;pattern=[Math.floor(Math.random()*9)];showPattern();}
 function ng(){score=0;round=1;document.getElementById("sc").textContent=0;document.getElementById("rnd").textContent=1;pattern=[Math.floor(Math.random()*9)];if(running)showPattern();}

@@ -63,6 +63,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const stageBg=new Image();stageBg.src='../assets/game-art/shadow-match/stage.jpg';
 const shapes=["triangle","square","pentagon","hexagon","star"];
 let shape,targetAngle,currentAngle,score=0,round=1,running=false;
 function rnd(){return Math.random()*Math.PI*2;}
@@ -76,8 +77,9 @@ function drawShape(x,y,type,angle,color,size){
   ctx.fill();ctx.restore();
 }
 function draw(){
-  ctx.fillStyle="#1a1000";ctx.fillRect(0,0,400,400);
-  ctx.fillStyle="#333";ctx.font="14px Segoe UI";ctx.textAlign="center";
+  if(window.GameFX)GameFX.fxImage(ctx,stageBg,()=>{ctx.fillStyle="#1a1000";ctx.fillRect(0,0,400,400);},0,0,400,400);
+  else{ctx.fillStyle="#1a1000";ctx.fillRect(0,0,400,400);}
+  ctx.fillStyle="#eee";ctx.font="14px Segoe UI";ctx.textAlign="center";
   ctx.fillText("Shadow (target)",100,30);ctx.fillText("Your Shape",300,30);
   drawShape(100,220,shape,targetAngle,"rgba(255,255,255,.15)",80);
   drawShape(300,220,shape,currentAngle,"#f7971e",80);
@@ -90,7 +92,7 @@ function draw(){
 }
 function check(){
   const diff=Math.abs(((currentAngle-targetAngle+Math.PI*3)%(Math.PI*2))-Math.PI);
-  if(diff<0.15){score+=Math.round((1-diff/0.15)*100*(round));document.getElementById("sc").textContent=score;setTimeout(newRound,400);}
+  if(diff<0.15){score+=Math.round((1-diff/0.15)*100*(round));document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,300,220,{count:14,colors:['#f7971e','#ffd200','#fff'],spread:2.5,life:0.4});setTimeout(newRound,400);}
 }
 document.addEventListener("keydown",e=>{
   if(!running)return;

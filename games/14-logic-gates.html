@@ -81,6 +81,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const circuitBg=new Image();circuitBg.src='../assets/game-art/logic-gates/circuit.jpg';
 const GATES=[
   {name:"AND",fn:(a,b)=>a&&b},
   {name:"OR", fn:(a,b)=>a||b},
@@ -92,7 +93,9 @@ const GATES=[
 let A=false,B=false,target=false,gate,score=0,level=1,running=false;
 function newPuzzle(){gate=GATES[Math.floor(Math.random()*Math.min(2+Math.floor(level/2),GATES.length))];target=Math.random()>.5;A=false;B=false;draw();}
 function draw(){
-  ctx.fillStyle="#050510";ctx.fillRect(0,0,480,380);
+  if(window.GameFX)GameFX.fxImage(ctx,circuitBg,()=>{ctx.fillStyle="#050510";ctx.fillRect(0,0,480,380);},0,0,480,380);
+  else{ctx.fillStyle="#050510";ctx.fillRect(0,0,480,380);}
+  ctx.fillStyle="rgba(5,5,16,.45)";ctx.fillRect(0,0,480,380);
   // Draw inputs
   function drawIO(x,y,val,label){ctx.fillStyle=val?"#00ff88":"#333";ctx.beginPath();ctx.arc(x,y,28,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#00b4d8";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle=val?"#000":"#aaa";ctx.font="bold 14px monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(label,x,y-35);ctx.fillText(val?"1":"0",x,y);}
   drawIO(80,120,A,"A");drawIO(80,250,B,"B");
@@ -110,7 +113,7 @@ function draw(){
   ctx.fillStyle="#f39c12";ctx.font="bold 18px Segoe UI";ctx.textAlign="center";ctx.fillText("TARGET: "+(target?"1":"0"),390,290);
   ctx.fillStyle="#aaa";ctx.font="14px Segoe UI";ctx.fillText("Click A or B to toggle",240,340);
   // Check
-  if(out===target){score+=10*level;level++;document.getElementById("sc").textContent=score;document.getElementById("lv").textContent=level;document.getElementById("ph").textContent="Correct!";setTimeout(newPuzzle,700);}
+  if(out===target){score+=10*level;level++;document.getElementById("sc").textContent=score;document.getElementById("lv").textContent=level;document.getElementById("ph").textContent="Correct!";if(window.GameFX)GameFX.burst(cv,240,190,{count:14,colors:['#00ff88','#00b4d8','#fff'],spread:2.5,life:0.4});setTimeout(newPuzzle,700);}
 }
 cv.addEventListener("click",e=>{
   if(!running)return;

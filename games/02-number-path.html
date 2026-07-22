@@ -63,6 +63,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const starsBg=new Image();starsBg.src='../assets/game-art/number-path/stars.jpg';
 const COLS=6,SZ=60;let nums=[],next=1,score=0,level=1,running=false;
 function mkBoard(){
   nums=[];const count=level*3+9;
@@ -74,8 +75,9 @@ function mkBoard(){
   next=1;document.getElementById("nx").textContent=1;
 }
 function draw(){
-  ctx.fillStyle="#0a1a1a";ctx.fillRect(0,0,360,360);
-  ctx.strokeStyle="#1a3a2a";ctx.lineWidth=1;
+  if(window.GameFX)GameFX.fxImage(ctx,starsBg,()=>{ctx.fillStyle="#0a1a1a";ctx.fillRect(0,0,360,360);},0,0,360,360);
+  else{ctx.fillStyle="#0a1a1a";ctx.fillRect(0,0,360,360);}
+  ctx.strokeStyle="rgba(26,58,42,.5)";ctx.lineWidth=1;
   for(let i=0;i<=COLS;i++){ctx.beginPath();ctx.moveTo(i*SZ,0);ctx.lineTo(i*SZ,360);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*SZ);ctx.lineTo(360,i*SZ);ctx.stroke();}
   nums.forEach(n=>{
     if(n.hit)return;
@@ -95,6 +97,7 @@ cv.addEventListener("click",e=>{
     const x=n.x*SZ+SZ/2,y=n.y*SZ+SZ/2;
     if(Math.hypot(mx-x,my-y)<24&&n.v===next){
       n.hit=true;next++;score+=next*level;
+      if(window.GameFX)GameFX.burst(cv,x,y,{count:8,colors:['#38ef7d','#11998e'],spread:1.8,life:0.3});
       document.getElementById("sc").textContent=score;
       document.getElementById("nx").textContent=next;
       if(nums.every(n=>n.hit)){level++;document.getElementById("lv").textContent=level;setTimeout(()=>{mkBoard();draw();},600);}
