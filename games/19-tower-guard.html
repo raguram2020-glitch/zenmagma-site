@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=420,H=460;
+const castleBg=new Image();castleBg.src='../assets/game-art/tower-guard/castle.jpg';
 let hp,score,wave,gold,enemies,bullets,explosions,autoShoot,frame,running,dmg,fireRate,waveActive;
 function init(){hp=20;score=0;wave=1;gold=80;enemies=[];bullets=[];explosions=[];autoShoot=0;frame=0;dmg=15;fireRate=45;waveActive=false;document.getElementById("hp").textContent=hp;document.getElementById("sc").textContent=score;document.getElementById("wv").textContent=wave;document.getElementById("gd").textContent=gold;}
 function spawnWave(){
@@ -66,9 +67,10 @@ function spawnWave(){
   }
 }
 function draw(){
-  ctx.fillStyle="#0a0000";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,castleBg,()=>{ctx.fillStyle="#0a0000";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#0a0000";ctx.fillRect(0,0,W,H);}
   // Path
-  ctx.fillStyle="#1a0a00";ctx.fillRect(0,160,W-80,80);ctx.fillRect(W-80,0,80,H);
+  ctx.fillStyle="rgba(26,10,0,.55)";ctx.fillRect(0,160,W-80,80);ctx.fillRect(W-80,0,80,H);
   // Tower
   ctx.fillStyle="#8B0000";ctx.fillRect(W-80,40,60,H-40);ctx.fillStyle="#c0392b";ctx.fillRect(W-90,40,80,30);ctx.fillStyle="#e74c3c";ctx.fillRect(W-68,20,40,25);
   // HP bar
@@ -84,7 +86,7 @@ function draw(){
 function update(){
   frame++;autoShoot++;
   if(autoShoot>=fireRate&&enemies.length>0){const t=enemies[0];const angle=Math.atan2(t.y-(H/2),t.x-(W-50));bullets.push({x:W-50,y:H/2,dx:Math.cos(angle)*10,dy:Math.sin(angle)*10});autoShoot=0;}
-  bullets=bullets.filter(b=>{b.x+=b.dx;b.y+=b.dy;let hit=false;enemies=enemies.filter(e=>{if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+4){e.hp-=dmg;explosions.push({x:e.x,y:e.y,r:15,life:20});if(e.hp<=0){score+=10*wave;gold+=5;document.getElementById("sc").textContent=score;document.getElementById("gd").textContent=gold;hit=true;return false;}hit=true;return true;}return true;});return !hit&&b.x>0&&b.x<W&&b.y>0&&b.y<H;});
+  bullets=bullets.filter(b=>{b.x+=b.dx;b.y+=b.dy;let hit=false;enemies=enemies.filter(e=>{if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+4){e.hp-=dmg;explosions.push({x:e.x,y:e.y,r:15,life:20});if(e.hp<=0){score+=10*wave;gold+=5;document.getElementById("sc").textContent=score;document.getElementById("gd").textContent=gold;if(window.GameFX)GameFX.burst(cv,e.x,e.y,{count:10,colors:['#e74c3c','#f1c40f'],spread:2,life:0.35});hit=true;return false;}hit=true;return true;}return true;});return !hit&&b.x>0&&b.x<W&&b.y>0&&b.y<H;});
   enemies=enemies.filter(e=>{e.x+=e.spd;if(e.x>W-50){hp-=2;document.getElementById("hp").textContent=hp;if(hp<=0){running=false;showGameOver("Tower fell! Score: "+score);}return false;}return true;});
   explosions=explosions.filter(p=>{p.life--;return p.life>0;});
   if(!waveActive&&enemies.length===0&&frame>60){wave++;document.getElementById("wv").textContent=wave;frame=0;spawnWave();}

@@ -48,6 +48,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=380;
+const valleyBg=new Image();valleyBg.src='../assets/game-art/kingdom-defense/valley.jpg';
 const PATH=[[0,190],[80,190],[80,100],[200,100],[200,280],[360,280],[360,120],[480,120]];
 let towers=[],enemies=[],bullets=[],gold=100,hp=20,wave=1,score=0,frame=0,running=false,tool="archer",hoverX=-999,hoverY=-999;
 const TOWER={archer:{r:80,spd:2,dmg:10,rate:60,color:"#27ae60",e:"🏹",cost:30},mage:{r:120,spd:3,dmg:25,rate:90,color:"#9b59b6",e:"🔮",cost:60},cannon:{r:100,spd:1.5,dmg:50,rate:150,color:"#e74c3c",e:"💣",cost:90}};
@@ -75,11 +76,13 @@ function update(){
   enemies.forEach(e=>{e.prog+=e.spd;if(e.prog>=1){hp--;document.getElementById("hp").textContent=hp;e.prog=2;if(hp<=0){running=false;setTimeout(()=>window._showMod("Castle fell! Score: "+score),200);}}});
   enemies=enemies.filter(e=>e.prog<2);
   towers.forEach(t=>{t.cooldown--;if(t.cooldown>0)return;const e=enemies.find(en=>{const p=posOnPath(en.prog);return Math.hypot(p.x-t.x,p.y-t.y)<t.r;});if(e){t.cooldown=t.rate;const p=posOnPath(e.prog);bullets.push({x:t.x,y:t.y,tx:p.x,ty:p.y,dmg:t.dmg,color:t.color,prog:0,target:e});}});
-  bullets=bullets.filter(b=>{b.prog+=0.1;const p=posOnPath(b.target.prog);b.tx=p.x;b.ty=p.y;if(b.prog>=1){b.target.hp-=b.dmg;if(b.target.hp<=0){score+=10*wave;document.getElementById("sc").textContent=score;gold+=5;document.getElementById("gd").textContent=gold;b.target.prog=2;}return false;}return true;});
+  bullets=bullets.filter(b=>{b.prog+=0.1;const p=posOnPath(b.target.prog);b.tx=p.x;b.ty=p.y;if(b.prog>=1){b.target.hp-=b.dmg;if(b.target.hp<=0){score+=10*wave;document.getElementById("sc").textContent=score;gold+=5;document.getElementById("gd").textContent=gold;if(window.GameFX)GameFX.burst(cv,b.tx,b.ty,{count:10,colors:['#c0392b','#f1c40f'],spread:2,life:0.35});b.target.prog=2;}return false;}return true;});
   if(enemies.length===0&&frame%10===0){wave++;document.getElementById("wv").textContent=wave;spawnWave();}
 }
 function draw(){
-  ctx.fillStyle="#0a0000";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,valleyBg,()=>{ctx.fillStyle="#0a0000";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#0a0000";ctx.fillRect(0,0,W,H);}
+  ctx.fillStyle="rgba(10,0,0,.25)";ctx.fillRect(0,0,W,H);
   // Path
   ctx.strokeStyle="rgba(139,0,0,.5)";ctx.lineWidth=28;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();PATH.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));ctx.stroke();
   ctx.strokeStyle="rgba(200,50,50,.3)";ctx.lineWidth=20;ctx.stroke();

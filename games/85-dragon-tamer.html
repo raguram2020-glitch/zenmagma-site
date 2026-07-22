@@ -47,12 +47,15 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=380;
+const lairBg=new Image();lairBg.src='../assets/game-art/dragon-tamer/lair.jpg';
 let score=0,level=1,resources=100,enemyHp=100,playerHp=100,running=false,frame=0;
 const units=[],effects=[];
 function draw(){
-  ctx.fillStyle="#0a0500";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,lairBg,()=>{ctx.fillStyle="#0a0500";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#0a0500";ctx.fillRect(0,0,W,H);}
+  ctx.fillStyle="rgba(10,5,0,.3)";ctx.fillRect(0,0,W,H);
   // Field
-  ctx.fillStyle="rgba(255,255,255,.03)";for(let i=0;i<W;i+=40){ctx.fillRect(i,0,1,H);}for(let i=0;i<H;i+=40){ctx.fillRect(0,i,W,1);}
+  ctx.fillStyle="rgba(255,255,255,.05)";for(let i=0;i<W;i+=40){ctx.fillRect(i,0,1,H);}for(let i=0;i<H;i+=40){ctx.fillRect(0,i,W,1);}
   // Player base
   ctx.fillStyle="#f7971e";ctx.fillRect(10,H/2-40,60,80);ctx.fillStyle="#fff";ctx.font="14px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🐉",40,H/2);
   ctx.fillText("You",40,H/2+25);
@@ -66,7 +69,7 @@ function draw(){
   effects.forEach(e=>{e.x+=e.dx;e.y+=e.dy;e.life--;ctx.globalAlpha=e.life/30;ctx.fillStyle=e.color;ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(e.t,e.x,e.y);ctx.globalAlpha=1;});
   effects.splice(0,effects.findIndex(e=>e.life>0));
 }
-function action1(){if(!running||resources<20){log("Not enough resources!");return;}resources-=20;const dmg=5+Math.random()*10+level*2;enemyHp=Math.max(0,enemyHp-dmg);score+=Math.round(dmg)*level;effects.push({x:W*.7,y:H/2,dx:-1,dy:-1,life:30,color:"#f7971e",t:"⚔️ -"+Math.round(dmg)});document.getElementById("rs").textContent=resources;document.getElementById("sc").textContent=score;if(enemyHp<=0){score+=100*level;level++;enemyHp=100+level*20;log("Enemy defeated! Level "+level);document.getElementById("lv").textContent=level;}draw();}
+function action1(){if(!running||resources<20){log("Not enough resources!");return;}resources-=20;const dmg=5+Math.random()*10+level*2;enemyHp=Math.max(0,enemyHp-dmg);score+=Math.round(dmg)*level;effects.push({x:W*.7,y:H/2,dx:-1,dy:-1,life:30,color:"#f7971e",t:"⚔️ -"+Math.round(dmg)});if(window.GameFX)GameFX.burst(cv,W*.7,H/2,{count:10,colors:['#f7971e','#ffd200'],spread:2,life:0.35});document.getElementById("rs").textContent=resources;document.getElementById("sc").textContent=score;if(enemyHp<=0){score+=100*level;level++;enemyHp=100+level*20;log("Enemy defeated! Level "+level);document.getElementById("lv").textContent=level;}draw();}
 function action2(){if(!running||resources<10){log("Not enough resources!");return;}resources-=10;playerHp=Math.min(100,playerHp+10);document.getElementById("rs").textContent=resources;log("Defended! HP restored.");draw();}
 function gather(){if(!running)return;const gain=10+Math.floor(Math.random()*10)+level*2;resources+=gain;log("Gathered "+gain+" resources!");document.getElementById("rs").textContent=resources;// Enemy attacks back
 const edm=3+Math.random()*5+level;playerHp=Math.max(0,playerHp-edm);if(playerHp<=0){running=false;setTimeout(()=>window._showMod("Defeated! Score: "+score),200);}draw();}
