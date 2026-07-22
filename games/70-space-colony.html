@@ -68,12 +68,14 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=300;
+const alienBg=new Image();alienBg.src='../assets/game-art/space-colony/alien.jpg';
 const TILES=12*7;let grid=[],energy=100,water=100,food=100,pop=3,day=1,score=0,running=false;
 const BUILDINGS={empty:{e:"",ep:0,wp:0,fp:0},solar:{e:"☀️",ep:15,wp:0,fp:0},water:{e:"💧",ep:-5,wp:20,fp:0},farm:{e:"🌿",ep:-5,wp:-5,fp:15},dome:{e:"🏠",ep:-10,wp:-10,fp:-10,pp:2}};
 function init(){grid=Array(84).fill("empty");}
 function draw(){
-  ctx.fillStyle="#000010";ctx.fillRect(0,0,W,H);
-  for(let i=0;i<7;i++)for(let j=0;j<12;j++){const b=grid[i*12+j];const x=j*40,y=i*43;ctx.fillStyle="#0a0a1a";ctx.fillRect(x+1,y+1,38,41);ctx.strokeStyle="rgba(102,126,234,.2)";ctx.lineWidth=1;ctx.strokeRect(x,y,40,43);if(b!=="empty"){ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(BUILDINGS[b].e,x+20,y+21);}}
+  if(window.GameFX)GameFX.fxImage(ctx,alienBg,()=>{ctx.fillStyle="#000010";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#000010";ctx.fillRect(0,0,W,H);}
+  for(let i=0;i<7;i++)for(let j=0;j<12;j++){const b=grid[i*12+j];const x=j*40,y=i*43;ctx.fillStyle="rgba(10,10,26,.55)";ctx.fillRect(x+1,y+1,38,41);ctx.strokeStyle="rgba(102,126,234,.2)";ctx.lineWidth=1;ctx.strokeRect(x,y,40,43);if(b!=="empty"){ctx.font="24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(BUILDINGS[b].e,x+20,y+21);}}
 }
 function build(type){
   const costs={solar:{ep:50},water:{wp:60},farm:{fp:40},dome:{ep:80,wp:80,fp:80}};
@@ -82,7 +84,7 @@ function build(type){
   if(c.wp&&water<c.wp){log("Not enough water!");return;}
   if(c.fp&&food<c.fp){log("Not enough food!");return;}
   const empty=grid.indexOf("empty");if(empty<0){log("No space!");return;}
-  grid[empty]=type;if(c.ep)energy-=c.ep;if(c.wp)water-=c.wp;if(c.fp)food-=c.fp;draw();upd();log(type+" built!");
+  grid[empty]=type;if(c.ep)energy-=c.ep;if(c.wp)water-=c.wp;if(c.fp)food-=c.fp;if(window.GameFX){const ex=(empty%12)*40+20,ey=Math.floor(empty/12)*43+21;GameFX.burst(cv,ex,ey,{count:8,colors:['#667eea','#764ba2','#fff'],spread:1.8,life:0.3});}draw();upd();log(type+" built!");
 }
 function nextDay(){
   day++;let ep=0,wp=0,fp=0,pp=0;

@@ -54,15 +54,17 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),COLS=6,ROWS=4,SW=80,SH=80;
+const farmlandBg=new Image();farmlandBg.src='../assets/game-art/farm-grow/farmland.jpg';
 const STAGES=["bare","planted","sprouted","grown","ready"];
 const STAGE_E=["","🌱","🌿","🌾","✨🌾"];
 let plots=[],gold=50,day=1,score=0,selected=null,running=false;
 function init(){plots=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)plots.push({r,c,stage:0,watered:false,days:0});}
 function draw(){
-  ctx.fillStyle="#001a00";ctx.fillRect(0,0,480,320);
+  if(window.GameFX)GameFX.fxImage(ctx,farmlandBg,()=>{ctx.fillStyle="#001a00";ctx.fillRect(0,0,480,320);},0,0,480,320);
+  else{ctx.fillStyle="#001a00";ctx.fillRect(0,0,480,320);}
   plots.forEach(p=>{
     const x=p.c*SW,y=p.r*SH;
-    ctx.fillStyle=p.stage>0?"#2d5a1b":"#4a3000";ctx.fillRect(x+2,y+2,SW-4,SH-4);
+    ctx.fillStyle=p.stage>0?"rgba(45,90,27,.55)":"rgba(0,0,0,.15)";ctx.fillRect(x+2,y+2,SW-4,SH-4);
     if(p.watered&&p.stage>0){ctx.fillStyle="rgba(0,100,255,.2)";ctx.fillRect(x+2,y+2,SW-4,SH-4);}
     if(selected===p){ctx.strokeStyle="#f1c40f";ctx.lineWidth=3;ctx.strokeRect(x+2,y+2,SW-4,SH-4);}
     ctx.font="32px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
@@ -73,7 +75,7 @@ function draw(){
 cv.addEventListener("click",e=>{if(!running)return;const c=Math.floor(e.offsetX/SW),r=Math.floor(e.offsetY/SH);selected=plots.find(p=>p.r===r&&p.c===c)||null;draw();});
 function plant(){if(!selected||selected.stage>0){log("Select an empty plot!");return;}if(gold<5){log("Not enough gold!");return;}selected.stage=1;gold-=5;upd();draw();log("Planted a crop!");}
 function water(){if(!selected||selected.stage===0){log("Select a planted crop!");return;}if(gold<2){log("Not enough gold!");return;}if(selected.watered){log("Already watered today!");return;}selected.watered=true;gold-=2;upd();draw();log("Watered the crop!");}
-function harvest(){if(!selected||selected.stage!==4){log("Crop not ready!");return;}const earn=20+selected.days*5;gold+=earn;score+=earn;selected.stage=0;selected.watered=false;selected.days=0;upd();draw();log(`Harvested! +${earn}g`);}
+function harvest(){if(!selected||selected.stage!==4){log("Crop not ready!");return;}const earn=20+selected.days*5;gold+=earn;score+=earn;if(window.GameFX)GameFX.burst(cv,selected.c*SW+SW/2,selected.r*SH+SH/2,{count:14,colors:['#f1c40f','#2ecc71','#fff'],spread:2.5,life:0.4});selected.stage=0;selected.watered=false;selected.days=0;upd();draw();log(`Harvested! +${earn}g`);}
 function nextDay(){day++;document.getElementById("dy").textContent=day;plots.forEach(p=>{if(p.stage>0&&p.stage<4){if(p.watered)p.stage++;p.days++;p.watered=false;}});upd();draw();log("New day! Water your crops.");}
 function upd(){document.getElementById("gd").textContent=gold;document.getElementById("sc").textContent=score;}
 function log(msg){document.getElementById("log").textContent=msg;}

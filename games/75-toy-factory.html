@@ -51,10 +51,13 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=400,H=300;
+const workshopBg=new Image();workshopBg.src='../assets/game-art/toy-factory/workshop.jpg';
 let score=0,level=1,running=false,frame=0;
 const items=[],particles=[];
 function draw(){
-  ctx.fillStyle="#0f0f1a";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,workshopBg,()=>{ctx.fillStyle="#0f0f1a";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#0f0f1a";ctx.fillRect(0,0,W,H);}
+  ctx.fillStyle="rgba(15,15,26,.35)";ctx.fillRect(0,0,W,H);
   ctx.fillStyle="#f953c6";ctx.font="bold 24px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";
   ctx.fillText("Toy Factory",W/2,H/2-30);
   ctx.fillStyle="#aaa";ctx.font="16px Segoe UI";ctx.fillText("Score: "+score,W/2,H/2+10);
@@ -62,7 +65,7 @@ function draw(){
   frame++;
   for(let i=0;i<20;i++){ctx.fillStyle=`hsl(${(i*30+frame)%360},80%,60%)`;ctx.beginPath();ctx.arc(50+i*16,(H*.7+Math.sin((frame*.05+i)*.5)*20),6,0,Math.PI*2);ctx.fill();}
 }
-function action1(){if(!running)return;score+=10*level;document.getElementById("sc").textContent=score;document.getElementById("log").textContent="Action 1! +"+10*level+" points";if(score>level*100){level++;document.getElementById("lv").textContent=level;}draw();}
+function action1(){if(!running)return;score+=10*level;document.getElementById("sc").textContent=score;document.getElementById("log").textContent="Action 1! +"+10*level+" points";if(window.GameFX)GameFX.burst(cv,W/2,H/2,{count:10,colors:['#f953c6','#b91d73','#fff'],spread:2,life:0.35});if(score>level*100){level++;document.getElementById("lv").textContent=level;}draw();}
 function action2(){if(!running)return;score+=5*level;document.getElementById("sc").textContent=score;document.getElementById("log").textContent="Action 2! +"+5*level+" points";draw();}
 function go(){document.getElementById("ov").style.display="none";running=true;(function lp(){if(!running)return;draw();requestAnimationFrame(lp);})();}
 draw();

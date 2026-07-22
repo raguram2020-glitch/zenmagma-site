@@ -54,14 +54,16 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),COLS=12,ROWS=8,CS=40;
+const skylineBg=new Image();skylineBg.src='../assets/game-art/city-builder/skyline.jpg';
 const TYPES={empty:{e:"",cost:0},house:{e:"🏠",cost:30,pop:5,happy:0},shop:{e:"🏪",cost:50,pop:0,happy:-5,income:20},park:{e:"🌳",cost:20,pop:0,happy:15},road:{e:"🛣",cost:10,pop:0,happy:2}};
 let grid,tool="house",gold=200,score=0,day=0,income_timer;
 function init(){grid=Array.from({length:ROWS},()=>Array(COLS).fill("empty"));}
 function draw(){
-  ctx.fillStyle="#001428";ctx.fillRect(0,0,480,320);
+  if(window.GameFX)GameFX.fxImage(ctx,skylineBg,()=>{ctx.fillStyle="#001428";ctx.fillRect(0,0,480,320);},0,0,480,320);
+  else{ctx.fillStyle="#001428";ctx.fillRect(0,0,480,320);}
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
     const t=grid[r][c],x=c*CS,y=r*CS;
-    ctx.fillStyle=t==="empty"?"#0a1a2a":"#0d2040";ctx.fillRect(x+1,y+1,CS-2,CS-2);
+    ctx.fillStyle=t==="empty"?"rgba(10,26,42,.55)":"rgba(13,32,64,.55)";ctx.fillRect(x+1,y+1,CS-2,CS-2);
     ctx.strokeStyle="rgba(79,172,254,.15)";ctx.lineWidth=1;ctx.strokeRect(x,y,CS,CS);
     if(t!=="empty"){ctx.font="22px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(TYPES[t].e,x+CS/2,y+CS/2);}
   }
@@ -77,7 +79,7 @@ cv.addEventListener("click",e=>{
   if(r<0||r>=ROWS||c<0||c>=COLS)return;
   const cost=TYPES[tool].cost;
   if(gold<cost){document.getElementById("log").textContent="Not enough gold!";return;}
-  gold-=cost;grid[r][c]=tool;document.getElementById("gd").textContent=gold;draw();
+  gold-=cost;grid[r][c]=tool;document.getElementById("gd").textContent=gold;if(window.GameFX)GameFX.burst(cv,c*CS+CS/2,r*CS+CS/2,{count:8,colors:['#4facfe','#00f2fe','#fff'],spread:1.8,life:0.3});draw();
 });
 function go(){document.getElementById("ov").style.display="none";income_timer=setInterval(()=>{let inc=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]==="shop")inc+=20;}gold+=inc;document.getElementById("gd").textContent=gold;if(inc>0)document.getElementById("log").textContent=`+${inc}g income!`;},5000);draw();}
 init();draw();setTool("house");
