@@ -22,7 +22,7 @@
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, rgba(102,126,234,.55) 0%, rgba(118,75,162,.65) 100%), url('../assets/game-art/quiz-master/knowledge.jpg') center/cover;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -316,6 +316,10 @@
 
             if (selected === correct) {
                 score++;
+                if (window.GameFX) {
+                    const el = options[correct];
+                    GameFX.burst(el, el.clientWidth / 2, el.clientHeight / 2, { count: 14, colors: ['#4caf50', '#667eea', '#fff'], spread: 2.5, life: 0.4 });
+                }
             }
 
             document.getElementById('score').textContent = score;

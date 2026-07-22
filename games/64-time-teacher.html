@@ -51,6 +51,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),CX=140,CY=140,R=120;
+const classroomBg=new Image();classroomBg.src='../assets/game-art/time-teacher/classroom.jpg';
 let targetH,targetM,userH=0,userM=0,mode="hour",score=0,level=1,streak=0,running=false;
 function mkQ(){
   targetH=Math.floor(Math.random()*12);targetM=level>2?Math.floor(Math.random()*4)*15:0;
@@ -60,7 +61,9 @@ function mkQ(){
   document.getElementById("fb").textContent="Click to set hour hand first";draw();
 }
 function draw(){
-  ctx.fillStyle="#001a14";ctx.fillRect(0,0,280,280);
+  if(window.GameFX)GameFX.fxImage(ctx,classroomBg,()=>{ctx.fillStyle="#001a14";ctx.fillRect(0,0,280,280);},0,0,280,280);
+  else{ctx.fillStyle="#001a14";ctx.fillRect(0,0,280,280);}
+  ctx.fillStyle="rgba(0,26,20,.4)";ctx.beginPath();ctx.arc(CX,CY,R+4,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle="#1abc9c";ctx.lineWidth=4;ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);ctx.stroke();
   for(let i=0;i<12;i++){const a=i*Math.PI/6-Math.PI/2;ctx.fillStyle="#1abc9c";ctx.font="bold 14px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(i===0?12:i,CX+Math.cos(a)*(R-16),CY+Math.sin(a)*(R-16));}
   for(let i=0;i<60;i+=5){const a=i*Math.PI/30-Math.PI/2;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.arc(CX+Math.cos(a)*(R-6),CY+Math.sin(a)*(R-6),2,0,Math.PI*2);ctx.fill();}
@@ -82,7 +85,7 @@ cv.addEventListener("click",e=>{
 });
 function submit(){
   const ok=userH===targetH&&Math.abs(userM-targetM)<=5;
-  if(ok){streak++;score+=50*level*(1+streak*.1);document.getElementById("sc").textContent=Math.round(score);document.getElementById("st").textContent=streak;document.getElementById("fb").innerHTML='<span style="color:#2ecc71">✓ Correct time!</span>';if(streak%3===0)level++;document.getElementById("lv").textContent=level;setTimeout(mkQ,700);}
+  if(ok){streak++;score+=50*level*(1+streak*.1);document.getElementById("sc").textContent=Math.round(score);document.getElementById("st").textContent=streak;document.getElementById("fb").innerHTML='<span style="color:#2ecc71">✓ Correct time!</span>';if(window.GameFX)GameFX.burst(cv,CX,CY,{count:14,colors:['#1abc9c','#16a085','#fff'],spread:2.5,life:0.4});if(streak%3===0)level++;document.getElementById("lv").textContent=level;setTimeout(mkQ,700);}
   else{streak=0;document.getElementById("fb").innerHTML=`<span style="color:#e74c3c">✗ Check hour and minute hands</span>`;}
 }
 function go(){document.getElementById("ov").style.display="none";running=true;mkQ();}

@@ -47,6 +47,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=380;
+const jungleBg=new Image();jungleBg.src='../assets/game-art/letter-hunt/jungle.jpg';
 const COLORS=["#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6","#1abc9c","#e67e22","#1a9850"];
 let letters=[],next=0,score=0,timeLeft=60,timer,running=false,glowPulse=0;
 function mkLetters(){
@@ -59,7 +60,8 @@ function mkLetters(){
 }
 function draw(){
   glowPulse+=0.08;
-  ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,jungleBg,()=>{ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);}
   letters.forEach(l=>{
     if(l.found)return;
     const isNext=l.ch===String.fromCharCode(65+next);
@@ -79,7 +81,7 @@ cv.addEventListener("click",e=>{
   const mx=e.offsetX,my=e.offsetY;
   const l=letters.find(l=>!l.found&&Math.hypot(l.x-mx,l.y-my)<22);
   if(!l)return;
-  if(l.ch===String.fromCharCode(65+next)){l.found=true;next++;score+=10*(next);document.getElementById("sc").textContent=score;document.getElementById("nxt").textContent=next<26?String.fromCharCode(65+next):"Done!";if(next>=26){clearInterval(timer);running=false;const bonus=timeLeft>=30?50:0;if(bonus)score+=bonus;window._showMod("All letters found! Score: "+score+(bonus?" (+50 speed bonus! ⚡)":""));}}
+  if(l.ch===String.fromCharCode(65+next)){l.found=true;next++;score+=10*(next);if(window.GameFX)GameFX.burst(cv,l.x,l.y,{count:10,colors:['#1abc9c','#fff'],spread:1.8,life:0.35});document.getElementById("sc").textContent=score;document.getElementById("nxt").textContent=next<26?String.fromCharCode(65+next):"Done!";if(next>=26){clearInterval(timer);running=false;const bonus=timeLeft>=30?50:0;if(bonus)score+=bonus;window._showMod("All letters found! Score: "+score+(bonus?" (+50 speed bonus! ⚡)":""));}}
   else{score=Math.max(0,score-5);document.getElementById("sc").textContent=score;}
 });
 function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;window._showMod("Time up! Score: "+score);}else timeLeft--;}

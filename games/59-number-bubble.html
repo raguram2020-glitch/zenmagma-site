@@ -48,6 +48,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=440,H=320;
+const underwaterBg=new Image();underwaterBg.src='../assets/game-art/number-bubble/underwater.jpg';
 let bubbles=[],score=0,level=1,timeLeft=45,timer,correct,running=false;
 function mkQ(){
   const a=Math.floor(Math.random()*(5+level*2))+1,b=Math.floor(Math.random()*(5+level*2))+1;
@@ -65,7 +66,8 @@ function mkQ(){
   bubbles[Math.floor(Math.random()*bubbles.length)].val=correct;
 }
 function draw(){
-  ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,underwaterBg,()=>{ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#001a14";ctx.fillRect(0,0,W,H);}
   bubbles.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(b.x<b.r||b.x>W-b.r)b.vx*=-1;if(b.y<b.r||b.y>H-b.r)b.vy*=-1;const isCorrectBubble=b.val===correct;const r=isCorrectBubble?b.r+3:b.r;ctx.save();if(isCorrectBubble){ctx.shadowColor='rgba(255,255,100,0.9)';ctx.shadowBlur=18;}ctx.fillStyle=isCorrectBubble?`hsla(${b.hue},90%,65%,.95)`:`hsla(${b.hue},70%,55%,.8)`;ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=isCorrectBubble?"rgba(255,255,100,.8)":"rgba(255,255,255,.4)";ctx.lineWidth=isCorrectBubble?3:2;ctx.stroke();ctx.restore();ctx.fillStyle="#fff";ctx.font=`bold ${isCorrectBubble?20:18}px Segoe UI`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(b.val,b.x,b.y);});
 }
 cv.addEventListener("click",e=>{
@@ -73,7 +75,7 @@ cv.addEventListener("click",e=>{
   const mx=e.offsetX,my=e.offsetY;
   const hit=bubbles.find(b=>Math.hypot(b.x-mx,b.y-my)<b.r);
   if(!hit)return;
-  if(hit.val===correct){score+=timeLeft*level*2;document.getElementById("sc").textContent=score;}else{score=Math.max(0,score-10);document.getElementById("sc").textContent=score;}
+  if(hit.val===correct){score+=timeLeft*level*2;document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,hit.x,hit.y,{count:10,colors:['#ffd700','#fff'],spread:1.8,life:0.35});}else{score=Math.max(0,score-10);document.getElementById("sc").textContent=score;}
   level++;document.getElementById("lv").textContent=level;mkQ();
 });
 function tick(){document.getElementById("tm").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);running=false;setTimeout(()=>window._showMod("Time up! Score: "+score),100);}else timeLeft--;}

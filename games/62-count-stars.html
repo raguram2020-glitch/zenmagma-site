@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=440,H=280;
+const spaceBg=new Image();spaceBg.src='../assets/game-art/count-stars/space.jpg';
 let stars=[],count,score=0,level=1,streak=0,frame=0,running=false,anim;
 function mkQ(){
   count=3+Math.floor(Math.random()*(4+level*2));stars=[];
@@ -59,11 +60,12 @@ function mkQ(){
   document.getElementById("opts").innerHTML=opts.map(o=>`<button class="btn" onclick="check(${o})" style="font-size:1.3em;min-width:60px">${o}</button>`).join("");
 }
 function draw(){
-  ctx.fillStyle="#000510";ctx.fillRect(0,0,W,H);
+  if(window.GameFX)GameFX.fxImage(ctx,spaceBg,()=>{ctx.fillStyle="#000510";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#000510";ctx.fillRect(0,0,W,H);}
   stars.forEach(s=>{s.x+=s.vx;s.y+=s.vy;if(s.x<0||s.x>W)s.vx*=-1;if(s.y<0||s.y>H)s.vy*=-1;ctx.fillStyle="#f9d423";ctx.font=`${s.size*2}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("⭐",s.x,s.y);});
 }
 function check(n){
-  if(n===count){streak++;score+=count*10*streak;document.getElementById("fb").innerHTML=`<span style="color:#2ecc71">✓ Yes! ${count} stars</span>`;}
+  if(n===count){streak++;score+=count*10*streak;document.getElementById("fb").innerHTML=`<span style="color:#2ecc71">✓ Yes! ${count} stars</span>`;if(window.GameFX)GameFX.burst(cv,W/2,H/2,{count:14,colors:['#f9d423','#ff4e50','#fff'],spread:2.5,life:0.4});}
   else{streak=0;document.getElementById("fb").innerHTML=`<span style="color:#e74c3c">✗ There were ${count}</span>`;}
   document.getElementById("sc").textContent=score;document.getElementById("st").textContent=streak;document.getElementById("lv").textContent=level=Math.floor(score/200)+1;
   setTimeout(mkQ,900);
