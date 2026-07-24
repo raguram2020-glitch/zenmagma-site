@@ -50,6 +50,7 @@ function showWin(msg){
 }
 
 const cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=480,H=420;
+const forestBg=new Image();forestBg.src='../assets/game-art/magic-mushroom/forest.jpg';
 let player,platforms,gems,enemies,score,lives,level,camera,frame,running,keys={};
 function mkLevel(){
   platforms=[];gems=[];enemies=[];camera=0;
@@ -87,15 +88,16 @@ function update(){
     }
   });
   camera=Math.max(0,player.x-W/3);
-  gems=gems.filter(g=>{if(!g.collected&&Math.abs(player.x+player.w/2-g.x)<g.r+10&&Math.abs(player.y+player.h/2-g.y)<g.r+10){g.collected=true;score+=10*level;document.getElementById("sc").textContent=score;return false;}return true;});
+  gems=gems.filter(g=>{if(!g.collected&&Math.abs(player.x+player.w/2-g.x)<g.r+10&&Math.abs(player.y+player.h/2-g.y)<g.r+10){g.collected=true;score+=10*level;document.getElementById("sc").textContent=score;if(window.GameFX)GameFX.burst(cv,g.x-camera,g.y,{count:10,colors:['#f953c6','#fff'],spread:1.8,life:0.35});return false;}return true;});
   enemies.forEach(e=>{e.x+=e.dx;if(e.x<e.patrolMin||e.x>e.patrolMax)e.dx*=-1;if(Math.abs(player.x-e.x)<e.r+14&&Math.abs(player.y+player.h/2-e.y)<e.r+18){lives--;document.getElementById("lf").textContent=lives;player.x=60;player.y=H-100;player.vy=0;if(lives<=0){running=false;showGameOver("Score: "+score);}}  });
   if(player.y>H+50){lives--;player.x=60;player.y=H-100;player.vy=0;document.getElementById("lf").textContent=lives;if(lives<=0){running=false;showGameOver("Score: "+score);}};
   if(gems.length===0){level++;document.getElementById("lv").textContent=level;score+=level*50;document.getElementById("sc").textContent=score;mkLevel();}
 }
 function draw(){
   const cam=Math.round(camera);
-  ctx.fillStyle="#0a0018";ctx.fillRect(0,0,W,H);
-  
+  if(window.GameFX)GameFX.fxImage(ctx,forestBg,()=>{ctx.fillStyle="#0a0018";ctx.fillRect(0,0,W,H);},0,0,W,H);
+  else{ctx.fillStyle="#0a0018";ctx.fillRect(0,0,W,H);}
+
   ctx.save();ctx.translate(-cam,0);
   platforms.forEach(p=>{ctx.fillStyle="#8B0057";ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(p.x,p.y,p.w,4);});
   gems.forEach(g=>{ctx.fillStyle="#f1c40f";ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("💎",g.x,g.y);});
