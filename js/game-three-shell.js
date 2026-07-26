@@ -96,6 +96,17 @@ export class RunnerShell {
     this.scene.background = new THREE.Color(hex);
   }
 
+  /* Static image backdrop behind the whole scene (skybox-lite).
+     Stretches to fill the viewport, replacing setSkyColor's flat
+     THREE.Color. Use a wide illustrated image for a "real place"
+     feel instead of a plain solid color sky. */
+  setSkyTexture(url) {
+    new THREE.TextureLoader().load(url, tex => {
+      if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+      this.scene.background = tex;
+    });
+  }
+
   /* A camera-facing billboard sprite — the standard way
      to place a 2D AI-generated character/obstacle image
      into the 3D scene without a 3D mesh. Returns the
