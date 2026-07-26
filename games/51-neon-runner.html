@@ -141,7 +141,26 @@ function projPoint(z,tcx,tcy){
 }
 function addFT(x,y,txt,col){ftxts.push({x,y,txt,col,life:60,vy:-1.5});}
 function neonGlow(col,blur,fn){cx.shadowBlur=blur;cx.shadowColor=col;fn();cx.shadowBlur=0;}
+/* ── Photoreal hero sprites — Gemini-generated run/jump/slide poses,
+   with the original vector character kept as drawPlayerVector() so a
+   slow/broken image load never leaves the game without a player. ── */
+const PLAYER_IMGS={
+  run:Object.assign(new Image(),{src:'../assets/game-art/neon-runner/player-run.png'}),
+  jump:Object.assign(new Image(),{src:'../assets/game-art/neon-runner/player-jump.png'}),
+  slide:Object.assign(new Image(),{src:'../assets/game-art/neon-runner/player-slide.png'})
+};
+function imgReady(img){return img&&img.complete&&img.naturalWidth>0;}
 function drawPlayer(x,y,sl,tilt){
+  const airborne=y<GY-2;
+  const img=sl?PLAYER_IMGS.slide:(airborne?PLAYER_IMGS.jump:PLAYER_IMGS.run);
+  if(!imgReady(img)){drawPlayerVector(x,y,sl,tilt);return;}
+  const h=sl?76:112,w=h*(img.naturalWidth/img.naturalHeight);
+  cx.save();
+  if(tilt){cx.translate(x,y);cx.rotate(tilt);cx.translate(-x,-y);}
+  cx.drawImage(img,x-w/2,y-h,w,h);
+  cx.restore();
+}
+function drawPlayerVector(x,y,sl,tilt){
   const t=cx,bob=Math.sin(fr*0.2)*2,pulse=0.6+Math.sin(fr*0.15)*0.4;
   t.save(); t.translate(Math.floor(x),Math.floor(y)); if(tilt)t.rotate(tilt);
   // Neon body glow
@@ -198,7 +217,36 @@ function drawPlayer(x,y,sl,tilt){
    final stretch before contact, so it reads as an attack rather than
    a static prop. ── */
 function creatureAtk(o){return o.z<0.18?Math.min(1,(0.18-o.z)/0.18):0;}
+/* ── Photoreal creature sprites, same fallback-to-vector pattern as
+   the player. Drawn larger than each type's o.x/y/w/h hitbox (visual
+   flourish) while collision keeps using the smaller precise box. ── */
+const ENEMY_IMGS={
+  dino:Object.assign(new Image(),{src:'../assets/game-art/neon-runner/enemy-dino.png'}),
+  scorpion:Object.assign(new Image(),{src:'../assets/game-art/neon-runner/enemy-scorpion.png'}),
+  bat:Object.assign(new Image(),{src:'../assets/game-art/neon-runner/enemy-bat.png'})
+};
 function drawDino(o){
+  const img=ENEMY_IMGS.dino;
+  if(!imgReady(img)){drawDinoVector(o);return;}
+  const atk=creatureAtk(o),jx=atk*Math.sin(fr*0.9)*o.w*0.05;
+  const h=o.h*2.3,w=h*(img.naturalWidth/img.naturalHeight),bx=o.x+o.w/2+jx,by=o.y+o.h;
+  cx.drawImage(img,bx-w/2,by-h,w,h);
+}
+function drawScorpion(o){
+  const img=ENEMY_IMGS.scorpion;
+  if(!imgReady(img)){drawScorpionVector(o);return;}
+  const atk=creatureAtk(o),jx=atk*Math.sin(fr*0.9)*o.w*0.06;
+  const h=o.h*1.35,w=h*(img.naturalWidth/img.naturalHeight),bx=o.x+o.w/2+jx,by=o.y+o.h;
+  cx.drawImage(img,bx-w/2,by-h,w,h);
+}
+function drawBat(o){
+  const img=ENEMY_IMGS.bat;
+  if(!imgReady(img)){drawBatVector(o);return;}
+  const atk=creatureAtk(o);
+  const w=o.w*1.35,h=w*(img.naturalHeight/img.naturalWidth),mx=o.x+o.w/2,my=o.y+o.h/2-atk*o.h*0.6;
+  cx.drawImage(img,mx-w/2,my-h/2,w,h);
+}
+function drawDinoVector(o){
   const atk=creatureAtk(o),jx=atk*Math.sin(fr*0.9)*o.w*0.05;
   const x=o.x+jx,y=o.y,w=o.w,h=o.h,bx=x+w/2,by=y+h,run=Math.sin(fr*0.5)*w*0.08,dark='#08140f';
   cx.fillStyle=dark;
@@ -217,7 +265,7 @@ function drawDino(o){
   cx.fillStyle='#00ffaa';
   for(let i=0;i<3;i++){const sx=bx-w*0.12+i*w*0.16,sy=y+h*0.24;cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(sx+w*0.06,sy-h*0.16);cx.lineTo(sx+w*0.12,sy);cx.closePath();cx.fill();}
 }
-function drawScorpion(o){
+function drawScorpionVector(o){
   const atk=creatureAtk(o),jx=atk*Math.sin(fr*0.9)*o.w*0.06;
   const x=o.x+jx,y=o.y,w=o.w,h=o.h,bx=x+w/2,by=y+h,dark='#170a22';
   neonGlow('#aa44ff',6,()=>{cx.strokeStyle='#cc66ff';cx.lineWidth=Math.max(1,w*0.045);
@@ -238,7 +286,7 @@ function drawScorpion(o){
   });
   neonGlow('#ff2266',10,()=>{cx.fillStyle='#ff3377';cx.beginPath();cx.arc(bx-w*0.1,by-h*0.18,Math.max(1,w*0.045),0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(bx+w*0.1,by-h*0.18,Math.max(1,w*0.045),0,Math.PI*2);cx.fill();});
 }
-function drawBat(o){
+function drawBatVector(o){
   const atk=creatureAtk(o),x=o.x,y=o.y-atk*o.h*0.6,w=o.w,h=o.h,mx=x+w/2,my=y+h/2,flap=Math.sin(fr*0.4)*h*1.8;
   neonGlow('#ffaa00',14,()=>{
     cx.strokeStyle='#ffbb33';cx.lineWidth=Math.max(1,h*0.35);
