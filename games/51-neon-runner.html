@@ -49,13 +49,14 @@ resize();window.addEventListener('resize',resize);
 let shell3d=null;
 (async function initShell3d(){
   try{
-    const shellMod=await import('../js/game-three-shell.js');
+    const shellMod=await import('../js/game-three-shell.js?v=2');
     if(!shellMod.supportsWebGL2())return;
     const THREE=await import('../js/vendor/three.module.min.js');
-    shell3d=new shellMod.RunnerShell(document.getElementById('cv3d'),{sky:0x05001a,camHeight:4.2,camDistance:8.5,lookHeight:1.4,fov:60});
-    shell3d.setGroundTexture('../assets/game-art/neon-runner/ground.jpg',{width:14,length:500,repeatY:60});
-    shell3d.setSkyTexture('../assets/game-art/neon-runner/sky.jpg');
-    shell3d.scene.fog=new THREE.Fog(0x1a0530,30,150);
+    const s=new shellMod.RunnerShell(document.getElementById('cv3d'),{sky:0x05001a,camHeight:4.2,camDistance:8.5,lookHeight:1.4,fov:60});
+    s.setGroundTexture('../assets/game-art/neon-runner/ground.jpg',{width:14,length:500,repeatY:60});
+    if(typeof s.setSkyTexture==='function')s.setSkyTexture('../assets/game-art/neon-runner/sky.jpg');
+    s.scene.fog=new THREE.Fog(0x1a0530,30,150);
+    shell3d=s;
   }catch(e){shell3d=null;}
 })();
 const NR_MOOD_HEX=[0x05001a,0x320014,0x001432,0x321400];
