@@ -83,8 +83,8 @@ let shield,mag,slow,shT,mgT,slT,hintT,bgOff=0;
    the target the player is steering toward; `px` is the current
    on-screen x, eased toward laneX(lane) each frame for a smooth
    side-step instead of an instant teleport. */
-const LANES=3,LANE_GAP=()=>W*0.17;
-function laneX(i){return W*0.22+(i-1)*LANE_GAP();}
+const LANES=3,LANE_GAP=()=>W*0.34;
+function laneX(i){return W*0.5+(i-1)*LANE_GAP();}
 let lane=1,px=0;
 function moveLane(d){lane=Math.max(0,Math.min(LANES-1,lane+d));}
 function init(){sc=0;dist=0;coins=0;mult=1;spd=ISPD;fr=0;sclk=0;vy=0;py=GY;sliding=false;stmr=0;dead=false;inv=false;invT=0;lives=MAX_LIVES;obs=[];coll=[];parts=[];pups=[];ftxts=[];shield=false;mag=false;slow=false;shT=0;mgT=0;slT=0;hintT=300;bgOff=0;best=parseInt(localStorage.getItem(LSK)||'0');moodIdx=0;moodFade=0;moodChanging=false;moodText='';moodTextT=0;lane=1;px=laneX(1);}
@@ -136,7 +136,7 @@ function spawnPup(){const t=['shield','magnet','slow'][Math.floor(Math.random()*
 const MIN_SCALE=0.16,Z_RATE=0.0032;
 function projPoint(z,tcx,tcy){
   const p=Math.min(1,Math.max(0,1-z));
-  const hx=W*0.5,hy=GY*0.32;
+  const hx=W*0.5,hy=H*0.378;
   return{cx:hx+(tcx-hx)*p,cy:hy+(tcy-hy)*p,scale:MIN_SCALE+(1-MIN_SCALE)*p*p};
 }
 function addFT(x,y,txt,col){ftxts.push({x,y,txt,col,life:60,vy:-1.5});}
