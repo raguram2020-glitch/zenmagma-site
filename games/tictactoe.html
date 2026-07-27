@@ -303,7 +303,7 @@
 /* ── Illustrated X/O marks, with a graceful text fallback
    if the image fails to load ── */
 function markHTML(type) {
-    const src = type === 'X' ? '../assets/game-art/tictactoe/x-icon.png' : '../assets/game-art/tictactoe/o-icon.png';
+    const src = type === 'X' ? '../assets/game-art/tictactoe/x-icon.jpg' : '../assets/game-art/tictactoe/o-icon.jpg';
     const fallback = type === 'X' ? '✕' : '◯';
     return '<img class="mark-img" src="' + src + '" alt="' + type + '" data-fallback="' + fallback + '" onerror="markFallback(this)">';
 }
